@@ -23,6 +23,9 @@ namespace wa_api_incomm.Models.Hub
         public bool bi_envio_email { get; set; }
         public bool bi_envio_sms { get; set; }
 
+        public decimal? nu_precio { get; set; }
+        public string vc_cod_distribuidor { get; set; }
+
 
     }
 }

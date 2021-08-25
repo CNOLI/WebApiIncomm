@@ -42,7 +42,7 @@ namespace wa_api_incomm
 
             });
             IoC.AddRegistration(services);
-
+            services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
 
             services.AddSwaggerGen(c =>

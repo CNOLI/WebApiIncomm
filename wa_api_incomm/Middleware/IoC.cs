@@ -18,8 +18,8 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<IPinService, PinService>();
             services.AddSingleton<Send, Send>();
             services.AddSingleton<IProductoService, ProductoService>();
-            
 
+            services.AddSingleton<ISentinelService, SentinelService>();
 
 
 

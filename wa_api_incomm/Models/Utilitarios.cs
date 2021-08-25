@@ -19,5 +19,17 @@ namespace wa_api_incomm.Models
             return ec;
 
         }
+        public static object JsonErrorTran(Exception ex)
+        {
+            String jsonObject = "{";
+            jsonObject += "\"nu_tran_stdo\":\"0\",";
+            jsonObject += "\"nu_tran_pkey\":\"0\",";
+            jsonObject += "\"vc_tran_codi\":\"" + ex.GetType() + "\",";
+            jsonObject += "\"tx_tran_mnsg\":\"" + ex.Message + "\",";
+            jsonObject = jsonObject.Substring(0, jsonObject.Length - 1) + "}";
+
+            return JsonConvert.DeserializeObject<object>(jsonObject);
+        }
+
     }
 }

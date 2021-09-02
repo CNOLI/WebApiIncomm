@@ -60,7 +60,7 @@ namespace wa_api_incomm.Services
                 {
                     tran_sql.Rollback();
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("00", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                 }
 
                 var id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -88,7 +88,7 @@ namespace wa_api_incomm.Services
                 if (!Regex.Match(input.id_producto, @"(^[0-9]+$)").Success)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto " + input.id_producto + " debe ser numerico");
-                    return UtilSql.sOutPutTransaccion("03", "El id del producto debe ser numerico");
+                    return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico");
                 }
 
 
@@ -98,7 +98,7 @@ namespace wa_api_incomm.Services
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + input.codigo_distribuidor + " no existe");
-                    return UtilSql.sOutPutTransaccion("04", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
                 ComercioModel comercio =  get_comercio(con_sql, input.codigo_comercio, input.nombe_comercio, distribuidor.nu_id_distribuidor);
@@ -108,7 +108,7 @@ namespace wa_api_incomm.Services
                 if (producto.nu_id_producto <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + input.id_producto + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
+                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
                 }
 
                 ConvenioModel convenio = get_convenio(con_sql, 1);
@@ -176,7 +176,7 @@ namespace wa_api_incomm.Services
                     {
                         tran_sql.Rollback();
                         _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                        return UtilSql.sOutPutTransaccion("00", "Error en base de datos");
+                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                     }
 
 
@@ -246,7 +246,7 @@ namespace wa_api_incomm.Services
                     {
                         tran_sql.Rollback();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
-                        return UtilSql.sOutPutTransaccion("00", "Error en base de datos");
+                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                     }
 
                     tran_sql.Commit();

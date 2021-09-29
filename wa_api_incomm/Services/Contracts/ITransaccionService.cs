@@ -9,5 +9,6 @@ namespace wa_api_incomm.Services.Contracts
     public interface ITransaccionService
     {
         object execute_trans(string conexion, InputTransModel input);
+        object pr_sms(string conexion, string nro_telefono);
     }
 }

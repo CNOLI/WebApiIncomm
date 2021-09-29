@@ -53,5 +53,19 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
             }
         }
+
+
+        [HttpPost("prSms")]
+        public IActionResult prSms([FromQuery] string nroCelular)
+        {
+            try
+            {
+                return this.Ok(_ITransaccionService.pr_sms(Configuration.GetSection("SQL").Value, nroCelular));
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
+            }
+        }
     }
 }

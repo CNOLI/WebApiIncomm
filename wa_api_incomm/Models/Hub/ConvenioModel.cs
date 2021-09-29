@@ -32,7 +32,11 @@ namespace wa_api_incomm.Models.Hub
 		public bool		bi_ssl_email				{ get; set; }
 		public string	vc_url_api_aes				{ get; set; }
 		public string	vc_clave_aes				{ get; set; }
-			
+		public string	vc_nro_telefono_tran_incomm { get; set; }
+		public string	vc_nro_complete_incomm		{ get; set; }
+		
+
+
 
 	}
 }

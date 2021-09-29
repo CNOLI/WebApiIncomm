@@ -47,7 +47,7 @@ namespace wa_api_incomm
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Auth HUB", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API HUB", Version = "v1" });
             });
 
         }
@@ -64,7 +64,7 @@ namespace wa_api_incomm
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Two V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
             });
 
             app.UseHttpsRedirection();

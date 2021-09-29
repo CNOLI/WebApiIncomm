@@ -125,7 +125,22 @@ namespace wa_api_incomm.Services
                 tim.issueDate = fechatran.ToString("yyyyMMddHHmmss.mss");
 
                 tim.issuerId = distribuidor.vc_cod_distribuidor;
-                tim.phoneNumber = input.nro_telefono.Substring(3);
+
+                if (input.id_opcion_telefono == "0")
+                {
+                    tim.phoneNumber = input.nro_telefono.Substring(3);
+                }
+                else if (input.id_opcion_telefono == "1")
+                {
+                    tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
+                }
+                else 
+                {
+                    tim.phoneNumber = convenio.vc_nro_telefono_tran_incomm;
+                }
+                
+
+
                 tim.source = convenio.vc_source_body;
                 tim.ip = convenio.vc_nro_ip;
                 tim.amount = producto.nu_valor_facial.ToString();
@@ -272,6 +287,29 @@ namespace wa_api_incomm.Services
             }
         }
 
+
+        public object pr_sms(string conexion, string nro_telefono)
+        {
+            SqlConnection con_sql = null;
+            try
+            {
+                con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+
+                ConvenioModel convenio = get_convenio(con_sql, 1);
+                var id_trans_global = "0";
+
+                var mensajetxt = "felicitaciones. tu pin esta listo para ser redimido, el codigo es:. terminos y condiciones en " + convenio.vc_url_web_terminos;
+                SendMessage(mensajetxt, nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
         private async Task SendMessage(string mensaje,string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
         {
             try
@@ -287,7 +325,7 @@ namespace wa_api_incomm.Services
                     PhoneNumber = numero
                 };
 
-                client.PublishAsync(request);
+                await client.PublishAsync(request);
             }
             catch (Exception ex)
             {
@@ -484,7 +522,7 @@ namespace wa_api_incomm.Services
                         _result.vc_merchant_id = dr["vc_merchant_id"].ToString();
                     if (UtilSql.Ec(dr, "vc_pos_id"))
                         _result.vc_pos_id = dr["vc_pos_id"].ToString();
-                    if (UtilSql.Ec(dr, "vc_clave_encrip_aut"))
+                    if (UtilSql.Ec(dr, "vc_source_header"))
                         _result.vc_source_header = dr["vc_source_header"].ToString();
                     if (UtilSql.Ec(dr, "vc_source_body"))
                         _result.vc_source_body = dr["vc_source_body"].ToString();
@@ -517,8 +555,13 @@ namespace wa_api_incomm.Services
                         _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
                     if (UtilSql.Ec(dr, "vc_nro_ip"))
                         _result.vc_nro_ip = dr["vc_nro_ip"].ToString();
-
+                    if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
+                        _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
+                        _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
                     
+
+
                 }
             }
             return _result;

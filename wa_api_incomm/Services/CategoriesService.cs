@@ -235,7 +235,7 @@ namespace wa_api_incomm.Services
                         model.vc_merchant_id = dr["vc_merchant_id"].ToString();
                     if (UtilSql.Ec(dr, "vc_pos_id"))
                         model.vc_pos_id = dr["vc_pos_id"].ToString();
-                    if (UtilSql.Ec(dr, "vc_clave_encrip_aut"))
+                    if (UtilSql.Ec(dr, "vc_source_header"))
                         model.vc_source_header = dr["vc_source_header"].ToString();
                     if (UtilSql.Ec(dr, "vc_source_body"))
                         model.vc_source_body = dr["vc_source_body"].ToString();

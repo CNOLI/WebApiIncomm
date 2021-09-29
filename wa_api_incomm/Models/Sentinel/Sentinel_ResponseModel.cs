@@ -42,6 +42,25 @@ namespace wa_api_incomm.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string fecha { get; set; }
 
+        //Persona
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string nombres { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string apellido_paterno { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string apellido_materno { get; set; }
+
+        //Respuesta general
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? nu_tran_stdo { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? nu_tran_pkey { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string vc_tran_codi { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string tx_tran_mnsg { get; set; }
+
     }
 }
     

@@ -41,6 +41,7 @@ namespace wa_api_incomm.Models
         public string ApellidoMaterno { get; set; }
         public string Nombres { get; set; }
         public string CodigoWS { get; set; }
+        public string MensajeWS { get; set; }
     }
 
     public class ConsultaTitular : ConsultaPersona

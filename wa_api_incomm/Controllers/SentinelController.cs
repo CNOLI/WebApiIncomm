@@ -31,25 +31,25 @@ namespace wa_api_incomm.Controllers
             Configuration = builder.Build();
         }
 
-        [HttpPost("sel_banco")]
-        public IActionResult sel_banco([FromBody]Sentinel_InputModel.Busqueda model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_ISentinelService.sel_banco(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("sel_tipo_documento_identidad")]
+        //[HttpPost("sel_banco")]
+        //public IActionResult sel_banco([FromBody]Sentinel_InputModel.Busqueda model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_ISentinelService.sel_banco(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        [HttpPost("TipDocIdentidad")]
         public IActionResult sel_tipo_documento_identidad([FromBody]Sentinel_InputModel.Busqueda model)
         {
             if (!this.ModelState.IsValid)
@@ -67,7 +67,7 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("sel_producto")]
+        [HttpPost("Producto")]
         public IActionResult sel_producto([FromBody]Sentinel_InputModel.Busqueda model)
         {
             if (!this.ModelState.IsValid)
@@ -85,62 +85,62 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("get_precio_producto")]
-        public IActionResult get_precio_producto([FromBody]Sentinel_InputModel.Get_Producto model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_ISentinelService.get_precio_producto(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("get_saldo_distribuidor")]
-        public IActionResult get_saldo_distribuidor([FromBody]Sentinel_InputModel.Get_Distribuidor model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_ISentinelService.get_saldo_distribuidor(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("sel_transaccion")]
-        public IActionResult sel_transaccion([FromBody]Sentinel_InputModel.Sel_Transaccion model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_ISentinelService.sel_transaccion(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("get_validar_titular")]
-        public IActionResult generar([FromBody]Sentinel_InputModel.Solicitante model)
+        //[HttpPost("get_precio_producto")]
+        //public IActionResult get_precio_producto([FromBody]Sentinel_InputModel.Get_Producto model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_ISentinelService.get_precio_producto(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        //[HttpPost("get_saldo_distribuidor")]
+        //public IActionResult get_saldo_distribuidor([FromBody]Sentinel_InputModel.Get_Distribuidor model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_ISentinelService.get_saldo_distribuidor(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        //[HttpPost("sel_transaccion")]
+        //public IActionResult sel_transaccion([FromBody]Sentinel_InputModel.Sel_Transaccion model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_ISentinelService.sel_transaccion(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        [HttpPost("ValidarTitular")]
+        public IActionResult get_validar_titular([FromBody]Sentinel_InputModel.Consultado model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -158,7 +158,7 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("ins_transaccion")]
+        [HttpPost("RegistrarSolicitudReporte")]
         public IActionResult ins_transaccion([FromBody]Sentinel_InputModel.Ins_Transaccion model)
         {
             if (!this.ModelState.IsValid)

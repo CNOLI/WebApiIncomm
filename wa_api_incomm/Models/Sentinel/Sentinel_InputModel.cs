@@ -7,10 +7,10 @@ namespace wa_api_incomm.Models
 {
     public class Sentinel_InputModel
     {
-        public class Solicitante
+        public class Consultado
         {
-            public string cod_tip_doc_solicitante { get; set; }
-            public string nro_doc_solicitante { get; set; }
+            public string cod_tip_doc_consultado { get; set; }
+            public string nro_doc_consultado { get; set; }
         }
         public class Sel_Transaccion
         {

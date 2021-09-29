@@ -21,7 +21,7 @@ namespace wa_api_incomm.Middleware
 
             services.AddSingleton<ISentinelService, SentinelService>();
 
-
+            services.AddSingleton<IBanBifService, BanBifService>();
 
             return services;
         }

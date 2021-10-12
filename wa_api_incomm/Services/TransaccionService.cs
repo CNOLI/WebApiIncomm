@@ -126,19 +126,21 @@ namespace wa_api_incomm.Services
 
                 tim.issuerId = distribuidor.vc_cod_distribuidor;
 
-                if (input.id_opcion_telefono == "0")
-                {
-                    tim.phoneNumber = input.nro_telefono.Substring(3);
-                }
-                else if (input.id_opcion_telefono == "1")
-                {
-                    tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
-                }
-                else 
-                {
-                    tim.phoneNumber = convenio.vc_nro_telefono_tran_incomm;
-                }
-                
+                //if (input.id_opcion_telefono == "0")
+                //{
+                //    tim.phoneNumber = input.nro_telefono.Substring(3);
+                //}
+                //else if (input.id_opcion_telefono == "1")
+                //{
+                //    tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
+                //}
+                //else 
+                //{
+                //    tim.phoneNumber = convenio.vc_nro_telefono_tran_incomm;
+                //}
+
+                tim.phoneNumber = input.nro_telefono.Substring(3);
+
 
 
                 tim.source = convenio.vc_source_body;
@@ -220,7 +222,18 @@ namespace wa_api_incomm.Services
 
                     tran_sql.Commit();
                     _logger.Information("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + "Transaccion incomm exitosa " + idtran + " " + result.transactionId);
-                    return UtilSql.sOutPutTransaccion("00", "OK");
+
+                    object info = new object();
+
+                    info = new
+                    {
+                        codigo = "00",
+                        mensaje = "OK",
+                        nro_transaccion = id_trans_global
+                    };
+                   
+
+                    return info;
 
                 }
                 else 
@@ -317,12 +330,13 @@ namespace wa_api_incomm.Services
                 AmazonSimpleNotificationServiceClient client =
                        new AmazonSimpleNotificationServiceClient(vc_aws_access_key_id,
                                                                    vc_aws_secrect_access_key,
-                                                                   Amazon.RegionEndpoint.SAEast1);
+                                                                   Amazon.RegionEndpoint.USEast1);
 
                 var request = new PublishRequest
                 {
                     Message = mensaje,
                     PhoneNumber = numero
+
                 };
 
                 await client.PublishAsync(request);
@@ -555,10 +569,10 @@ namespace wa_api_incomm.Services
                         _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
                     if (UtilSql.Ec(dr, "vc_nro_ip"))
                         _result.vc_nro_ip = dr["vc_nro_ip"].ToString();
-                    if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
-                        _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
-                    if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
-                        _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
+                    //if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
+                    //    _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
+                    //if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
+                    //    _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
                     
 
 

@@ -104,7 +104,7 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
-        public async Task<Response> get_empresa_rubros(RubroModel model)
+        public async Task<Response> get_empresa_rubros(RubroModel.Rubro_Input model)
         {
             Response Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
@@ -143,7 +143,7 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
-        public async Task<Response> get_lista_convenio(EmpresaModel model)
+        public async Task<Response> get_lista_convenio(EmpresaModel.Empresa_Input model)
         {
             Response Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
@@ -164,7 +164,7 @@ namespace wa_api_incomm.ApiRest
                 string parametros = "";
                 parametros += "?codigoEmpresa=" + model.vc_cod_empresa;
                 parametros += "&codigoRecaudador=" + codigoRecaudador;
-                parametros += "&codigoProducto=" + "S"; // Preguntar a que se refiere
+                parametros += "&codigoProducto=" + "1"; // Preguntar a que se refiere
 
                 response = await api.GetAsync("api-recaudaciones/v1/convenios" + parametros);
 
@@ -184,9 +184,9 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
-        public async Task<Response> get_convenio(ConvenioModel model)
+        public async Task<Response.E_Response> get_convenio(ConvenioModel.Convenio_Input model)
         {
-            Response Result = null;
+            Response.E_Response Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
@@ -207,7 +207,7 @@ namespace wa_api_incomm.ApiRest
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Result = JsonConvert.DeserializeObject<Response>(await response.Content.ReadAsStringAsync());
+                    Result = JsonConvert.DeserializeObject<Response.E_Response>(await response.Content.ReadAsStringAsync());
                 }
                 else
                 {
@@ -221,5 +221,79 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
+        public async Task<Response.Ls_Response_Trx> get_consultar_deudas(DeudaModel.Deuda_Input model)
+        {
+            Response.Ls_Response_Trx Result = null;
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
+            {
+                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
+                String codigoRecaudador = config.GetSection("BanBifInfo:codigoRecaudador").Value;
+
+                if (model.vc_cod_convenio is null)
+                {
+                    throw new Exception("Debe ingresar un codigo de convenio.");
+                }
+
+                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
+
+                string parametros = "";
+                parametros += "?codigoRecaudador=" + codigoRecaudador;
+                parametros += "&fechaHora=" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                parametros += "&idServicio=" + model.nu_id_servicio;
+                parametros += "&idTransaccionOrigen=" + string.Concat(DateTime.Now.ToString("yyyyMMddHHmmss"), new Random().Next(1, 9).ToString("D1"));
+
+                response = await api.GetAsync("api-recaudaciones/v1/convenios/"+ model.vc_cod_convenio + "/deudas" + parametros);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
+                //throw new Exception(ex.Message + ". get_convenio " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return Result;
+        }
+        public async Task<Response.E_Response_Trx> post_procesar_pago(PagoModel model,string idTransaccionOrigen)
+        {
+            Response.E_Response_Trx Result = null;
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
+            {
+                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
+                
+                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
+
+                string parametros = "";
+                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen;
+
+                var json = JsonConvert.SerializeObject(model);
+                var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
+
+                response = await api.PostAsync("/api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                //throw new Exception(ex.Message + ". get_convenio " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return Result;
+        }
     }
 }

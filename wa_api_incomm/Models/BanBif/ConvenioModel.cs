@@ -6,23 +6,18 @@ using System.Threading.Tasks;
 
 namespace wa_api_incomm.Models.BanBif
 {
-    public class ConvenioModel
+    public class ConvenioModel : EntidadBase
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string vc_cod_convenio { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string vc_desc_convenio { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public EmpresaModel e_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public ProductoModel e_producto { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<CanalModel> ls_canal { get; set; }
-        public ConvenioModel()
+        public string vc_cod_empresa { get; set; }
+        public string vc_nro_doc_empresa { get; set; }
+        public string vc_nombre_empresa { get; set; }
+        public string vc_cod_producto { get; set; }
+        public bool? bi_estado { get; set; }
+        public class Convenio_Input
         {
-            this.e_empresa = new EmpresaModel();
-            this.e_producto = new ProductoModel();
-            this.ls_canal = new List<CanalModel>();
+            public string vc_cod_convenio { get; set; }
         }
     }
 }

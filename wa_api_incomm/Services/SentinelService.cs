@@ -415,6 +415,9 @@ namespace wa_api_incomm.Services
                     model.vc_nro_doc_cpt        = input.nro_doc_consultado;
                     model.vc_cod_producto       = input.cod_producto;
                     model.vc_ruc                = input.nro_ruc;
+                    model.PDVTipoDoc            = input.PDVTipoDoc;
+                    model.PDVNroDoc             = input.PDVNroDoc;
+                    model.PDVRazSocNom          = input.PDVRazSocNom;
 
                     //encriptar el usuario
                     encripta = new Encripta();

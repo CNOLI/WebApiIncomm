@@ -70,7 +70,7 @@ namespace wa_api_incomm.ApiRest
                 api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
 
-                response = await api.PostAsync("rest/RWS_Tda_SolConTitMasFac", httpContent).ConfigureAwait(false);
+                response = await api.PostAsync("rest/RWS_Tda_SolConTitMasFacV2", httpContent).ConfigureAwait(false);
 
                 result = JsonConvert.DeserializeObject<ConsultaTitularRest>(await response.Content.ReadAsStringAsync());
             }

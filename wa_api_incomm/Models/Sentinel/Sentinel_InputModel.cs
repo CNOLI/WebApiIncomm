@@ -37,6 +37,9 @@ namespace wa_api_incomm.Models
 
             public string tip_doc_facturacion { get; set; }  // FAC ;  BOL
             public string nro_ruc { get; set; }
+            public string PDVTipoDoc { get; set; }
+            public string PDVNroDoc { get; set; }
+            public string PDVRazSocNom { get; set; }
 
 
             //----------------------------------------

@@ -29,7 +29,7 @@ namespace wa_api_incomm.Models.Hub
         [Required(AllowEmptyStrings = false, ErrorMessage = "El {0} es obligatorio")]
         //[RegularExpression("(^[0-9]+$)", ErrorMessage = "El {0} solo permite digitos")]
         public string id_producto { get; set; }
-        public string id_opcion_telefono { get; set; }
+        //public string id_opcion_telefono { get; set; }
 
     }
 }

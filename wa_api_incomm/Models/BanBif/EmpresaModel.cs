@@ -6,26 +6,19 @@ using System.Threading.Tasks;
 
 namespace wa_api_incomm.Models.BanBif
 {
-    public class EmpresaModel
+    public class EmpresaModel : EntidadBase
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string vc_cod_rubro { get; set; }
+        public string vc_desc_rubro { get; set; }
         public string vc_cod_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string vc_nro_doc_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string vc_nombre_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string vc_razon_social_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string vc_estado_empresa { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<RubroModel> ls_rubro { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<CanalModel> ls_canal { get; set; }
-        public EmpresaModel()
+        public string vc_nro_doc_identidad { get; set; }
+        public string vc_nombre { get; set; }
+        public string vc_razon_social { get; set; }
+        public decimal? nu_id_convenio { get; set; }
+        public bool? bi_estado { get; set; }
+        public class Empresa_Input
         {
-            this.ls_rubro = new List<RubroModel>();
-            this.ls_canal = new List<CanalModel>();
+            public string vc_cod_empresa { get; set; }
         }
     }
 }

@@ -39,6 +39,9 @@ namespace wa_api_incomm.Models.Hub
         public string vc_nro_doc_cpt        { get; set; }
         public string vc_cod_producto       { get; set; }
         public string vc_ruc                { get; set; }
+        public string PDVTipoDoc            { get; set; }
+        public string PDVNroDoc             { get; set; }
+        public string PDVRazSocNom          { get; set; }
 
 
     }

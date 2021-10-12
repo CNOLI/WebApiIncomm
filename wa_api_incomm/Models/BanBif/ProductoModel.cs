@@ -8,9 +8,7 @@ namespace wa_api_incomm.Models.BanBif
 {
     public class ProductoModel
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string vc_cod_producto { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string vc_desc_producto { get; set; }
     }
 }

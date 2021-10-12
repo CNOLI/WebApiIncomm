@@ -62,6 +62,9 @@ namespace wa_api_incomm.Models
         public string TipoDocComprobante { get; set; }
         public string NroDocumentoFAC { get; set; }
         public string ReferenceCode { get; set; }
+        public string PDVTipoDoc { get; set; }
+        public string PDVNroDoc { get; set; }
+        public string PDVRazSocNom { get; set; }
     }
 
     public class ConsultaTitularDet

@@ -11,7 +11,7 @@ using wa_api_incomm.Services.Contracts;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("Sentinel")]
     [ApiController]
     public class SentinelController : ControllerBase
     {

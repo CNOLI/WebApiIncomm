@@ -12,7 +12,7 @@ using wa_api_incomm.Services.Contracts;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("[controller]")]
+    [Route("BanBif")]
     [ApiController]
     public class BanBifController : ControllerBase
     {
@@ -32,7 +32,7 @@ namespace wa_api_incomm.Controllers
             Configuration = builder.Build();
         }
 
-        [HttpPost("sel_rubro_recaudador")]
+        [HttpPost("get_datos_banbif")]
         public IActionResult sel_rubro_recaudador()
         {
             if (!this.ModelState.IsValid)
@@ -43,15 +43,87 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IBanBifService.sel_rubro_recaudador(Configuration.GetSection("SQL").Value));
+                return this.Ok(_IBanBifService.get_datos_banbif(Configuration.GetSection("SQL").Value));
             }
             catch (Exception ex)
             {
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("sel_empresa_rubros")]
-        public IActionResult sel_empresa_rubros([FromBody]RubroModel model)
+        //[HttpPost("sel_rubro_recaudador")]
+        //public IActionResult sel_rubro_recaudador()
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_IBanBifService.sel_banbif_rubro_recaudador(Configuration.GetSection("SQL").Value));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        //[HttpPost("sel_empresa_rubros")]
+        //public IActionResult sel_empresa_rubros([FromBody]RubroModel.Rubro_Input model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_IBanBifService.sel_banbif_empresa_rubros(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        //[HttpPost("sel_convenio")]
+        //public IActionResult sel_convenio([FromBody]EmpresaModel.Empresa_Input model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_IBanBifService.sel_banbif_convenio(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        //[HttpPost("get_convenio")]
+        //public IActionResult get_convenio([FromBody]ConvenioModel.Convenio_Input model)
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(this.ModelState);
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_IBanBifService.get_banbif_convenio(Configuration.GetSection("SQL").Value, model));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
+        [HttpPost("get_deuda")]
+        public IActionResult get_deuda([FromBody]DeudaModel.Deuda_Input model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -61,15 +133,15 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IBanBifService.sel_empresa_rubros(Configuration.GetSection("SQL").Value, model));
+                return this.Ok(_IBanBifService.get_deuda(Configuration.GetSection("SQL").Value, model));
             }
             catch (Exception ex)
             {
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("sel_convenio")]
-        public IActionResult sel_convenio([FromBody]EmpresaModel model)
+        [HttpPost("post_pago")]
+        public IActionResult post_pago([FromBody]PagoModel.Pago_Input model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -79,25 +151,7 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IBanBifService.sel_convenio(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("get_convenio")]
-        public IActionResult get_convenio([FromBody]ConvenioModel model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_IBanBifService.get_convenio(Configuration.GetSection("SQL").Value, model));
+                return this.Ok(_IBanBifService.post_pago(Configuration.GetSection("SQL").Value, model));
             }
             catch (Exception ex)
             {

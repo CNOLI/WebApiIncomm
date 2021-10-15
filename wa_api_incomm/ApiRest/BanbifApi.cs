@@ -279,6 +279,7 @@ namespace wa_api_incomm.ApiRest
 
                 response = await api.PostAsync("/api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
 
+                var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
                 {
                     Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());

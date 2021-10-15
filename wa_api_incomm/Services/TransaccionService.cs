@@ -50,7 +50,7 @@ namespace wa_api_incomm.Services
                 TrxHubModel trx = new TrxHubModel();
                 trx.codigo_distribuidor = input.codigo_distribuidor;
                 trx.codigo_comercio = input.codigo_comercio;
-                trx.nombe_comercio = input.nombe_comercio;
+                trx.nombre_comercio = input.nombre_comercio;
                 trx.nro_telefono = input.nro_telefono;
                 trx.email = input.email;
                 trx.id_producto = input.id_producto;
@@ -101,7 +101,7 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
-                ComercioModel comercio =  get_comercio(con_sql, input.codigo_comercio, input.nombe_comercio, distribuidor.nu_id_distribuidor);
+                ComercioModel comercio =  get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
 
                 ProductoModel producto = get_producto(con_sql, Convert.ToInt32(input.id_producto),distribuidor.nu_id_distribuidor);
 
@@ -381,7 +381,7 @@ namespace wa_api_incomm.Services
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
                 cmd.Parameters.AddWithValue("@vc_cod_comercio", model.codigo_comercio);
-                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombe_comercio);
+                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombre_comercio);
                 cmd.Parameters.AddWithValue("@vc_nro_telefono", model.nro_telefono);
                 cmd.Parameters.AddWithValue("@vc_email", model.email);
                 cmd.Parameters.AddWithValue("@vc_id_producto", model.id_producto);

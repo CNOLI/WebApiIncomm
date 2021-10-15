@@ -15,7 +15,7 @@ namespace wa_api_incomm.Models.Hub
         public string codigo_comercio { get; set; }
 
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-        public string nombe_comercio { get; set; }
+        public string nombre_comercio { get; set; }
 
         [Required(AllowEmptyStrings = false, ErrorMessage = "El {0} es obligatorio")]
         //[RegularExpression("(^[0-9]+$)", ErrorMessage = "El {0} solo permite 9 digitos")]

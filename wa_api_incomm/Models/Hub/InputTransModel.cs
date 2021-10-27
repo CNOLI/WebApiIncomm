@@ -30,6 +30,8 @@ namespace wa_api_incomm.Models.Hub
         //[RegularExpression("(^[0-9]+$)", ErrorMessage = "El {0} solo permite digitos")]
         public string id_producto { get; set; }
         //public string id_opcion_telefono { get; set; }
+        public string clave { get; set; }
+        public string fecha_envio { get; set; }
 
     }
 }

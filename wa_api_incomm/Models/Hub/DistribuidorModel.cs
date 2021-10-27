@@ -11,6 +11,7 @@ namespace wa_api_incomm.Models.Hub
         public string   vc_cod_distribuidor { get; set; }
         public string   vc_zip_code         { get; set; }
         public decimal? nu_saldo            { get; set; }
+        public bool     bi_valor_pin        { get; set; }
 
     }
 }

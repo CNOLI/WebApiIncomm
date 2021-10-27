@@ -6,9 +6,11 @@ using Amazon.SimpleNotificationService;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using wa_api_incomm.Help;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.Hub;
 using wa_api_incomm.Services.Contracts;
+using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
@@ -35,18 +37,27 @@ namespace wa_api_incomm.Controllers
         [HttpPost("generar")]
         public IActionResult generar([FromBody]InputTransModel model)
         {
-
-
             if (!this.ModelState.IsValid)
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
 
                 _logger.Error(allErrors.First());
                 return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos"));
-            }                
+            }
             try
-            {
-                return this.Ok(_ITransaccionService.execute_trans(Configuration.GetSection("SQL").Value, model));
+            {           
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else 
+                {
+
+                    return this.Ok(_ITransaccionService.execute_trans(Configuration.GetSection("SQL").Value, model));
+                }
+
             }
             catch (Exception ex)
             {

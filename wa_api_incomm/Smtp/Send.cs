@@ -74,7 +74,7 @@ namespace wa_api_incomm.Smtp
 
 
 
-        public string GetBody(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb)
+        public string GetBody(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
 
@@ -243,9 +243,14 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
             bodyRegistrer += "<td align='left' style='Margin:0;padding-left:10px;padding-right:10px;padding-top:15px;padding-bottom:15px'>";
             bodyRegistrer += "<table style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:500px' class='cke_show_border' cellspacing='1' cellpadding='1' border='0' align='left' role='presentation'>";
-            bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\"><b>Valor total: " + total+"</b></p></td>";
-            bodyRegistrer += "</tr>";
+
+            if (bi_valor)
+            {
+                bodyRegistrer += "<tr style='border-collapse:collapse'>";//
+                bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\"><b>Valor total: " + total + "</b></p></td>";
+                bodyRegistrer += "</tr>";//
+            }
+
             bodyRegistrer += "</table>";
             bodyRegistrer += "</td>";
             bodyRegistrer += "</tr>";

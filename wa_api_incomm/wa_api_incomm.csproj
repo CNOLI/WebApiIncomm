@@ -17,4 +17,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.3.3" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Hub_Encrypt">
+      <HintPath>bin\Debug\netcoreapp3.1\Hub_Encrypt.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

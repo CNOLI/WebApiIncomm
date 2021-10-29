@@ -71,17 +71,36 @@ namespace wa_api_incomm.Services
 
                 _logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
 
-                if (!new PhoneAttribute().IsValid(input.nro_telefono))
+                bool bi_envio_sms_firts = true;
+                bool bi_envio_email_firts = true;
+
+                if (input.nro_telefono == "")
                 {
-                    _logger.Error("idtrx: "+id_trx_hub+" / "+"El número de telefono " + input.nro_telefono + " es incorrecto");
-                    return UtilSql.sOutPutTransaccion("02", "El número de telefono es incorrecto");
+                    bi_envio_sms_firts = false;
+                }
+
+                if (input.email == "")
+                {
+                    bi_envio_email_firts = false;
                 }
 
 
-                if (!new EmailAddressAttribute().IsValid(input.email))
+                if (bi_envio_sms_firts)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El email " +input.email+" es incorrecto");
-                    return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
+                    if (!new PhoneAttribute().IsValid(input.nro_telefono))
+                    {
+                        _logger.Error("idtrx: " + id_trx_hub + " / " + "El número de telefono " + input.nro_telefono + " es incorrecto");
+                        return UtilSql.sOutPutTransaccion("02", "El número de telefono es incorrecto");
+                    }
+                }
+
+                if (bi_envio_email_firts)
+                {
+                    if (!new EmailAddressAttribute().IsValid(input.email))
+                    {
+                        _logger.Error("idtrx: " + id_trx_hub + " / " + "El email " + input.email + " es incorrecto");
+                        return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
+                    }
                 }
 
 
@@ -134,12 +153,26 @@ namespace wa_api_incomm.Services
                 //{
                 //    tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
                 //}
-                //else 
+                //else
                 //{
                 //    tim.phoneNumber = convenio.vc_nro_telefono_tran_incomm;
                 //}
 
-                tim.phoneNumber = input.nro_telefono.Substring(3);
+                //tim.phoneNumber = input.nro_telefono.Substring(3);
+
+                if (!bi_envio_email_firts)
+                {
+                    input.nro_telefono = convenio.vc_celular_def;
+                }
+
+                if (!bi_envio_email_firts)
+                {
+                    input.email = convenio.vc_email_def;
+                }
+
+
+                tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
+                tim.email = input.email;
 
 
 
@@ -147,7 +180,6 @@ namespace wa_api_incomm.Services
                 tim.ip = convenio.vc_nro_ip;
                 tim.amount = producto.nu_valor_facial.ToString();
                 tim.issuerLogin = comercio.vc_cod_comercio;
-                tim.email = input.email;
                 tim.eanCode = producto.vc_cod_ean;
                 tim.zipCode = distribuidor.vc_zip_code;
                 tim.channel = "API";
@@ -178,7 +210,7 @@ namespace wa_api_incomm.Services
                     tm.nu_id_comercio = comercio.nu_id_comercio;
                     tm.dt_fecha = fechatran;
                     tm.nu_id_producto = producto.nu_id_producto;
-                    tm.nu_precio = Math.Round(Convert.ToDecimal(result.amount)/1000,3);
+                    tm.nu_precio = Math.Round(Convert.ToDecimal(result.amount),3);
                     tm.vc_id_ref_trx = result.transactionId;
 
                     tm.vc_cod_autorizacion = result.authorizationCode;
@@ -204,21 +236,31 @@ namespace wa_api_incomm.Services
                     dpm.pin = result.pin;
                     var _rpin = _aesapi.GetPin(dpm).Result;
 
-                    if (producto.bi_envio_sms)
-                    {
-                        //emvio de mensaje
-                        var mensajetxt = "felicitaciones. tu pin esta listo para ser redimido, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
-                        SendMessage(mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
-                    }
 
-                    if (producto.bi_envio_email)
+
+                    if (bi_envio_sms_firts)
                     {
-                        //envio de correo
-                        var body = _send.GetBody(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos);
-                        var titulo = "Confirmación de transacción #" + result.transactionId;
-                        _send.Email(id_trans_global, input.email, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
+                        if (producto.bi_envio_sms)
+                        {
+                            //emvio de mensaje
+                            var mensajetxt = "felicitaciones. tu pin esta listo para ser redimido, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
+                            SendMessage(mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
+                        }
 
                     }
+                    if (bi_envio_email_firts)
+                    {
+                        if (producto.bi_envio_email)
+                        {
+                            //envio de correo
+                            var body = _send.GetBody(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+                            var titulo = "Confirmación de transacción #" + result.transactionId;
+                            _send.Email(id_trans_global, input.email, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
+                        }
+
+                    }
+
+
 
                     tran_sql.Commit();
                     _logger.Information("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + "Transaccion incomm exitosa " + idtran + " " + result.transactionId);
@@ -443,6 +485,8 @@ namespace wa_api_incomm.Services
                         model.vc_cod_distribuidor = dr["vc_cod_distribuidor"].ToString();
                     if (UtilSql.Ec(dr, "vc_zip_code"))
                         model.vc_zip_code = dr["vc_zip_code"].ToString();
+                    if (UtilSql.Ec(dr, "bi_valor_pin"))
+                        model.bi_valor_pin = dr["bi_valor_pin"].ToBool();
                 }
             }
             return model;
@@ -569,12 +613,16 @@ namespace wa_api_incomm.Services
                         _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
                     if (UtilSql.Ec(dr, "vc_nro_ip"))
                         _result.vc_nro_ip = dr["vc_nro_ip"].ToString();
-                    //if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
-                    //    _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
-                    //if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
-                    //    _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
-                    
+                    if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
+                        _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
+                        _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
 
+
+                    if (UtilSql.Ec(dr, "vc_celular_def"))
+                        _result.vc_celular_def = dr["vc_celular_def"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_def"))
+                        _result.vc_email_def = dr["vc_email_def"].ToString();
 
                 }
             }

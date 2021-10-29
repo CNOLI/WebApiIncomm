@@ -34,8 +34,10 @@ namespace wa_api_incomm.Models.Hub
 		public string	vc_clave_aes				{ get; set; }
 		public string	vc_nro_telefono_tran_incomm { get; set; }
 		public string	vc_nro_complete_incomm		{ get; set; }
-		
+		public string	vc_celular_def				{ get; set; }
+		public string	vc_email_def				{ get; set; }
 
+		
 
 
 	}

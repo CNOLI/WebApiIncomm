@@ -9,8 +9,8 @@ namespace wa_api_incomm.Models
     {
         public class Consultado
         {
-            public string cod_tip_doc_consultado { get; set; }
-            public string nro_doc_consultado { get; set; }
+            public string tipo_documento_consultado { get; set; }
+            public string numero_documento_consultado { get; set; }
         }
         public class Sel_Transaccion
         {
@@ -21,25 +21,26 @@ namespace wa_api_incomm.Models
         }
         public class Ins_Transaccion
         {
-            public string cod_distribuidor { get; set; }
-            public string cod_comercio { get; set; }
+            public string codigo_distribuidor { get; set; }
+            public string codigo_comercio { get; set; }
+            public string nombre_comercio { get; set; }
 
-            public string cod_producto { get; set; }
+            public string id_producto { get; set; }
 
-            public string cod_tip_doc_solicitante { get; set; }
-            public string nro_doc_solicitante { get; set; }
-            public string dig_ver_solicitante { get; set; }
-            public string tel_solicitante { get; set; }
-            public string email_solicitante { get; set; }
+            public string tipo_documento_consultante { get; set; }
+            public string numero_documento_consultante { get; set; }
+            public string digito_verificador_consultante { get; set; }
+            public string telefono_consultante { get; set; }
+            public string email_consultante { get; set; }
 
-            public string cod_tip_doc_consultado { get; set; }
-            public string nro_doc_consultado { get; set; }
+            public string tipo_documento_consultado { get; set; }
+            public string numero_documento_consultado { get; set; }
 
-            public string tip_doc_facturacion { get; set; }  // FAC ;  BOL
-            public string nro_ruc { get; set; }
-            public string PDVTipoDoc { get; set; }
-            public string PDVNroDoc { get; set; }
-            public string PDVRazSocNom { get; set; }
+            public string tipo_documento_facturacion { get; set; }  // FAC ;  BOL
+            public string numero_ruc { get; set; }
+            public string tipo_documento_PDV { get; set; }
+            public string numero_documento_PDV { get; set; }
+            public string razon_social_PDV { get; set; }
 
 
             //----------------------------------------
@@ -62,9 +63,9 @@ namespace wa_api_incomm.Models
             //public string vc_usuario { get; set; }
 
         }
-        public class Busqueda
+        public class Busqueda_Sentinel_Input
         {
-            public string cod_distribuidor { get; set; }
+            public string codigo_distribuidor { get; set; }
             public string buscador { get; set; }
 
         }

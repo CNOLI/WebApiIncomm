@@ -86,7 +86,6 @@ namespace wa_api_incomm.Models.BanBif
             public decimal? montoTotalDestino { get; set; }
             public decimal? montoRedondeo { get; set; }
             public decimal? comisionCliente { get; set; }
-            //public E_documento documento { get; set; }
             public decimal? idConsulta { get; set; }
             public E_documento documento { get; set; }
             public E_convenio convenio { get; set; }
@@ -96,9 +95,9 @@ namespace wa_api_incomm.Models.BanBif
             public List<E_datosAdicionales> datosAdicionales { get; set; }
 
             // Procesar Pagos
-            public int fechaHora { get; set; }
+            public Int64 fechaHora { get; set; }
             public List<E_pagos> pagos { get; set; }
-            public List<E_datos> deudas { get; set; }
+            public List<E_datos_trx> deudas { get; set; }
         }
         public class E_rubros
         {

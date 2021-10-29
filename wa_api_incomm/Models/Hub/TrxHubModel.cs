@@ -12,7 +12,7 @@ namespace wa_api_incomm.Models.Hub
 
         public string codigo_comercio { get; set; }
 
-        public string nombe_comercio { get; set; }
+        public string nombre_comercio { get; set; }
         public string nro_telefono { get; set; }
         public string email { get; set; }
         public string id_producto { get; set; }

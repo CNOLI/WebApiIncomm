@@ -29,10 +29,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
-
-            api.BaseAddress = new Uri(ApiURL);
-            //client.Timeout = TimeSpan.FromSeconds(60);
-
+            
             token = GetTokenAsync(client_id, client_secret).Result;
 
 
@@ -221,12 +218,15 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
-        public async Task<Response.Ls_Response_Trx> get_consultar_deudas(DeudaModel.Deuda_Input model)
+        public async Task<Response.Ls_Response_Trx> Consultar_Deuda(DeudaModel.Deuda_Input model)
         {
             Response.Ls_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
+                api.DefaultRequestHeaders.Accept.Remove(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
                 String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
                 String codigoRecaudador = config.GetSection("BanBifInfo:codigoRecaudador").Value;
 
@@ -243,55 +243,57 @@ namespace wa_api_incomm.ApiRest
                 parametros += "&idServicio=" + model.nu_id_servicio;
                 parametros += "&idTransaccionOrigen=" + string.Concat(DateTime.Now.ToString("yyyyMMddHHmmss"), new Random().Next(1, 9).ToString("D1"));
 
-                response = await api.GetAsync("api-recaudaciones/v1/convenios/"+ model.vc_cod_convenio + "/deudas" + parametros);
+                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/convenios/" + model.vc_cod_convenio + "/deudas" + parametros);
 
+                var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
                 {
                     Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
                 }
                 else
                 {
-                    throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                    Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
+                    //throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
                 }
             }
             catch (Exception ex)
             {
-                Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
-                //throw new Exception(ex.Message + ". get_convenio " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                //Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
+                throw new Exception(ex.Message + ". Consultar_Deuda " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
         }
-        public async Task<Response.E_Response_Trx> post_procesar_pago(PagoModel model,string idTransaccionOrigen)
+        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model,string idTransaccionOrigen)
         {
             Response.E_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
-                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
-                
-                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
-
                 string parametros = "";
                 parametros += "?idTransaccionOrigen=" + idTransaccionOrigen;
 
                 var json = JsonConvert.SerializeObject(model);
-                var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
+                var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.Default, "application/json");
 
-                response = await api.PostAsync("/api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
 
+
+                response = await api.PostAsync(ApiURL + "api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
+
+                var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
                 {
                     Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
                 }
                 else
                 {
-                    throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                    //throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
                 }
             }
             catch (Exception ex)
             {
-                Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                //throw new Exception(ex.Message + ". get_convenio " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                //Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
         }

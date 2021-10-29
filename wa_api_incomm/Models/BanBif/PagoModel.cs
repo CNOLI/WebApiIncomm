@@ -81,13 +81,13 @@ namespace wa_api_incomm.Models.BanBif
         {
             public string tipoOperacion { get; set; }
             public string medioPago { get; set; }
-            //public E_documento cuentaCargo { get; set; }
+            public E_documento cuentaCargo { get; set; }
             public decimal? monto { get; set; }
             public decimal? deudaAPagar { get; set; }
-            //public E_pagos()
-            //{
-            //    this.cuentaCargo = new E_documento();
-            //}
+            public E_pagos()
+            {
+                this.cuentaCargo = new E_documento();
+            }
         }
         public class Pago_Input
         {

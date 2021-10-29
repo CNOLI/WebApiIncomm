@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using wa_api_incomm.Models;
 using wa_api_incomm.Services.Contracts;
+using static wa_api_incomm.Models.Sentinel_InputModel;
 
 namespace wa_api_incomm.Controllers
 {
@@ -49,8 +50,8 @@ namespace wa_api_incomm.Controllers
         //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
         //    }
         //}
-        [HttpPost("TipDocIdentidad")]
-        public IActionResult sel_tipo_documento_identidad([FromBody]Sentinel_InputModel.Busqueda model)
+        [HttpPost("TipoDocIdentidad")]
+        public IActionResult sel_tipo_documento_identidad([FromBody]Busqueda_Sentinel_Input model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -68,7 +69,7 @@ namespace wa_api_incomm.Controllers
             }
         }
         [HttpPost("Producto")]
-        public IActionResult sel_producto([FromBody]Sentinel_InputModel.Busqueda model)
+        public IActionResult sel_producto([FromBody]Busqueda_Sentinel_Input model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -140,7 +141,7 @@ namespace wa_api_incomm.Controllers
         //    }
         //}
         [HttpPost("ValidarTitular")]
-        public IActionResult get_validar_titular([FromBody]Sentinel_InputModel.Consultado model)
+        public IActionResult get_validar_titular([FromBody]Consultado model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -151,7 +152,7 @@ namespace wa_api_incomm.Controllers
             try
             {
                 SentinelInfo info = Configuration.GetSection("SentinelInfo").Get<SentinelInfo>();
-                return this.Ok(_ISentinelService.get_validar_titular(info, model));
+                return this.Ok(_ISentinelService.get_validar_titular(Configuration.GetSection("SQL").Value,info, model));
             }
             catch (Exception ex)
             {
@@ -159,7 +160,7 @@ namespace wa_api_incomm.Controllers
             }
         }
         [HttpPost("RegistrarSolicitudReporte")]
-        public IActionResult ins_transaccion([FromBody]Sentinel_InputModel.Ins_Transaccion model)
+        public IActionResult ins_transaccion([FromBody]Ins_Transaccion model)
         {
             if (!this.ModelState.IsValid)
             {

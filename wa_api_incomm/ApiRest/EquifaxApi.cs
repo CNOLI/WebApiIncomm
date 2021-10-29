@@ -8,7 +8,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
-using wa_api_incomm.Models.BanBif;
+using wa_api_incomm.Models.Equifax;
+using static wa_api_incomm.Models.Equifax_InputModel;
+using static wa_api_incomm.Models.Equifax_ResponseModel;
 
 namespace wa_api_incomm.ApiRest
 {
@@ -34,7 +36,7 @@ namespace wa_api_incomm.ApiRest
             token = GetTokenAsync(username, password).Result;
 
 
-            api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.access_token);
+            //api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.token);
             
         }
 
@@ -65,37 +67,33 @@ namespace wa_api_incomm.ApiRest
             }
             return accessToken;
         }
-        public async Task<Response.E_Response_Trx> Generar_Reporte(PagoModel model,string idTransaccionOrigen)
+        public async Task<Generar_Reporte_Response> Generar_Reporte(Generar_Reporte_Input model)
         {
-            Response.E_Response_Trx Result = null;
+            Generar_Reporte_Response Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
-                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
-                
-                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
 
-                string parametros = "";
-                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen;
+                api.DefaultRequestHeaders.Add("Authorization", "bearer " + token.token);
 
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
-                response = await api.PostAsync("/api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
+                response = await api.PostAsync("api/v1/sales" , httpContent).ConfigureAwait(false);
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
                 {
-                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                    Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
                 }
                 else
                 {
-                    throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                    throw new Exception("Generar_Reporte: " + response.Content.ReadAsStringAsync().Result);
                 }
             }
             catch (Exception ex)
             {
-                Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
             }
             return Result;
         }

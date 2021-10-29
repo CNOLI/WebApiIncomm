@@ -23,6 +23,10 @@ namespace wa_api_incomm.Middleware
 
             services.AddSingleton<IBanBifService, BanBifService>();
 
+            services.AddSingleton<IEquifaxService, EquifaxService>();
+
+            services.AddSingleton<IIzipayService, IzipayService>();
+
             return services;
         }
     }

@@ -1,97 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace wa_api_incomm.Models
 {
-    //public class SentinelInfo
-    //{
-    //    public string keysentinel { get; set; }
-    //    public string Gx_Key { get; set; }
-    //    public string Usuario { get; set; }
-    //    public string Contrasena { get; set; }
-    //}
+    public class EquifaxModel : EntidadBase
+    {
+        public decimal? nu_id_trx_app { get; set; }
+        public string vc_id_ref_trx { get; set; }
+        public class EquifaxInfo
+        {
+            public string username { get; set; }
+            public string password { get; set; }
+        }
 
-    //public class Encripta
-    //{
-    //    public string keysentinel { get; set; }
-    //    public string parametro { get; set; }
-    //}
+        public class GenerarReporte
+        {
 
+            public string codigo_distribuidor { get; set; }
+            public string codigo_comercio { get; set; }
+            public string nombre_comercio { get; set; }
+            public string id_producto { get; set; }
+            public string tipo_documento_consultante { get; set; }
+            public string numero_documento_consultante { get; set; }
+            public string email_consultante { get; set; }
+            public string digito_verificador_consultante { get; set; }
+            public string tipo_documento_consultado { get; set; }
+            public string numero_documento_consultado { get; set; }
 
-    //public class EncriptaRest
-    //{
-    //    public string encriptado { get; set; }
-    //    public int? coderror { get; set; }
-    //}
+        }
 
-    //public class ConsultaPersona
-    //{
-    //    public string Gx_UsuEnc { get; set; }
-    //    public string Gx_PasEnc { get; set; }
-    //    public string Gx_Key { get; set; }
-    //    public string TipoDocSol { get; set; }
-    //    public string NroDocSol { get; set; }
-    //}
+        public class ConsultarReporte
+        {
+            public string nro_transaccion { get; set; }
 
-    //public class ConsultaPersonaRest
-    //{
-    //    public string ApellidoPaterno { get; set; }
-    //    public string ApellidoMaterno { get; set; }
-    //    public string Nombres { get; set; }
-    //    public string CodigoWS { get; set; }
-    //    public string MensajeWS { get; set; }
-    //}
-
-    //public class ConsultaTitular : ConsultaPersona
-    //{
-    //    public string DigVerSol { get; set; }
-    //    public string CorreoSol { get; set; }
-    //    public string TelefSol { get; set; }
-    //    public List<ConsultaTitularDet> SDT_TitMas { get; set; }
-
-    //    public ConsultaTitular()
-    //    {
-    //        this.SDT_TitMas = new List<ConsultaTitularDet>();
-    //    }
-    //}
-
-    //public class ConsultaTitularFac : ConsultaTitular
-    //{
-    //    public string TipoDocComprobante { get; set; }
-    //    public string NroDocumentoFAC { get; set; }
-    //    public string ReferenceCode { get; set; }
-    //    public string PDVTipoDoc { get; set; }
-    //    public string PDVNroDoc { get; set; }
-    //    public string PDVRazSocNom { get; set; }
-    //}
-
-    //public class ConsultaTitularDet
-    //{
-    //    public string TipoDocCPT { get; set; }
-    //    public string NroDocCPT { get; set; }
-    //    public string TipoReporte { get; set; }
-    //    public string Pago { get; set; }
-    //}
-
-    //public class ConsultaTitularRest
-    //{
-    //    public string ID_Transaccion { get; set; }
-    //    public string CodigoWS { get; set; }
-    //    public List<ConsultaTitularRestDet> SDT_TitMas_Out { get; set; }
-
-    //    public ConsultaTitularRest()
-    //    {
-    //        this.SDT_TitMas_Out = new List<ConsultaTitularRestDet>();
-    //    }
-    //}
-    //public class ConsultaTitularRestDet
-    //{
-    //    public string TipoDocCPT { get; set; }
-    //    public string NroDocCPT { get; set; }
-    //    public Int32 NroCorre { get; set; }
-    //    public string CodigoVal { get; set; }
-    //}
+        }
+    }
 
 }

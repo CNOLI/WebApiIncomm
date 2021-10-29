@@ -213,7 +213,7 @@ namespace wa_api_incomm.Services
             {
                 BanBifApi client = new BanBifApi();
 
-                var result = client.get_consultar_deudas(model).Result;
+                var result = client.Consultar_Deuda(model).Result;
 
                 Response.E_meta e_meta = (Response.E_meta)result.meta;
                 List<Response.E_datos_trx> ls_datos = (List<Response.E_datos_trx>)result.datos;
@@ -254,7 +254,8 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                //return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
             }
             return ls_deuda;
 
@@ -285,7 +286,7 @@ namespace wa_api_incomm.Services
 
                 BanBifApi client = new BanBifApi();
 
-                var result = client.get_consultar_deudas(Deuda_Model).Result;
+                var result = client.Consultar_Deuda(Deuda_Model).Result;
 
                 Response.E_meta e_meta = (Response.E_meta)result.meta;
                 List<Response.E_datos_trx> ls_datos = (List<Response.E_datos_trx>)result.datos;
@@ -352,6 +353,7 @@ namespace wa_api_incomm.Services
 
                         e_p.tipoOperacion = "PAGO_TOTAL_CUOTA";
                         e_p.medioPago = "EFECTIVO";
+                        e_p.cuentaCargo.numero = "";
                         if (e_datos.montoRedondeo != e_datos.montoTotalDestino)
                         {
                             e_p.monto = e_datos.montoRedondeo;
@@ -471,7 +473,7 @@ namespace wa_api_incomm.Services
 
                         e_pago.deudas.Add(e_datos_pago);
 
-                        var result_pago = client.post_procesar_pago(e_pago, idTransaccionOrigen).Result;
+                        var result_pago = client.Procesar_Pago(e_pago, idTransaccionOrigen).Result;
 
                         Response.E_meta e_meta_pago = (Response.E_meta)result_pago.meta;
                         Response.E_datos_trx e_datos_pago_result = (Response.E_datos_trx)result_pago.datos;
@@ -493,7 +495,21 @@ namespace wa_api_incomm.Services
 
                             return UtilSql.sOutPutTransaccion(codigo, mensaje);
                         }
+                        if (e_meta_pago.mensajes[0].codigo == "ESM00")
+                        {
+                            object info = new object();
 
+                            info = new
+                            {
+                                codigo = "00",
+                                mensaje = "Se realizó el pago correctamente.",
+                                nro_transaccion = e_datos_pago_result.deudas[0].pagos[0].numeroPago
+                            };
+
+
+                            return info;
+
+                        }
 
 
                     }
@@ -507,7 +523,8 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                //return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
             }
             return ls_deuda;
 

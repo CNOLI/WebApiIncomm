@@ -16,19 +16,19 @@ namespace wa_api_incomm.Models
 
         //Tipo Documento Identidad
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? id_tipo_doc_identidad { get; set; }
+        public int? id_tipo_documento_identidad { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string cod_tipo_doc_identidad { get; set; }
+        public string codigo_tipo_documento_identidad { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string desc_tipo_doc_identidad { get; set; }
+        public string descripcion_tipo_documento_identidad { get; set; }
 
         //Producto
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? id_producto { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string cod_producto { get; set; }
+        public string codigo_producto { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string desc_producto { get; set; }
+        public string nombre_producto { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? precio { get; set; }
 
@@ -60,6 +60,13 @@ namespace wa_api_incomm.Models
         public string vc_tran_codi { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string tx_tran_mnsg { get; set; }
+
+        //Respuesta TRX
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string codigo { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string mensaje { get; set; }
 
     }
 }

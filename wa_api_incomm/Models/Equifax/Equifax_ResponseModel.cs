@@ -8,7 +8,7 @@ namespace wa_api_incomm.Models
 {
     public class Equifax_ResponseModel
     {
-        public class E_Response_Generar_Reporte
+        public class Generar_Reporte_Response
         {
             public string message { get; set; }
             public string code { get; set; }

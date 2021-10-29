@@ -23,6 +23,12 @@ namespace wa_api_incomm.Models
             public string operationNumber { get; set; }
         }
 
+        public class Busqueda_Equifax_Input
+        {
+            public string codigo_distribuidor { get; set; }
+            public string buscador { get; set; }
+
+        }
 
     }
 }

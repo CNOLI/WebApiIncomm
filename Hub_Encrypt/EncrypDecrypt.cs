@@ -8,8 +8,9 @@ namespace Hub_Encrypt
 {
     public class EncrypDecrypt
     {
-        string cad_des = "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ123456789";
-        string cad_en = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÑñ";
+        string cad_des = "O7ITQlh8yzpVSCso6FNti2ndRKewkuq9ñxAm50YEPWHÑcZgbLM3aBD1JvfGXrh";
+        string cad_en  = "M0gOGVP8yai6lSwvñ5bWcYZ73FEIfXBrxs9NKozen2UupAmh1CdRQkJLqÑHtTh";
+
 
         public string ENCRYPT(string fecha_envio, string codigo_distribuidor, string codigo_comercio, string id_producto)
         {

@@ -63,6 +63,14 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                 }
 
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
+                {
+                    tran_sql.Commit();
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+
+
                 var id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
                 id_trx_incomm_global = id_trx_hub;
 
@@ -160,7 +168,7 @@ namespace wa_api_incomm.Services
 
                 //tim.phoneNumber = input.nro_telefono.Substring(3);
 
-                if (!bi_envio_email_firts)
+                if (!bi_envio_sms_firts)
                 {
                     input.nro_telefono = convenio.vc_celular_def;
                 }
@@ -216,6 +224,17 @@ namespace wa_api_incomm.Services
                     tm.vc_cod_autorizacion = result.authorizationCode;
                     tm.vc_nro_pin = result.pin;
 
+                    if (bi_envio_sms_firts)
+                    {
+                        tm.vc_telefono_sol = input.nro_telefono;
+
+                    }
+                    if (bi_envio_email_firts)
+                    {
+
+                        tm.vc_email_sol = convenio.vc_email_envio;
+                    }
+
 
                     con_sql.Open();
                     tran_sql = con_sql.BeginTransaction();
@@ -227,6 +246,16 @@ namespace wa_api_incomm.Services
                         _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                         return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                     }
+
+                    if(cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
+                    {
+
+                        tran_sql.Commit();
+                        _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+
+                    }
+                    
 
 
                     //desencryptar pin
@@ -408,6 +437,9 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@vc_id_ref_trx", model.vc_id_ref_trx);
                 cmd.Parameters.AddWithValue("@vc_cod_autorizacion", model.vc_cod_autorizacion);
                 cmd.Parameters.AddWithValue("@vc_nro_pin", model.vc_nro_pin);
+                cmd.Parameters.AddWithValue("@vc_email_sol", model.vc_email_sol);
+                cmd.Parameters.AddWithValue("@vc_telefono_sol", model.vc_telefono_sol);
+
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();
                 return cmd;

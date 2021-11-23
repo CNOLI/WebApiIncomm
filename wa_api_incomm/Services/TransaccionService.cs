@@ -282,7 +282,9 @@ namespace wa_api_incomm.Services
                         if (producto.bi_envio_email)
                         {
                             //envio de correo
-                            var body = _send.GetBody(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+                            //var body = _send.GetBody(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+                            var body = _send.GetBodyFinal(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+
                             var titulo = "Confirmación de transacción #" + result.transactionId;
                             _send.Email(id_trans_global, input.email, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
                         }

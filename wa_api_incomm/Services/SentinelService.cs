@@ -622,10 +622,13 @@ namespace wa_api_incomm.Services
                     modelo.ReferenceCode = trx.nu_id_trx_app.ToString();
                     var a = JsonConvert.SerializeObject(modelo);
 
-                    //ConsultaTitularRest rest = api.ConsultaTitularFacturacion(modelo).Result;
-                    ConsultaTitularRest response = new ConsultaTitularRest();
-                    response.CodigoWS = "0";
-                    response.ID_Transaccion = "TestOK";
+                    //PRODUCCION
+                    ConsultaTitularRest response = api.ConsultaTitularFacturacion(modelo).Result;
+
+                    //QA
+                    //ConsultaTitularRest response = new ConsultaTitularRest();
+                    //response.CodigoWS = "0";
+                    //response.ID_Transaccion = "TestOK";
 
                     if (response.CodigoWS == "0")
                     {

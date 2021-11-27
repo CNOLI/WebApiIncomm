@@ -23,6 +23,8 @@ namespace wa_api_incomm.Services
     public class IzipayService : IIzipayService
     {
         public int nu_id_convenio = 5;
+        public string vc_desc_convenio = "IZIPAY";
+
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
 
@@ -449,6 +451,8 @@ namespace wa_api_incomm.Services
                         tran_sql.Commit();
 
                         object info = new object();
+
+                        _logger.Information( vc_desc_convenio + "| " + "idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 
                         info = new
                         {

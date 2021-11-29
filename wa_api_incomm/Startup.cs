@@ -37,9 +37,10 @@ namespace wa_api_incomm
                 var connString = Configuration["Serilog:DefaultConnection"];
                 var tableName = Configuration["Serilog:TableName"];
                 return new LoggerConfiguration().WriteTo.
-                MSSqlServer(connString, tableName,
-                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
-                autoCreateSqlTable: true).CreateLogger();
+                MSSqlServer(connString, 
+                            tableName,
+                            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
+                            autoCreateSqlTable: true).CreateLogger();
 
             });
             IoC.AddRegistration(services);

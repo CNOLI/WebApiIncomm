@@ -20,7 +20,7 @@ namespace wa_api_incomm.ApiRest
     {
         private Token token = null;
         private const string ApiURL = "https://psrdes.izipay.pe:8088/"; //QA
-        //private const string ApiURL = ""; //PROD
+        //private const string ApiURL = "https://psr.izipay.pe:8090/"; //PROD
         private HttpClient api;
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
@@ -28,10 +28,10 @@ namespace wa_api_incomm.ApiRest
         public IziPayFinanzasApi(IHttpClientFactory client_factory, Token model)
         {
             api = client_factory.CreateClient("HttpClientWithSSLUntrusted");
-                                                  
-            //HttpClientHandler clientHandler = new HttpClientHandler();
-            //clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-            //api = new HttpClient(clientHandler);
+
+            HttpClientHandler clientHandler = new HttpClientHandler();
+            clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+            api = new HttpClient(clientHandler);
 
             izikey = config.GetSection("IzipayFinanzasInfo:izikey").Value;
             model.bin_acq = config.GetSection("IzipayFinanzasInfo:bin_acq").Value;
@@ -74,6 +74,7 @@ namespace wa_api_incomm.ApiRest
                 model.mac = izikey + model.bin_acq + model.id_estab + model.id_term + model.secreto;
                 model.mac = GetSHA256(model.mac).ToUpper();
 
+                //ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };                
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
                 response = await api.PostAsync("psr-fin-fe/t-auth", httpContent).ConfigureAwait(false);
 

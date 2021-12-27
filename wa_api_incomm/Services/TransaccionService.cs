@@ -227,12 +227,11 @@ namespace wa_api_incomm.Services
                     if (bi_envio_sms_firts)
                     {
                         tm.vc_telefono_sol = input.nro_telefono;
-
                     }
                     if (bi_envio_email_firts)
                     {
-
-                        tm.vc_email_sol = convenio.vc_email_envio;
+                        tm.vc_email_sol = input.email;
+                        //tm.vc_email_sol = convenio.vc_email_envio;
                     }
 
 

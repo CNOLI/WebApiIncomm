@@ -24,45 +24,6 @@ namespace wa_api_incomm.Services
         {
             _logger = logger;
         }
-        //public object sel_banco(string conexion, Sentinel_InputModel.Busqueda input)
-        //{
-        //    using (SqlConnection cn = new SqlConnection(conexion))
-        //    {
-        //        try
-        //        {
-        //            Sentinel_ResponseModel model_response = new Sentinel_ResponseModel();
-        //            ProductoModel model = new ProductoModel();
-        //            model.vc_tran_clve_find = input.buscador;
-
-        //            cn.Open();
-        //            using (var cmd = new SqlCommand("tisi_global.usp_sel_banco", cn))
-        //            {
-        //                cmd.CommandType = CommandType.StoredProcedure;
-        //                model.nu_tran_ruta = 1;
-
-        //                UtilSql.iGet(cmd, model);
-        //                SqlDataReader dr = cmd.ExecuteReader();
-
-        //                var lm = new List<Sentinel_ResponseModel>();
-        //                while (dr.Read())
-        //                {
-        //                    model_response = new Sentinel_ResponseModel();
-        //                    if (UtilSql.Ec(dr, "NU_ID_BANCO"))
-        //                        model_response.id_banco = dr["NU_ID_BANCO"].ToDecimal();
-        //                    if (UtilSql.Ec(dr, "VC_DESC_BANCO"))
-        //                        model_response.desc_banco = dr["VC_DESC_BANCO"].ToString();
-        //                    lm.Add(model_response);
-        //                }
-        //                return lm;
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw ex;
-        //        }
-
-        //    }
-        //}
         public object sel_tipo_documento_identidad(string conexion, Sentinel_InputModel.Busqueda_Sentinel_Input input)
         {
             using (SqlConnection cn = new SqlConnection(conexion))
@@ -103,183 +64,6 @@ namespace wa_api_incomm.Services
 
             }
         }
-        public object sel_producto(string conexion, Sentinel_InputModel.Busqueda_Sentinel_Input input)
-        {
-            using (SqlConnection cn = new SqlConnection(conexion))
-            {
-                try
-                {
-                    Sentinel_ResponseModel model_response = new Sentinel_ResponseModel();
-                    ProductoModel model = new ProductoModel();
-                    model.nu_id_convenio = nu_id_convenio;
-                    model.vc_cod_distribuidor = input.codigo_distribuidor;
-                    model.vc_tran_clve_find = input.buscador;
-                    model.bi_estado = true;
-
-                    cn.Open();
-                    using (var cmd = new SqlCommand("tisi_global.usp_sel_producto", cn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        model.nu_tran_ruta = 3;
-                        cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
-                        cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
-
-                        UtilSql.iGet(cmd, model);
-                        SqlDataReader dr = cmd.ExecuteReader();
-                        var lm = new List<Sentinel_ResponseModel>();
-                        while (dr.Read())
-                        {
-                            model_response = new Sentinel_ResponseModel();
-                            if (UtilSql.Ec(dr, "NU_ID_PRODUCTO"))
-                                model_response.id_producto = dr["NU_ID_PRODUCTO"].ToDecimal();
-                            if (UtilSql.Ec(dr, "VC_COD_PRODUCTO"))
-                                model_response.codigo_producto = dr["VC_COD_PRODUCTO"].ToString();
-                            if (UtilSql.Ec(dr, "VC_DESC_PRODUCTO"))
-                                model_response.nombre_producto = dr["VC_DESC_PRODUCTO"].ToString();
-                            if (UtilSql.Ec(dr, "NU_PRECIO"))
-                                model_response.precio = dr["NU_PRECIO"].ToDecimal();
-                            lm.Add(model_response);
-                        }
-                        return lm;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
-            }
-        }
-        //public object get_precio_producto(string conexion, Sentinel_InputModel.Get_Producto input)
-        //{
-        //    using (SqlConnection cn = new SqlConnection(conexion))
-        //    {
-        //        try
-        //        {
-        //            Sentinel_ResponseModel model_response = new Sentinel_ResponseModel();
-        //            ProductoModel model = new ProductoModel();
-        //            model.nu_id_convenio = nu_id_convenio;
-        //            model.vc_cod_producto = input.cod_producto;
-
-        //            cn.Open();
-        //            using (var cmd = new SqlCommand("tisi_global.usp_get_producto", cn))
-        //            {
-        //                cmd.CommandType = CommandType.StoredProcedure;
-        //                model.nu_tran_ruta = 1;
-        //                cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
-        //                cmd.Parameters.AddWithValue("@vc_cod_producto", model.vc_cod_producto);
-
-        //                UtilSql.iGet(cmd, model);
-        //                SqlDataReader dr = cmd.ExecuteReader();
-
-        //                if (dr.Read())
-        //                {
-        //                    if (UtilSql.Ec(dr, "NU_PRECIO"))
-        //                        model_response.precio = dr["NU_PRECIO"].ToDecimal();
-
-        //                    return model_response;
-        //                }
-        //                return "";
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw ex;
-        //        }
-
-        //    }
-        //}
-        //public object get_saldo_distribuidor(string conexion, Sentinel_InputModel.Get_Distribuidor input)
-        //{
-        //    using (SqlConnection cn = new SqlConnection(conexion))
-        //    {
-        //        try
-        //        {
-        //            Sentinel_ResponseModel model_response = new Sentinel_ResponseModel();
-        //            DistribuidorModel model = new DistribuidorModel();
-        //            model.vc_cod_distribuidor = input.cod_distribuidor;
-
-        //            cn.Open();
-        //            using (var cmd = new SqlCommand("tisi_global.usp_get_distribuidor", cn))
-        //            {
-        //                cmd.CommandType = CommandType.StoredProcedure;
-        //                model.nu_tran_ruta = 1;
-        //                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
-
-        //                UtilSql.iGet(cmd, model);
-        //                SqlDataReader dr = cmd.ExecuteReader();
-
-        //                if (dr.Read())
-        //                {
-        //                    if (UtilSql.Ec(dr, "NU_SALDO"))
-        //                        model_response.saldo = dr["NU_SALDO"].ToDecimal();
-
-        //                    return model_response;
-        //                }
-        //                return "";
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw ex;
-        //        }
-
-        //    }
-        //}
-        //public object sel_transaccion(string conexion, Sentinel_InputModel.Sel_Transaccion input)
-        //{
-        //    using (SqlConnection cn = new SqlConnection(conexion))
-        //    {
-        //        try
-        //        {
-        //            Sentinel_ResponseModel model_response = new Sentinel_ResponseModel();
-        //            TransaccionModel model = new TransaccionModel();
-        //            model.vc_cod_distribuidor = input.cod_distribuidor;
-        //            model.vc_cod_comercio = input.cod_comercio;
-        //            model.dt_fec_inicio = input.fec_inicio;
-        //            model.dt_fec_final = input.fec_final;
-
-        //            cn.Open();
-        //            using (var cmd = new SqlCommand("tisi_trx.usp_sel_transaccion", cn))
-        //            {
-        //                cmd.CommandType = CommandType.StoredProcedure;
-        //                model.nu_tran_ruta = 2;
-        //                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
-        //                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.vc_cod_comercio);
-        //                cmd.Parameters.AddWithValue("@dt_fec_inicio", model.dt_fec_inicio);
-        //                cmd.Parameters.AddWithValue("@dt_fec_final", model.dt_fec_final);
-
-        //                UtilSql.iGet(cmd, model);
-        //                SqlDataReader dr = cmd.ExecuteReader();
-
-        //                var lm = new List<Sentinel_ResponseModel>();
-        //                while (dr.Read())
-        //                {
-        //                    model_response = new Sentinel_ResponseModel();
-        //                    if (UtilSql.Ec(dr, "NU_ID_TRX"))
-        //                        model_response.id_transaccion = dr["NU_ID_TRX"].ToDecimal();
-        //                    if (UtilSql.Ec(dr, "DT_FECHA"))
-        //                        model_response.fecha = dr["DT_FECHA"].ToDateTime().Value.ToString("yyyy-MM-dd");
-        //                    if (UtilSql.Ec(dr, "NU_ID_PRODUCTO"))
-        //                        model_response.id_producto = dr["NU_ID_PRODUCTO"].ToDecimal();
-        //                    if (UtilSql.Ec(dr, "VC_DESC_PRODUCTO"))
-        //                        model_response.desc_producto = dr["VC_DESC_PRODUCTO"].ToString();
-        //                    if (UtilSql.Ec(dr, "NU_PRECIO"))
-        //                        model_response.precio = dr["NU_PRECIO"].ToDecimal();
-        //                    lm.Add(model_response);
-        //                }
-        //                return lm;
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw ex;
-        //        }
-
-        //    }
-        //}
-
-
         public object get_validar_titular(string conexion, SentinelInfo info, Sentinel_InputModel.Consultado model)
         {
             SentinelApi api = new SentinelApi();
@@ -622,13 +406,21 @@ namespace wa_api_incomm.Services
                     modelo.ReferenceCode = trx.nu_id_trx_app.ToString();
                     var a = JsonConvert.SerializeObject(modelo);
 
+                    ConsultaTitularRest response = new ConsultaTitularRest();
+
                     //PRODUCCION
-                    ConsultaTitularRest response = api.ConsultaTitularFacturacion(modelo).Result;
+                    if (Config.bi_produccion == true)
+                    {
+                        response = api.ConsultaTitularFacturacion(modelo).Result;
+                    }
 
                     //QA
-                    //ConsultaTitularRest response = new ConsultaTitularRest();
-                    //response.CodigoWS = "0";
-                    //response.ID_Transaccion = "TestOK";
+                    if (Config.bi_produccion == false)
+                    {
+                        response = new ConsultaTitularRest();
+                        response.CodigoWS = "0";
+                        response.ID_Transaccion = "TestOK";
+                    }
 
                     if (response.CodigoWS == "0")
                     {
@@ -663,7 +455,7 @@ namespace wa_api_incomm.Services
                         con_sql.Close();
 
                         return _info;
-                                               
+
                     }
 
                     else
@@ -773,7 +565,13 @@ namespace wa_api_incomm.Services
                         if (response.CodigoWS == null)
                             tm.vc_cod_error = "";
                         else
+                        {
                             tm.vc_cod_error = response.CodigoWS;
+                            foreach (var item in response.SDT_TitMas_Out)
+                            {
+                                tm.vc_cod_error += "|" + item.CodigoVal;
+                            }
+                        }
 
                         if (response.CodigoWS == null)
                             tm.vc_desc_error = "";

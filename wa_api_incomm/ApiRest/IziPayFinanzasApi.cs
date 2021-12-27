@@ -19,8 +19,8 @@ namespace wa_api_incomm.ApiRest
     public class IziPayFinanzasApi
     {
         private Token token = null;
-        private const string ApiURL = "https://psrdes.izipay.pe:8088/"; //QA
-        //private const string ApiURL = "https://psr.izipay.pe:8090/"; //PROD
+        private const string ApiURL = Config.vc_url_izipay_finanzas;
+
         private HttpClient api;
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 

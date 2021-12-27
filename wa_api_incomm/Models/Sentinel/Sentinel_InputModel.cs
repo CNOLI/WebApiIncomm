@@ -41,6 +41,8 @@ namespace wa_api_incomm.Models
             public string tipo_documento_PDV { get; set; }
             public string numero_documento_PDV { get; set; }
             public string razon_social_PDV { get; set; }
+            public string clave { get; set; }
+            public string fecha_envio { get; set; }
 
 
             //----------------------------------------

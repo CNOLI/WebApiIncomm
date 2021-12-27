@@ -18,8 +18,8 @@ namespace wa_api_incomm.ApiRest
     public class IzipayApi
     {
         private Token token = null;
-        private const string ApiURL = "https://172.26.158.236:8443/"; //QA
-        //private const string ApiURL = "https://172.26.158.240:8443/"; //PROD
+        private const string ApiURL = Config.vc_url_izipay;
+
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 

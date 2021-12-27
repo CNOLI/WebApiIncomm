@@ -31,8 +31,8 @@ namespace wa_api_incomm.Models
             public string codigo_provincia { get; set; } = "SF";
             public string codigo_pais { get; set; } = "PE";
 
-
-
+            public string clave { get; set; }
+            public string fecha_envio { get; set; }
 
         }
 

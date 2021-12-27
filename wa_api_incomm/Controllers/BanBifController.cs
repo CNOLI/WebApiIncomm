@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.BanBif;
 using wa_api_incomm.Services.Contracts;
+using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
@@ -151,7 +152,16 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IBanBifService.post_pago(Configuration.GetSection("SQL").Value, model));
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else
+                { 
+                    return this.Ok(_IBanBifService.post_pago(Configuration.GetSection("SQL").Value, model));
+                }
             }
             catch (Exception ex)
             {

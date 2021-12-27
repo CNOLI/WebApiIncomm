@@ -15,8 +15,9 @@ namespace wa_api_incomm.ApiRest
     public class BanBifApi
     {
         private Token token = null;
-        private const string ApiURLToken = "https://rh-sso-rhsso.uatapps.banbifapimarket.com.pe/auth/realms/Banbif-API-External/protocol/openid-connect/token";
-        private const string ApiURL = "https://api-recaudaciones.uatapps.banbifapimarket.com.pe/"; //QA
+        private const string ApiURLToken = Config.vc_url_banbif_token;
+        private const string ApiURL = Config.vc_url_banbif;
+
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
@@ -83,7 +84,7 @@ namespace wa_api_incomm.ApiRest
                 string parametros = "";
                 parametros += "?activo=true";
 
-                response = await api.GetAsync("api-recaudaciones/v1/recaudadores/BANBIF/rubros" + parametros);
+                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/recaudadores/BANBIF/rubros" + parametros);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -122,7 +123,7 @@ namespace wa_api_incomm.ApiRest
                 string parametros = "";
                 parametros += "?codigoRecaudador="+ codigoRecaudador;
 
-                response = await api.GetAsync("api-recaudaciones/v1/rubros/" + model.vc_cod_rubro + "/empresas" + parametros);
+                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/rubros/" + model.vc_cod_rubro + "/empresas" + parametros);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -163,7 +164,7 @@ namespace wa_api_incomm.ApiRest
                 parametros += "&codigoRecaudador=" + codigoRecaudador;
                 parametros += "&codigoProducto=" + "1"; // Preguntar a que se refiere
 
-                response = await api.GetAsync("api-recaudaciones/v1/convenios" + parametros);
+                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/convenios" + parametros);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -200,7 +201,7 @@ namespace wa_api_incomm.ApiRest
                 string parametros = "";
                 parametros += "?codigoRecaudador=" + codigoRecaudador;
 
-                response = await api.GetAsync("api-recaudaciones/v1/convenios/"+ model.vc_cod_convenio + parametros);
+                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/convenios/" + model.vc_cod_convenio + parametros);
 
                 if (response.IsSuccessStatusCode)
                 {

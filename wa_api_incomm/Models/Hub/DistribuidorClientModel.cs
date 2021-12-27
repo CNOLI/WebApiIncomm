@@ -8,5 +8,6 @@ namespace wa_api_incomm.Models.Hub
     public class DistribuidorClientModel : EntidadBase
     {
         public string codigo_distribuidor { get; set; }
+        public string id_convenio { get; set; }
     }
 }

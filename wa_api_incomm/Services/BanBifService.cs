@@ -28,32 +28,18 @@ namespace wa_api_incomm.Services
 
             try
             {
-                List<RubroModel> ls_rubro = sel_banbif_rubro_recaudador();
-                //Guardar en BD
-
                 con_sql.Open();
+
+                List<RubroModel> ls_rubro = sel_rubro(con_sql);
+
+                con_sql.Close();
+                //Guardar en BD
+                con_sql.Open();
+
                 tran_sql = con_sql.BeginTransaction();
 
-                foreach (var rubro in ls_rubro)
+                foreach (var e_rubro in ls_rubro)
                 {
-
-                    //ins categories
-
-                    RubroModel e_rubro = new RubroModel();
-                    e_rubro.nu_id_convenio = nu_id_convenio;
-                    e_rubro.vc_cod_rubro = rubro.vc_cod_rubro;
-                    e_rubro.vc_desc_rubro = rubro.vc_desc_rubro;
-                    e_rubro.bi_estado = true;
-                    //tran
-                    e_rubro.vc_tran_usua_regi = "API";
-
-                    cmd = Ins_rubro(con_sql, tran_sql, e_rubro);
-
-                    if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                    {
-                        tran_sql.Rollback();
-                        return UtilSql.sOutPut(cmd);
-                    }
                     RubroModel.Rubro_Input e_rubro_input = new RubroModel.Rubro_Input();
                     e_rubro_input.vc_cod_rubro = e_rubro.vc_cod_rubro;
 
@@ -119,6 +105,32 @@ namespace wa_api_incomm.Services
                 throw ex;
             }
             return ls_rubro;
+        }
+        private List<RubroModel> sel_rubro(SqlConnection cn)
+        {
+            List<RubroModel> ls = new List<RubroModel>();
+            RubroModel model = new RubroModel();
+            using (var cmd = new SqlCommand("tisi_global.usp_sel_rubro_convenios", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_tran_ruta = 1;
+                model.nu_id_convenio = nu_id_convenio;
+                cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    model = new RubroModel();
+                    if (UtilSql.Ec(dr, "nu_id_rubro"))
+                        model.nu_id_rubro = Convert.ToInt32(dr["nu_id_rubro"].ToString());
+                    if (UtilSql.Ec(dr, "vc_cod_rubro"))
+                        model.vc_cod_rubro = dr["vc_cod_rubro"].ToString();
+                    if (UtilSql.Ec(dr, "vc_desc_rubro"))
+                        model.vc_desc_rubro = dr["vc_desc_rubro"].ToString();
+                    ls.Add(model);
+                }
+            }
+            return ls;
         }
         public List<EmpresaModel> sel_banbif_empresa_rubros(RubroModel.Rubro_Input model)
         {
@@ -202,7 +214,6 @@ namespace wa_api_incomm.Services
             }
             return e_convenio;
         }
-
         public object get_deuda(string conexion, DeudaModel.Deuda_Input model)
         {
             List<DeudaModel> ls_deuda = new List<DeudaModel>();
@@ -243,7 +254,7 @@ namespace wa_api_incomm.Services
                     e_deuda.dt_fecha_vencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
                     e_deuda.vc_cliente = e_datos.cliente.id;
 
-                    e_deuda.nu_monto_deuda = e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo: e_datos.montoTotalDestino;
+                    e_deuda.nu_monto_deuda = e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino;
                     e_deuda.vc_numero_documento = e_datos.documento.numero;
                     e_deuda.vc_moneda = e_datos.moneda;
                     e_deuda.dt_fecha_factura = e_datos.fechaFactura.ToString("yyyy-MM-dd");
@@ -530,20 +541,6 @@ namespace wa_api_incomm.Services
 
         }
 
-        private static SqlCommand Ins_rubro(SqlConnection cn, SqlTransaction tran, RubroModel model)
-        {
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_rubro", cn, tran))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@vc_cod_rubro", model.vc_cod_rubro);
-                cmd.Parameters.AddWithValue("@vc_desc_rubro", model.vc_desc_rubro);
-                cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
-                cmd.Parameters.AddWithValue("@bi_estado", model.bi_estado);
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
-        }
         private static SqlCommand Ins_empresa_rubro(SqlConnection cn, SqlTransaction tran, EmpresaModel model)
         {
             using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_empresa_rubro", cn, tran))
@@ -556,21 +553,6 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@vc_nombre", model.vc_nombre);
                 cmd.Parameters.AddWithValue("@vc_razon_social", model.vc_razon_social);
                 cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
-                cmd.Parameters.AddWithValue("@bi_estado", model.bi_estado);
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
-        }
-        private static SqlCommand Ins_producto_convenio(SqlConnection cn, SqlTransaction tran, ConvenioModel model)
-        {
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_producto_convenio_banbif", cn, tran))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@vc_cod_empresa", model.vc_cod_empresa);
-                cmd.Parameters.AddWithValue("@vc_nombre_empresa", model.vc_nombre_empresa);
-                cmd.Parameters.AddWithValue("@vc_cod_convenio", model.vc_cod_convenio);
-                cmd.Parameters.AddWithValue("@vc_desc_convenio", model.vc_desc_convenio);
                 cmd.Parameters.AddWithValue("@bi_estado", model.bi_estado);
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();

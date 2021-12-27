@@ -8,15 +8,16 @@ using Microsoft.Extensions.Configuration;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.Hub;
 using wa_api_incomm.Services.Contracts;
+using static wa_api_incomm.Models.Hub.ProductoClientModel;
 
 namespace wa_api_incomm.Controllers
 {
     [Route("Producto")]
-    public class ProductosController : Controller
+    public class ProductoController : Controller
     {
         private readonly IProductoService _IProductoService;
         public IConfigurationRoot Configuration { get; }
-        public ProductosController(IHostingEnvironment env, IProductoService IProductoService)
+        public ProductoController(IHostingEnvironment env, IProductoService IProductoService)
         {
             _IProductoService = IProductoService;
 
@@ -30,7 +31,7 @@ namespace wa_api_incomm.Controllers
         }
 
         [HttpPost("sel")]
-        public IActionResult generar([FromBody]DistribuidorClientModel model)
+        public IActionResult generar([FromBody]ProductoClientModelInput model)
         {
             if (!this.ModelState.IsValid)
                 return this.BadRequest(this.ModelState);

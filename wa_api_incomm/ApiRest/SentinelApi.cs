@@ -12,7 +12,7 @@ namespace wa_api_incomm.ApiRest
 {
     public class SentinelApi
     {
-        private const string ApiURL = "https://www2.sentinelperu.com/wsrest/"; //Prod
+        private const string ApiURL = Config.vc_url_sentinel;
         private HttpClient api = new HttpClient();
 
         public SentinelApi()

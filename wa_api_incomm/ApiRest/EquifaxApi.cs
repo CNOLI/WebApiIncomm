@@ -17,7 +17,8 @@ namespace wa_api_incomm.ApiRest
     public class EquifaxApi
     {
         private Token token = null;
-        private const string ApiURL = "https://accepwse.equifax.com.pe/salespartner/"; //QA
+        private const string ApiURL = Config.vc_url_equifax;
+
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
@@ -34,10 +35,7 @@ namespace wa_api_incomm.ApiRest
             api.BaseAddress = new Uri(ApiURL);
 
             token = GetTokenAsync(username, password).Result;
-
-
-            //api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.token);
-            
+                        
         }
 
 

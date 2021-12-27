@@ -29,6 +29,8 @@ namespace wa_api_incomm.Models
             public string digito_verificador_consultante { get; set; }
             public string tipo_documento_consultado { get; set; }
             public string numero_documento_consultado { get; set; }
+            public string clave { get; set; }
+            public string fecha_envio { get; set; }
 
         }
 

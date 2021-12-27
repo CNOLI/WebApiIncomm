@@ -11,8 +11,8 @@ namespace wa_api_incomm.ApiRest
 {
     public class IncommApi
     {
-        private const string ApiURL = "http://192.168.29.20:2555";//qa
-        //private const string ApiURL = "http://192.168.31.19:20966";//produccion        
+        private const string ApiURL = Config.vc_url_incomm;
+
         private HttpClient api = new HttpClient();
 
         public IncommApi(string merchantId,string auth,string posid, string source)

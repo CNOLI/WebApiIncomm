@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.Hub;
 using wa_api_incomm.Services.Contracts;
+using static wa_api_incomm.Models.Hub.ProductoClientModel;
 
 namespace wa_api_incomm.Services
 {
     public class ProductoService : IProductoService
     {
-        public object sel(string conexion, DistribuidorClientModel model)
+        public object sel(string conexion, ProductoClientModelInput input)
         {
             using (SqlConnection cn = new SqlConnection(conexion))
             {
@@ -21,9 +22,16 @@ namespace wa_api_incomm.Services
                     cn.Open();
                     using (var cmd = new SqlCommand("tisi_global.usp_sel_distribuidor_producto", cn))
                     {
+                        ProductoModel model = new ProductoModel();
                         cmd.CommandType = CommandType.StoredProcedure;
                         model.nu_tran_ruta = 2;
-                        cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
+                        model.vc_cod_distribuidor = input.codigo_distribuidor;
+                        if (!String.IsNullOrEmpty(input.id_convenio))
+                        {
+                            model.nu_id_convenio = int.Parse(input.id_convenio);
+                        }
+                        cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
+                        cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
                         UtilSql.iGet(cmd, model);
                         SqlDataReader dr = cmd.ExecuteReader();
                         return Query(dr);
@@ -50,12 +58,12 @@ namespace wa_api_incomm.Services
         private ProductoClientModel Decode(SqlDataReader or)
         {
             ProductoClientModel m = new ProductoClientModel();
-            if (Ec(or, "id_producto"))
-                m.id_producto = or["id_producto"].ToString();
-            if (Ec(or, "nombre_producto"))
-                m.nombre_producto = or["nombre_producto"].ToString();
-            if (Ec(or, "precio"))
-                m.precio = or["precio"].ToString();
+            if (Ec(or, "nu_id_producto"))
+                m.id_producto = or["nu_id_producto"].ToString();
+            if (Ec(or, "vc_desc_producto"))
+                m.nombre_producto = or["vc_desc_producto"].ToString();
+            if (Ec(or, "nu_precio"))
+                m.precio = or["nu_precio"].ToString();
 
             return m;
         }

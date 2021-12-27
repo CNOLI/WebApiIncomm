@@ -11,6 +11,7 @@ using wa_api_incomm.Models;
 using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.Izipay_InputModel;
 using static wa_api_incomm.Models.IzipayModel;
+using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
@@ -83,7 +84,16 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IIzipayService.RealizarRecarga(Configuration.GetSection("SQL").Value, model, _clientFactory));
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else
+                {
+                    return this.Ok(_IIzipayService.RealizarRecarga(Configuration.GetSection("SQL").Value, model, _clientFactory));
+                }
             }
             catch (Exception ex)
             {

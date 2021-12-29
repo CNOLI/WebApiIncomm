@@ -129,14 +129,12 @@ namespace wa_api_incomm.Services
                 TipoDocIdentidadModel tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
                 if (tipodocidentidad_consultante.nu_id_tipo_doc_identidad <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultante no existe.");
                 }
 
                 TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
                 }
 

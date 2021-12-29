@@ -15,7 +15,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("Izipay")]
+    [Route("prdigital/Izipay")]
     [ApiController]
     public class IzipayController : ControllerBase
     {

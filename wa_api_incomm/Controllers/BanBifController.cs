@@ -13,7 +13,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("BanBif")]
+    [Route("prdigital/BanBif")]
     [ApiController]
     public class BanBifController : ControllerBase
     {
@@ -134,7 +134,16 @@ namespace wa_api_incomm.Controllers
             }
             try
             {
-                return this.Ok(_IBanBifService.get_deuda(Configuration.GetSection("SQL").Value, model));
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.nu_id_servicio);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else
+                {
+                    return this.Ok(_IBanBifService.get_deuda(Configuration.GetSection("SQL").Value, model));
+                }
             }
             catch (Exception ex)
             {

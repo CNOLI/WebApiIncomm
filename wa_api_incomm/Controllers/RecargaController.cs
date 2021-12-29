@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -8,23 +9,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using wa_api_incomm.Models;
 using wa_api_incomm.Services.Contracts;
-using static wa_api_incomm.Models.Equifax_InputModel;
-using static wa_api_incomm.Models.EquifaxModel;
+using static wa_api_incomm.Models.RecargaModel;
 using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("prdigital/Equifax")]
+    [Route("Recarga")]
     [ApiController]
-    public class EquifaxController : ControllerBase
+    public class RecargaController : ControllerBase
     {
-        private readonly IEquifaxService _IEquifaxService;
+        private readonly IRecargaService _IRecargaService;
         public IConfigurationRoot Configuration { get; }
         private readonly Serilog.ILogger _logger;
-        public EquifaxController(Serilog.ILogger logger, IHostingEnvironment env, IEquifaxService IEquifaxService)
+        private readonly IHttpClientFactory _clientFactory;
+        public RecargaController(Serilog.ILogger logger, IHostingEnvironment env, IRecargaService IRecargaService, IHttpClientFactory clientFactory)
         {
-            _IEquifaxService = IEquifaxService;
+            _IRecargaService = IRecargaService;
             _logger = logger;
+            _clientFactory = clientFactory;
 
             var builder = new ConfigurationBuilder()
                        .SetBasePath(env.ContentRootPath)
@@ -33,27 +35,8 @@ namespace wa_api_incomm.Controllers
                        .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
-
-        [HttpPost("TipoDocIdentidad")]
-        public IActionResult sel_tipo_documento_identidad([FromBody]Busqueda_Equifax_Input model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
-            }
-            try
-            {
-                return this.Ok(_IEquifaxService.sel_tipo_documento_identidad(Configuration.GetSection("SQL").Value, model));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
-        [HttpPost("GenerarReporte")]
-        public IActionResult GenerarReporte([FromBody]GenerarReporte model)
+        [HttpPost("procesar")]
+        public IActionResult procesar([FromBody]Recarga_Input model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -71,7 +54,7 @@ namespace wa_api_incomm.Controllers
                 }
                 else
                 {
-                    return this.Ok(_IEquifaxService.GenerarReporte(Configuration.GetSection("SQL").Value, model));
+                    return this.Ok(_IRecargaService.procesar(Configuration.GetSection("SQL").Value, model, _clientFactory));
                 }
             }
             catch (Exception ex)

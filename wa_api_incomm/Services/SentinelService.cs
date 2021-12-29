@@ -66,144 +66,154 @@ namespace wa_api_incomm.Services
         }
         public object get_validar_titular(string conexion, SentinelInfo info, Sentinel_InputModel.Consultado model)
         {
-            SentinelApi api = new SentinelApi();
-            Encripta encripta = null;
-            EncriptaRest encripta_rest = null;
-            ConsultaPersona modelo = new ConsultaPersona();
-            ConsultaPersonaRest rest = new ConsultaPersonaRest();
-            Sentinel_ResponseModel response = new Sentinel_ResponseModel();
-            string mensaje_error = "";
-
-
-            SqlConnection con_sql = null;
-            con_sql = new SqlConnection(conexion);
-
-            con_sql.Open();
-            TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado);
-            if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
+            try
             {
-                //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
-                return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
-            }
-            con_sql.Close();
+                SentinelApi api = new SentinelApi();
+                Encripta encripta = null;
+                EncriptaRest encripta_rest = null;
+                ConsultaPersona modelo = new ConsultaPersona();
+                ConsultaPersonaRest rest = new ConsultaPersonaRest();
+                Sentinel_ResponseModel response = new Sentinel_ResponseModel();
+                string mensaje_error = "";
 
 
+                SqlConnection con_sql = null;
+                con_sql = new SqlConnection(conexion);
 
-            //encriptar el usuario
-            encripta = new Encripta();
-            encripta.keysentinel = info.keysentinel;
-            encripta.parametro = info.Usuario;
-            encripta_rest = api.Encriptacion(encripta).Result;
-            if (encripta_rest.coderror != 0)
-            {
-                switch (encripta_rest.coderror)
+                con_sql.Open();
+                TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
+                try
                 {
-                    case 1:
-                        mensaje_error = "Key no encontrado o asociado a un webservice o no activo.";
-                        break;
-                    case 2:
-                        mensaje_error = "Error en web service.";
-                        break;
+                    tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
+                }
+                catch (Exception ex)
+                {
+                    tipodocidentidad_consultado = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado);
                 }
 
-                response.codigo = encripta_rest.coderror.ToString();
-                response.mensaje = mensaje_error;
+                if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
+                }
+                con_sql.Close();
+
+                //encriptar el usuario
+                encripta = new Encripta();
+                encripta.keysentinel = info.keysentinel;
+                encripta.parametro = info.Usuario;
+                encripta_rest = api.Encriptacion(encripta).Result;
+                if (encripta_rest.coderror != 0)
+                {
+                    switch (encripta_rest.coderror)
+                    {
+                        case 1:
+                            mensaje_error = "Key no encontrado o asociado a un webservice o no activo.";
+                            break;
+                        case 2:
+                            mensaje_error = "Error en web service.";
+                            break;
+                    }
+
+                    response.codigo = encripta_rest.coderror.ToString();
+                    response.mensaje = mensaje_error;
+
+                    return response;
+                }
+                modelo.Gx_UsuEnc = encripta_rest.encriptado;
+
+                //encriptar la contraseña
+                encripta = new Encripta();
+                encripta.keysentinel = info.keysentinel;
+                encripta.parametro = info.Contrasena;
+                encripta_rest = api.Encriptacion(encripta).Result;
+                if (encripta_rest.coderror != 0)
+                {
+                    switch (encripta_rest.coderror)
+                    {
+                        case 1:
+                            mensaje_error = "Key no encontrado o asociado a un webservice o no activo.";
+                            break;
+                        case 2:
+                            mensaje_error = "Error en web service.";
+                            break;
+                    }
+                    response.codigo = encripta_rest.coderror.ToString();
+                    response.mensaje = mensaje_error;
+
+                    return response;
+                }
+                modelo.Gx_PasEnc = encripta_rest.encriptado;
+
+                modelo.Gx_Key = info.Gx_Key;
+                modelo.TipoDocSol = tipodocidentidad_consultado.vc_cod_tipo_doc_identidad;
+                modelo.NroDocSol = model.numero_documento_consultado;
+
+                rest = api.ConsultaPersona(modelo).Result;
+
+                rest.MensajeWS = "Consulta exitosa.";
+
+                if (rest.CodigoWS != "0")
+                {
+                    switch (rest.CodigoWS)
+                    {
+                        case "1":
+                            mensaje_error = "Usuario Incorrecto";
+                            break;
+                        case "2":
+                            mensaje_error = "Servicio Inválido";
+                            break;
+                        case "3":
+                            mensaje_error = "Documento inválido(No existe)";
+                            break;
+                        case "4":
+                            mensaje_error = "No tiene autorización a ver dicho CPT";
+                            break;
+                        case "6":
+                            mensaje_error = "El usuario no tiene permiso de consultar nuevos documentos";
+                            break;
+                        case "7":
+                            mensaje_error = "El servicio está suspendido";
+                            break;
+                        case "8":
+                            mensaje_error = "El usuario está suspendido";
+                            break;
+                        case "9":
+                            mensaje_error = "El usuario está bloqueado";
+                            break;
+                        case "10":
+                            mensaje_error = "El servicio no tiene disponible este producto";
+                            break;
+                        case "12":
+                            mensaje_error = "Usuario no se encuentra en servicio";
+                            break;
+                        case "97":
+                            mensaje_error = "Servicio no cuenta con acceso al web service";
+                            break;
+                        case "98":
+                            mensaje_error = "Error en credenciales usuario o password";
+                            break;
+                        case "99":
+                            mensaje_error = "Error en funcionamiento del web service";
+                            break;
+                    }
+                    response.codigo = rest.CodigoWS;
+                    response.mensaje = mensaje_error;
+
+                    return response;
+                }
+
+                response.codigo = "00";
+                response.nombres = rest.Nombres;
+                response.apellido_paterno = rest.ApellidoPaterno;
+                response.apellido_materno = rest.ApellidoMaterno;
 
                 return response;
             }
-            modelo.Gx_UsuEnc = encripta_rest.encriptado;
-
-            //encriptar la contraseña
-            encripta = new Encripta();
-            encripta.keysentinel = info.keysentinel;
-            encripta.parametro = info.Contrasena;
-            encripta_rest = api.Encriptacion(encripta).Result;
-            if (encripta_rest.coderror != 0)
+            catch (Exception ex)
             {
-                switch (encripta_rest.coderror)
-                {
-                    case 1:
-                        mensaje_error = "Key no encontrado o asociado a un webservice o no activo.";
-                        break;
-                    case 2:
-                        mensaje_error = "Error en web service.";
-                        break;
-                }
-                response.codigo = encripta_rest.coderror.ToString();
-                response.mensaje = mensaje_error;
-
-                return response;
-            }
-            modelo.Gx_PasEnc = encripta_rest.encriptado;
-
-            modelo.Gx_Key = info.Gx_Key;
-            modelo.TipoDocSol = tipodocidentidad_consultado.vc_cod_tipo_doc_identidad;
-            modelo.NroDocSol = model.numero_documento_consultado;
-
-            rest = api.ConsultaPersona(modelo).Result;
-
-            rest.MensajeWS = "Consulta exitosa.";
-
-            if (rest.CodigoWS != "0")
-            {
-                switch (rest.CodigoWS)
-                {
-                    case "1":
-                        mensaje_error = "Usuario Incorrecto";
-                        break;
-                    case "2":
-                        mensaje_error = "Servicio Inválido";
-                        break;
-                    case "3":
-                        mensaje_error = "Documento inválido(No existe)";
-                        break;
-                    case "4":
-                        mensaje_error = "No tiene autorización a ver dicho CPT";
-                        break;
-                    case "6":
-                        mensaje_error = "El usuario no tiene permiso de consultar nuevos documentos";
-                        break;
-                    case "7":
-                        mensaje_error = "El servicio está suspendido";
-                        break;
-                    case "8":
-                        mensaje_error = "El usuario está suspendido";
-                        break;
-                    case "9":
-                        mensaje_error = "El usuario está bloqueado";
-                        break;
-                    case "10":
-                        mensaje_error = "El servicio no tiene disponible este producto";
-                        break;
-                    case "12":
-                        mensaje_error = "Usuario no se encuentra en servicio";
-                        break;
-                    case "97":
-                        mensaje_error = "Servicio no cuenta con acceso al web service";
-                        break;
-                    case "98":
-                        mensaje_error = "Error en credenciales usuario o password";
-                        break;
-                    case "99":
-                        mensaje_error = "Error en funcionamiento del web service";
-                        break;
-                }
-                //response.nu_tran_stdo = 0;
-                //response.vc_tran_codi = rest.CodigoWS;
-                //response.tx_tran_mnsg = mensaje_error;
-                response.codigo = rest.CodigoWS;
-                response.mensaje = mensaje_error;
-
-                return response;
+                return UtilSql.sOutPutTransaccion("500", ex.Message);
             }
 
-            //response.nu_tran_stdo = 1;
-            response.codigo = "00";
-            response.nombres = rest.Nombres;
-            response.apellido_paterno = rest.ApellidoPaterno;
-            response.apellido_materno = rest.ApellidoMaterno;
-
-            return response;
         }
         public object ins_transaccion(string conexion, SentinelInfo info, Sentinel_InputModel.Ins_Transaccion model)
         {
@@ -230,13 +240,11 @@ namespace wa_api_incomm.Services
 
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El email " + model.email_consultante + " es incorrecto");
                     return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto " + model.id_producto + " debe ser numerico");
                     return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico");
                 }
 
@@ -245,7 +253,6 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + model.codigo_distribuidor + " no existe");
                     return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
@@ -255,28 +262,53 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("06", "El producto no existe");
                 }
 
-                TipoDocIdentidadModel tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
+                TipoDocIdentidadModel tipodocidentidad_consultante = new TipoDocIdentidadModel();
+                try
+                {
+                    tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
+                }
+                catch (Exception ex)
+                {
+                    tipodocidentidad_consultante = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultante);
+                }
+
+                //TipoDocIdentidadModel tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
                 if (tipodocidentidad_consultante.nu_id_tipo_doc_identidad <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultante no existe.");
                 }
 
-                TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
+                TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
+                try
+                {
+                    tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
+                }
+                catch (Exception ex)
+                {
+                    tipodocidentidad_consultado = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado);
+                }
+
+                //TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
                 }
 
-                TipoDocIdentidadModel tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
+                TipoDocIdentidadModel tipodocidentidad_PDV = new TipoDocIdentidadModel();
+                try
+                {
+                    tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
+                }
+                catch (Exception ex)
+                {
+                    tipodocidentidad_PDV = get_tipo_documento_codigo(con_sql, model.tipo_documento_PDV);
+                }
+                //TipoDocIdentidadModel tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
                 if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
                 {
-                    //_logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento del PDV no existe.");
                 }
 

@@ -70,8 +70,13 @@ namespace wa_api_incomm.Models.BanBif
         //}
         public class Deuda_Input
         {
+            public string codigo_distribuidor { get; set; }
+            public string codigo_comercio { get; set; }
+            public string nombre_comercio { get; set; }
             public string vc_cod_convenio { get; set; }
             public string nu_id_servicio { get; set; }
+            public string clave { get; set; }
+            public string fecha_envio { get; set; }
         }
     }
 }

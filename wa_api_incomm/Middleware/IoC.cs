@@ -27,6 +27,7 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<IEquifaxService, EquifaxService>();
 
             services.AddSingleton<IIzipayService, IzipayService>();
+            services.AddSingleton<IRecargaService, RecargaService>();
 
             return services;
         }

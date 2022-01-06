@@ -196,11 +196,11 @@ namespace wa_api_incomm.Services
                     cmd.Parameters.AddWithValue("@vc_cod_distribuidor", distribuidor.vc_cod_distribuidor);
                     cmd.Parameters.AddWithValue("@vc_cod_comercio", comercio.vc_cod_comercio);
                     cmd.Parameters.AddWithValue("@vc_cod_producto", producto.vc_cod_producto);
-                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_sol", model.tipo_documento_consultante);
+                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_sol", tipodocidentidad_consultante.vc_cod_tipo_doc_identidad);
                     cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.numero_documento_consultante);
                     cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.digito_verificador_consultante);
                     cmd.Parameters.AddWithValue("@vc_email_sol", model.email_consultante);
-                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_cpt", model.tipo_documento_consultado);
+                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_cpt", tipodocidentidad_consultado.vc_cod_tipo_doc_identidad);
                     cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", model.numero_documento_consultado);
                     cmd.Parameters.AddWithValue("@vc_id_ref_trx", "");
 

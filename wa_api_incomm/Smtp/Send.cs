@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.Hub;
+using MimeKit;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace wa_api_incomm.Smtp
 {
@@ -19,36 +22,79 @@ namespace wa_api_incomm.Smtp
         {
             _logger = logger;
         }
-        public void Email(string id_trx, string email, string titulo, string body, string email_envio, string contraseña_email, string smtp_email, int puerto, bool ssl,string empresa, SqlConnection cn)
+        //public void Email(string id_trx, string email, string titulo, string body, string email_envio, string contraseña_email, string smtp_email, int puerto, bool ssl,string empresa, SqlConnection cn)
+        //{
+        //    try
+        //    {
+
+        //        MailMessage correo = new MailMessage();
+        //        correo.To.Clear();
+
+        //        correo.Body = body;
+        //        correo.Subject = titulo;
+        //        correo.IsBodyHtml = true;
+        //        correo.BodyEncoding = Encoding.UTF8;
+
+
+        //        correo.From = new MailAddress(email_envio, empresa);
+        //        correo.To.Add(email);
+
+        //        SmtpClient envio = new SmtpClient(smtp_email);
+        //        envio.Port = puerto;
+        //        envio.DeliveryMethod = SmtpDeliveryMethod.Network;
+        //        envio.UseDefaultCredentials = false;
+        //        envio.Credentials = new NetworkCredential(email_envio, contraseña_email);
+        //        envio.EnableSsl = ssl;
+
+
+        //        string userState = "test message1";
+        //        envio.SendAsync(correo, userState);
+
+        //    }
+        //    catch (Exception ex) {                
+        //        _logger.Error(ex, "id_trx: " + id_trx + ex.Message);
+
+        //        ReenvioMensajeModel rm = new ReenvioMensajeModel();
+        //        rm.nu_id_trx = id_trx;
+        //        rm.ch_tipo_mensaje = "M";
+        //        var cmd = insSendInfoError(cn, rm);
+        //    }
+
+        //}
+        public void Email(string id_trx, string email, string titulo, string body, string email_envio, string contraseña_email, string smtp_email, int puerto, bool ssl, string empresa, SqlConnection cn)
         {
             try
             {
 
-                MailMessage correo = new MailMessage();
+                MimeMessage correo = new MimeMessage();
                 correo.To.Clear();
 
-                correo.Body = body;
+                var bodyBuilder = new BodyBuilder();
+                bodyBuilder.HtmlBody = body;
+                correo.Body = bodyBuilder.ToMessageBody();
                 correo.Subject = titulo;
-                correo.IsBodyHtml = true;
-                correo.BodyEncoding = Encoding.UTF8;
 
 
-                correo.From = new MailAddress(email_envio, empresa);
-                correo.To.Add(email);
+                correo.From.Add(new MailboxAddress(empresa, email_envio));
 
-                SmtpClient envio = new SmtpClient(smtp_email);
-                envio.Port = puerto;
-                envio.DeliveryMethod = SmtpDeliveryMethod.Network;
-                envio.UseDefaultCredentials = false;
-                envio.Credentials = new NetworkCredential(email_envio, contraseña_email);
-                envio.EnableSsl = ssl;
+                correo.To.Add(new MailboxAddress("",email.Trim()));
 
+                using (var client = new MailKit.Net.Smtp.SmtpClient())
+                {
+                    client.ServerCertificateValidationCallback = delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) { return true; };
+                    
+                    client.Connect(smtp_email, puerto, false);
 
-                string userState = "test message1";
-                envio.SendAsync(correo, userState);
+                    client.Authenticate(email_envio, contraseña_email);
+
+                    client.Send(correo);
+
+                    client.Disconnect(true);
+                }
 
             }
-            catch (Exception ex) {                
+            catch (Exception ex)
+            {
                 _logger.Error(ex, "id_trx: " + id_trx + ex.Message);
 
                 ReenvioMensajeModel rm = new ReenvioMensajeModel();

@@ -238,13 +238,38 @@ namespace wa_api_incomm.Services
             {
                 con_sql = new SqlConnection(conexion);
 
+                con_sql.Open();
+
+                TrxHubModel trx_hub = new TrxHubModel();
+                trx_hub.codigo_distribuidor = model.codigo_distribuidor;
+                trx_hub.codigo_comercio = model.codigo_comercio;
+                trx_hub.nombre_comercio = model.nombre_comercio;
+                trx_hub.nro_telefono = "";
+                trx_hub.email = model.email_consultante;
+                trx_hub.id_producto = model.id_producto;
+
+                cmd = insTrxhub(con_sql, trx_hub);
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                {
+                    tran_sql.Rollback();
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+
+                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
+
+                con_sql.Close();
+
+
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El email " + model.email_consultante + " es incorrecto");
                     return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto " + model.id_producto.ToString() + " debe ser numerico");
                     return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico");
                 }
 
@@ -253,6 +278,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
                     return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
@@ -262,6 +288,7 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
                     return UtilSql.sOutPutTransaccion("06", "El producto no existe");
                 }
 
@@ -278,6 +305,7 @@ namespace wa_api_incomm.Services
                 //TipoDocIdentidadModel tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
                 if (tipodocidentidad_consultante.nu_id_tipo_doc_identidad <= 0)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultante " + tipodocidentidad_consultante.nu_id_tipo_doc_identidad.ToString() + " no existe");
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultante no existe.");
                 }
 
@@ -294,6 +322,8 @@ namespace wa_api_incomm.Services
                 //TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultado " + tipodocidentidad_consultado.nu_id_tipo_doc_identidad.ToString() + " no existe");
+
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
                 }
 
@@ -309,6 +339,8 @@ namespace wa_api_incomm.Services
                 //TipoDocIdentidadModel tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
                 if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe");
+
                     return UtilSql.sOutPutTransaccion("XX", "El tipo de documento del PDV no existe.");
                 }
 
@@ -440,18 +472,23 @@ namespace wa_api_incomm.Services
 
                     ConsultaTitularRest response = new ConsultaTitularRest();
 
-                    //PRODUCCION
-                    if (Config.bi_produccion == true)
-                    {
-                        response = api.ConsultaTitularFacturacion(modelo).Result;
-                    }
-
                     //QA
                     if (Config.bi_produccion == false)
                     {
+                        modelo.ReferenceCode = "QA" + modelo.ReferenceCode;
+
                         response = new ConsultaTitularRest();
                         response.CodigoWS = "0";
                         response.ID_Transaccion = "TestOK";
+                    }
+
+                    //PRODUCCION
+                    if (Config.bi_produccion == true || info.EnvioSentinelQA == "1")
+                    {
+                        _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo enviado: " + JsonConvert.SerializeObject(modelo));
+                        response = api.ConsultaTitularFacturacion(modelo).Result;
+                        _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo recibido: " + JsonConvert.SerializeObject(response));
+
                     }
 
                     if (response.CodigoWS == "0")
@@ -883,6 +920,25 @@ namespace wa_api_incomm.Services
                 cmd.ExecuteNonQuery();
                 return cmd;
             }
+        }
+
+        private static SqlCommand insTrxhub(SqlConnection cn, TrxHubModel model)
+        {
+
+            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_trxhub", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
+                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.codigo_comercio);
+                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombre_comercio);
+                cmd.Parameters.AddWithValue("@vc_nro_telefono", model.nro_telefono);
+                cmd.Parameters.AddWithValue("@vc_email", model.email);
+                cmd.Parameters.AddWithValue("@vc_id_producto", model.id_producto);
+                UtilSql.iIns(cmd, model);
+                cmd.ExecuteNonQuery();
+                return cmd;
+            }
+
         }
     }
 }

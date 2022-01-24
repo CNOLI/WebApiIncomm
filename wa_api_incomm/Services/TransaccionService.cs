@@ -179,7 +179,7 @@ namespace wa_api_incomm.Services
                 }
 
 
-                tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
+                tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(2);
                 tim.email = input.email;
 
 
@@ -271,7 +271,7 @@ namespace wa_api_incomm.Services
                         if (producto.bi_envio_sms)
                         {
                             //emvio de mensaje
-                            var mensajetxt = "felicitaciones. tu pin esta listo para ser redimido, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
+                            var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
                             SendMessage(mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
                         }
 
@@ -283,8 +283,10 @@ namespace wa_api_incomm.Services
                             //envio de correo
                             //var body = _send.GetBody(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
                             var body = _send.GetBodyFinal(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+                            //var body = _send.GetBodyFinal(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, "7NCD-7HNQ-4QTX", comercio.vc_cod_comercio, fechatran.ToString(), "ON220113.1019.A00001", "00000000001316140195", "20.00", convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
 
                             var titulo = "Confirmación de transacción #" + result.transactionId;
+                            //var titulo = "Confirmación de transacción #ON220113.1019.A00001";
                             _send.Email(id_trans_global, input.email, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
                         }
 
@@ -384,7 +386,7 @@ namespace wa_api_incomm.Services
                 ConvenioModel convenio = get_convenio(con_sql, 1);
                 var id_trans_global = "0";
 
-                var mensajetxt = "felicitaciones. tu pin esta listo para ser redimido, el codigo es:. terminos y condiciones en " + convenio.vc_url_web_terminos;
+                var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es:. terminos y condiciones en " + convenio.vc_url_web_terminos;
                 SendMessage(mensajetxt, nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
 
                 return 1;

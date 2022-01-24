@@ -88,6 +88,29 @@ namespace wa_api_incomm.Services
             try
             {
                 con_sql = new SqlConnection(conexion);
+                
+                con_sql.Open();
+
+                TrxHubModel trx = new TrxHubModel();
+                trx.codigo_distribuidor = model.codigo_distribuidor;
+                trx.codigo_comercio = model.codigo_comercio;
+                trx.nombre_comercio = model.nombre_comercio;
+                trx.nro_telefono = "";
+                trx.email = model.email_consultante;
+                trx.id_producto = model.id_producto;
+
+                cmd = insTrxhub(con_sql, trx);
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                {
+                    tran_sql.Rollback();
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+
+                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
+
+                con_sql.Close();
+
                 con_sql.Open();
 
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
@@ -146,27 +169,6 @@ namespace wa_api_incomm.Services
 
                 con_sql.Close();
 
-                con_sql.Open();
-
-                TrxHubModel trx = new TrxHubModel();
-                trx.codigo_distribuidor = model.codigo_distribuidor;
-                trx.codigo_comercio = model.codigo_comercio;
-                trx.nombre_comercio = model.nombre_comercio;
-                trx.nro_telefono = "";
-                trx.email = model.email_consultante;
-                trx.id_producto = model.id_producto;
-
-                cmd = insTrxhub(con_sql, trx);
-                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                {
-                    tran_sql.Rollback();
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                }
-
-                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
-
-                con_sql.Close();
 
                 e_input.documentType = Convert.ToInt32(tipodocidentidad_consultante.vc_cod_tipo_doc_identidad);
                 e_input.documentNumber = model.numero_documento_consultante;

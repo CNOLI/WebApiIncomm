@@ -388,7 +388,7 @@ namespace wa_api_incomm.Services
                     {
                         tran_sql.Rollback();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                     }
                     model_sql.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
                               

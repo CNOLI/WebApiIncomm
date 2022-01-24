@@ -10,7 +10,7 @@ namespace wa_api_incomm.Models
         public const bool bi_produccion = false;
 
 
-        public const string vc_url_sentinel_qa = "https://www2.sentinelperu.com/wsrest/";
+        public const string vc_url_sentinel_qa = "https://www2.sentinelperu.com/wsrestqa/";
         public const string vc_url_sentinel_prod = "https://www2.sentinelperu.com/wsrest/";
 
         public const string vc_url_incomm_qa = "http://192.168.29.20:2555/";

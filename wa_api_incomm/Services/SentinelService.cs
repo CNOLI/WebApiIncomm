@@ -485,6 +485,8 @@ namespace wa_api_incomm.Services
                     //PRODUCCION
                     if (Config.bi_produccion == true || info.EnvioSentinelQA == "1")
                     {
+                        modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
+
                         _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo enviado: " + JsonConvert.SerializeObject(modelo));
                         response = api.ConsultaTitularFacturacion(modelo).Result;
                         _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo recibido: " + JsonConvert.SerializeObject(response));

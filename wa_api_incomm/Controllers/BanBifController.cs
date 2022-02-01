@@ -13,7 +13,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("prdigital/BanBif")]
+    [Route("BanBif")]
     [ApiController]
     public class BanBifController : ControllerBase
     {

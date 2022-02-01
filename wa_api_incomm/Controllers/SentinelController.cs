@@ -13,7 +13,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("prdigital/Sentinel")]
+    [Route("Sentinel")]
     [ApiController]
     public class SentinelController : ControllerBase
     {

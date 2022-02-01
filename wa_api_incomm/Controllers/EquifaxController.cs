@@ -14,7 +14,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("prdigital/Equifax")]
+    [Route("Equifax")]
     [ApiController]
     public class EquifaxController : ControllerBase
     {

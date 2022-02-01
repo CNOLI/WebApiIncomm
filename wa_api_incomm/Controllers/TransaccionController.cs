@@ -14,7 +14,7 @@ using Hub_Encrypt;
 
 namespace wa_api_incomm.Controllers
 {
-    [Route("prdigital/Transaccion")]
+    [Route("Transaccion")]
     public class TransaccionController : Controller
     {
         private readonly ITransaccionService _ITransaccionService;

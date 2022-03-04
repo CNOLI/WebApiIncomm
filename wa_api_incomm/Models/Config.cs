@@ -25,10 +25,20 @@ namespace wa_api_incomm.Models
         public const string vc_url_izipay_finanzas_qa = "https://psrdes.izipay.pe:8088/";
         public const string vc_url_izipay_finanzas_prod = "https://psr.izipay.pe:8090/";
 
-        public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.banbifapimarket.com.pe/";
-        public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.banbifapimarket.com.pe/auth/realms/Banbif-API-External/protocol/openid-connect/token";
+        //public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.banbifapimarket.com.pe/";
+        //public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.banbifapimarket.com.pe/auth/realms/Banbif-API-External/protocol/openid-connect/token";
+        
+        public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.dombif.peru/";
+        public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.dombif.peru/auth/realms/Banbif-API/protocol/openid-connect/token";
         public const string vc_url_banbif_prod = "";
         public const string vc_url_banbif_token_prod = "";
+
+        public const string vc_url_servipagos_qa = "https://apisrv1.servipagos.pe:20791/";
+
+        public const string vc_url_servipagos_qa_resp_1 = "https://apibck1.servipagos.pe:20791/";
+        public const string vc_url_servipagos_qa_resp_2 = "https://{IP_PUBLICA}:20791/";
+
+        public const string vc_url_servipagos_prod = "https://apisrv1.servipagos.pe:20719/";
 
 
         //URL's
@@ -40,5 +50,6 @@ namespace wa_api_incomm.Models
         public const string vc_url_izipay_finanzas = bi_produccion ? vc_url_izipay_finanzas_prod : vc_url_izipay_finanzas_qa;
         public const string vc_url_banbif = bi_produccion ? vc_url_banbif_prod : vc_url_banbif_qa;
         public const string vc_url_banbif_token = bi_produccion ? vc_url_banbif_token_prod : vc_url_banbif_token_qa;
+        public const string vc_url_servipagos = bi_produccion ? vc_url_servipagos_prod : vc_url_servipagos_qa;
     }
 }

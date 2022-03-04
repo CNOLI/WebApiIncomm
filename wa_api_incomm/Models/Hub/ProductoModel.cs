@@ -7,7 +7,7 @@ namespace wa_api_incomm.Models.Hub
 {
     public class ProductoModel : EntidadBase
     {
-        public int nu_id_producto { get; set; }
+        public int? nu_id_producto { get; set; }
         public string vc_cod_producto { get; set; }
         public string vc_desc_producto { get; set; }
         public int? nu_id_convenio { get; set; }
@@ -27,7 +27,8 @@ namespace wa_api_incomm.Models.Hub
         public string vc_cod_distribuidor { get; set; }
         public int nu_id_empresa { get; set; }
         public int nu_id_rubro { get; set; }
+        public int nu_id_distribuidor { get; set; }
 
-
+        
     }
 }

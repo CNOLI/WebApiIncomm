@@ -78,5 +78,18 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
             }
         }
+
+        [HttpPost("prEmail")]
+        public IActionResult prEmail([FromQuery] string correoDestino)
+        {
+            try
+            {
+                return this.Ok(_ITransaccionService.pr_email(Configuration.GetSection("SQL").Value, correoDestino));
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
+            }
+        }
     }
 }

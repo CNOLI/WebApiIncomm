@@ -30,8 +30,13 @@ namespace wa_api_incomm.Services
                         {
                             model.nu_id_convenio = int.Parse(input.id_convenio);
                         }
+                        if (!String.IsNullOrEmpty(input.id_producto))
+                        {
+                            model.nu_id_producto = int.Parse(input.id_producto);
+                        }
                         cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
                         cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
+                        cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
                         UtilSql.iGet(cmd, model);
                         SqlDataReader dr = cmd.ExecuteReader();
                         return Query(dr);

@@ -30,6 +30,5 @@ namespace wa_api_incomm.Models
 
             return JsonConvert.DeserializeObject<object>(jsonObject);
         }
-
     }
 }

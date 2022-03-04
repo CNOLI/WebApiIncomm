@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace wa_api_incomm.Models.BanBif
 {
-    public class PagoModel
+    public class ReversarPagoModel
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? nu_id_trx { get; set; }
@@ -19,7 +19,7 @@ namespace wa_api_incomm.Models.BanBif
         public decimal? montoTotalDeuda { get; set; }
         public decimal? montoTotalSaldo { get; set; }
         public List<E_datos> deudas { get; set; }
-        public PagoModel()
+        public ReversarPagoModel()
         {
             this.recaudador = new E_recaudador();
             this.convenio = new E_convenio();

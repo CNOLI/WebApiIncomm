@@ -923,7 +923,6 @@ namespace wa_api_incomm.Services
                 return cmd;
             }
         }
-
         private static SqlCommand insTrxhub(SqlConnection cn, TrxHubModel model)
         {
 

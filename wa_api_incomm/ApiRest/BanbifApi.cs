@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -30,6 +31,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
+            //api.Timeout = TimeSpan.FromSeconds(1);
             
             token = GetTokenAsync(client_id, client_secret).Result;
 
@@ -241,7 +243,7 @@ namespace wa_api_incomm.ApiRest
                 string parametros = "";
                 parametros += "?codigoRecaudador=" + codigoRecaudador;
                 parametros += "&fechaHora=" + DateTime.Now.ToString("yyyyMMddHHmmss");
-                parametros += "&idServicio=" + model.nu_id_servicio;
+                parametros += "&idServicio=" + model.numero_servicio;
                 parametros += "&idTransaccionOrigen=" + string.Concat(DateTime.Now.ToString("yyyyMMddHHmmss"), new Random().Next(1, 9).ToString("D1"));
 
                 response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/convenios/" + model.vc_cod_convenio + "/deudas" + parametros);
@@ -254,29 +256,66 @@ namespace wa_api_incomm.ApiRest
                 else
                 {
                     Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
-                    //throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
                 }
             }
             catch (Exception ex)
             {
-                //Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
                 throw new Exception(ex.Message + ". Consultar_Deuda " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
         }
-        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model,string idTransaccionOrigen)
+        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model,decimal? idTransaccionOrigen)
         {
             Response.E_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
                 string parametros = "";
-                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen;
+                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen.ToString();
 
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.Default, "application/json");
 
+                response = await api.PostAsync(ApiURL + "api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
+            
+                var jsonrpta = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    Result.timeout = true;
+                }
+                else
+                {
+                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return Result;
+        }
+        public async Task<Response.E_Response_Trx> Reversar_Pago(ReversarPagoModel model, decimal? idTransaccionOrigen)
+        {
+            Response.E_Response_Trx Result = null;
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
+            {
+                string parametros = "";
+                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen.ToString();
 
+                var json = JsonConvert.SerializeObject(model);
+                var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.Default, "application/json");
 
                 response = await api.PostAsync(ApiURL + "api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
 
@@ -288,12 +327,21 @@ namespace wa_api_incomm.ApiRest
                 else
                 {
                     Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                    //throw new Exception("get_convenio: " + response.Content.ReadAsStringAsync().Result);
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    Result.timeout = true;
+                }
+                else
+                {
+                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 }
             }
             catch (Exception ex)
             {
-                //Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
                 throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;

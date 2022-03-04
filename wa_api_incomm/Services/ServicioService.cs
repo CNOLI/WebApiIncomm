@@ -1,21 +1,32 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
+using wa_api_incomm.Models.BanBif;
 using wa_api_incomm.Models.Hub;
 using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.Hub.EmpresaClientModel;
 using static wa_api_incomm.Models.Hub.RubroClientModel;
-using static wa_api_incomm.Models.Hub.ServicioClientModel;
+using static wa_api_incomm.Models.Hub.ServicioModel;
 
 namespace wa_api_incomm.Services
 {
     public class ServicioService : IServicioService
     {
-        public object sel_rubros(string conexion, RubroClientModelInput input)
+
+        IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
+
+        private readonly Serilog.ILogger _logger;
+
+        public ServicioService(Serilog.ILogger logger)
+        {
+            _logger = logger;
+        }
+        public object obtenerRubros(string conexion, RubroClientModelInput input)
         {
             using (SqlConnection cn = new SqlConnection(conexion))
             {
@@ -57,7 +68,7 @@ namespace wa_api_incomm.Services
 
             }
         }
-        public object sel_empresas(string conexion, EmpresaClientModelInput input)
+        public object obtenerEmpresas(string conexion, EmpresaClientModelInput input)
         {
             using (SqlConnection cn = new SqlConnection(conexion))
             {
@@ -87,9 +98,9 @@ namespace wa_api_incomm.Services
                             if (Ec(dr, "nu_id_empresa"))
                                 m.id_empresa = dr["nu_id_empresa"].ToString();
                             if (Ec(dr, "vc_nro_doc_identidad"))
-                                m.ruc = dr["vc_nro_doc_identidad"].ToString();
+                                m.ruc_empresa = dr["vc_nro_doc_identidad"].ToString();
                             if (Ec(dr, "vc_nombre"))
-                                m.nombre = dr["vc_nombre"].ToString();
+                                m.nombre_empresa = dr["vc_nombre"].ToString();
 
                             ls.Add(m);
                         }
@@ -104,7 +115,7 @@ namespace wa_api_incomm.Services
 
             }
         }
-        public object sel(string conexion, ServicioClientModelInput input)
+        public object obtenerServicios(string conexion, ServicioModelInput input)
         {
             using (SqlConnection cn = new SqlConnection(conexion))
             {
@@ -136,9 +147,198 @@ namespace wa_api_incomm.Services
             }
         }
 
-        private List<ServicioClientModel> Query(SqlDataReader or)
+        public object obtenerDeuda(string conexion, ServicioObtenerDeudaPagoModelInput input)
         {
-            var lm = new List<ServicioClientModel>();
+            SqlConnection con_sql = null;
+
+            dynamic obj = null;
+
+            try
+            {
+                con_sql = new SqlConnection(conexion);
+
+                GlobalService global_service = new GlobalService();             
+                
+                //Obtener Distribuidor
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
+
+                con_sql.Open();
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+                con_sql.Close();
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                }
+
+                //Obtener Producto
+                ProductoModel producto = new ProductoModel();
+                producto.nu_id_producto = Convert.ToInt32(input.id_servicio);
+                producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+
+                con_sql.Open();
+                producto = global_service.get_producto(con_sql, producto);
+                con_sql.Close();
+                
+                if (producto.nu_id_producto <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
+                }
+
+                //Dirigir a APIS
+                if (producto.nu_id_convenio == 3)
+                {
+                    //BANBIF
+                    DeudaModel.Deuda_Input model_banbif = new DeudaModel.Deuda_Input();
+                    model_banbif.codigo_distribuidor = input.codigo_distribuidor;
+                    model_banbif.codigo_comercio = input.codigo_comercio;
+                    model_banbif.nombre_comercio = input.nombre_comercio;
+                    model_banbif.vc_cod_convenio = producto.vc_cod_producto;
+                    model_banbif.numero_servicio = input.numero_servicio;
+                    BanBifService Banbif_Service = new BanBifService(_logger);
+                    obj = Banbif_Service.get_deuda(conexion, model_banbif);
+
+                }
+                else
+                {
+                    return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
+                }
+
+                return obj;
+
+            }
+            catch (Exception ex)
+            {
+
+                return UtilSql.sOutPutTransaccion("500", ex.Message);
+            }
+            finally
+            {
+                if (con_sql.State == ConnectionState.Open) con_sql.Close();
+            }
+        }
+        public object procesarPago(string conexion, ServicioProcesarPagoModelInput input)
+        {
+            SqlConnection con_sql = null;
+            SqlTransaction tran_sql = null;
+            SqlCommand cmd = null;
+            string id_trx_hub = "";
+            string id_trans_global = "";
+
+            dynamic obj = null;
+
+            try
+            {
+                con_sql = new SqlConnection(conexion);
+
+                GlobalService global_service = new GlobalService();
+
+                //Insertar Transaccion HUB
+                con_sql.Open();
+
+                TrxHubModel trx_hub = new TrxHubModel();
+                trx_hub.codigo_distribuidor = input.codigo_distribuidor;
+                trx_hub.codigo_comercio = input.codigo_comercio;
+                trx_hub.nombre_comercio = input.nombre_comercio;
+                trx_hub.nro_telefono = "";
+                trx_hub.email = "";
+                trx_hub.id_producto = input.id_servicio;
+
+                cmd = global_service.insTrxhub(con_sql, trx_hub);
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                {
+                    tran_sql.Rollback();
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+
+                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
+
+                con_sql.Close();
+
+
+                //Obtener Distribuidor
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
+
+                con_sql.Open();
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+                con_sql.Close();
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
+                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                }
+
+                con_sql.Open();
+                ComercioModel comercio = global_service.get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
+                con_sql.Close();
+
+                //Obtener Producto
+                ProductoModel producto = new ProductoModel();
+                producto.nu_id_producto = Convert.ToInt32(input.id_servicio);
+                producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+
+                con_sql.Open();
+                producto = global_service.get_producto(con_sql, producto);
+                con_sql.Close();
+
+                if (producto.nu_id_producto <= 0)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
+                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
+                }
+
+                //Validaciones Adicionales
+
+                if (string.IsNullOrEmpty(input.numero_documento))
+                {
+                    return UtilSql.sOutPutTransaccion("500", "Debe indicar el número de documento de pago.");
+                }
+
+                //Dirigir a APIS
+                if (producto.nu_id_convenio == 3)
+                {
+                    //BANBIF
+                    PagoModel.Pago_Input model_banbif = new PagoModel.Pago_Input();
+                    model_banbif.id_trx_hub = id_trx_hub;
+                    model_banbif.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();
+                    model_banbif.id_comercio = comercio.nu_id_comercio.ToString();
+                    model_banbif.id_servicio = input.id_servicio;
+                    model_banbif.vc_cod_convenio = producto.vc_cod_producto;
+                    model_banbif.numero_servicio = input.numero_servicio;
+                    model_banbif.numero_documento = input.numero_documento;
+                    model_banbif.importe_pago = input.importe_pago;
+                    BanBifService Banbif_Service = new BanBifService(_logger);
+                    obj = Banbif_Service.post_pago(conexion, model_banbif);
+
+                }
+                else
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
+                    return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
+                }
+
+                return obj;
+
+            }
+            catch (Exception ex)
+            {
+
+                return UtilSql.sOutPutTransaccion("500", ex.Message);
+            }
+            finally
+            {
+                if (con_sql.State == ConnectionState.Open) con_sql.Close();
+            }
+
+        }
+
+        private List<ServicioModel> Query(SqlDataReader or)
+        {
+            var lm = new List<ServicioModel>();
             while (or.Read())
             {
                 lm.Add(Decode(or));
@@ -146,9 +346,9 @@ namespace wa_api_incomm.Services
             return lm;
         }
 
-        private ServicioClientModel Decode(SqlDataReader or)
+        private ServicioModel Decode(SqlDataReader or)
         {
-            ServicioClientModel m = new ServicioClientModel();
+            ServicioModel m = new ServicioModel();
             if (Ec(or, "nu_id_producto"))
                 m.id_servicio = or["nu_id_producto"].ToString();
             if (Ec(or, "vc_desc_producto"))

@@ -8,13 +8,14 @@ namespace wa_api_incomm.Models.Hub
     public class TransaccionModel :EntidadBase
     {
         public decimal? nu_id_convenio { get; set; }
+        public int nu_id_trx_hub { get; set; }
 
         public int nu_id_trx                { get; set; }
         public decimal? nu_id_trx_app       { get; set; }
         public int nu_id_distribuidor       { get; set; }
         public int nu_id_comercio           { get; set; }
         public DateTime dt_fecha            { get; set; }
-        public int nu_id_producto           { get; set; }
+        public int? nu_id_producto           { get; set; }
         public decimal nu_precio            { get; set; }
         public string vc_id_ref_trx         { get; set; }
         public string vc_cod_autorizacion   { get; set; }
@@ -42,6 +43,12 @@ namespace wa_api_incomm.Models.Hub
         public string PDVTipoDoc            { get; set; }
         public string PDVNroDoc             { get; set; }
         public string PDVRazSocNom          { get; set; }
+
+        //
+        public string vc_numero_servicio    { get; set; }
+        public string vc_nro_doc_pago       { get; set; }
+        //
+        public decimal? nu_id_tipo_moneda_vta { get; set; }
 
 
     }

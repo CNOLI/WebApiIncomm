@@ -77,12 +77,12 @@ namespace wa_api_incomm.Smtp
 
                 correo.From.Add(new MailboxAddress(empresa, email_envio));
 
-                correo.To.Add(new MailboxAddress("",email.Trim()));
+                correo.To.Add(new MailboxAddress("", email.Trim()));
 
                 using (var client = new MailKit.Net.Smtp.SmtpClient())
                 {
                     client.ServerCertificateValidationCallback = delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) { return true; };
-                    
+
                     client.Connect(smtp_email, puerto, false);
 
                     client.Authenticate(email_envio, contraseña_email);
@@ -105,7 +105,7 @@ namespace wa_api_incomm.Smtp
 
         }
 
-        private static SqlCommand insSendInfoError(SqlConnection cn,  ReenvioMensajeModel model)
+        private static SqlCommand insSendInfoError(SqlConnection cn, ReenvioMensajeModel model)
         {
             using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_reenvio_mensaje", cn))
             {
@@ -171,7 +171,7 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<tr style='border-collapse:collapse'></tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
             bodyRegistrer += "<td align='center' style='padding:0;Margin:0'>";
-            bodyRegistrer += "<table class='es-header-body' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:"+color1+";width:600px' cellspacing='0' cellpadding='0' bgcolor='#044767' align='center'>";
+            bodyRegistrer += "<table class='es-header-body' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:" + color1 + ";width:600px' cellspacing='0' cellpadding='0' bgcolor='#044767' align='center'>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
             bodyRegistrer += "<td align='left' style='Margin:0;padding-top:35px;padding-bottom:35px;padding-left:35px;padding-right:35px'>";
             bodyRegistrer += "<table class='es-left' cellspacing='0' cellpadding='0' align='left' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left'>";
@@ -217,7 +217,7 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<td align='center' style='padding:0;Margin:0;padding-bottom:10px'><h2 style=\"Margin:0;line-height:36px;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-size:30px;font-style:normal;font-weight:bold;color:#333333\">¡Tu compra fue existosa!</h2></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td align='left' style='padding:0;Margin:0;padding-top:15px;padding-bottom:20px'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#777777;font-size:16px\">Realizaste una compra de contenido de: <b>" + categoria+"</b>, para el producto: "+producto+"</p></td>";
+            bodyRegistrer += "<td align='left' style='padding:0;Margin:0;padding-top:15px;padding-bottom:20px'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#777777;font-size:16px\">Realizaste una compra de contenido de: <b>" + categoria + "</b>, para el producto: " + producto + "</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "</table></td>";
             bodyRegistrer += "</tr>";
@@ -229,7 +229,7 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<table class='es-content' cellspacing='0' cellpadding='0' align='center' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%'>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
             bodyRegistrer += "<td align='center' style='padding:0;Margin:0'>";
-            bodyRegistrer += "<table class='es-content-body' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:"+color2+";width:600px' cellspacing='0' cellpadding='0' bgcolor='#1b9ba3' align='center'>";
+            bodyRegistrer += "<table class='es-content-body' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:" + color2 + ";width:600px' cellspacing='0' cellpadding='0' bgcolor='#1b9ba3' align='center'>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
             bodyRegistrer += "<td align='left' style='Margin:0;padding-top:35px;padding-bottom:35px;padding-left:35px;padding-right:35px'>";
             bodyRegistrer += "<table width='100%' cellspacing='0' cellpadding='0' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px'>";
@@ -240,10 +240,10 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<td align='center' style='padding:0;Margin:0'><p style=\"Margin:0;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-style:normal;font-weight:bold;color:#FFFFFF\">Tu PIN es:</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td align='center' style='padding:0;Margin:0;padding-top:25px'><h2 style=\"Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-size:24px;font-style:normal;font-weight:bold;color:#FFFFFF\">" + pin+"</h2></td>";
+            bodyRegistrer += "<td align='center' style='padding:0;Margin:0;padding-top:25px'><h2 style=\"Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-size:24px;font-style:normal;font-weight:bold;color:#FFFFFF\">" + pin + "</h2></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td align='center' style='padding:0;Margin:0;padding-top:25px'><p style=\"Margin:0;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-style:normal;font-weight:bold;color:#FFFFFF\">En el comercio identificado con el código: " + codcomercio+"</p></td>";
+            bodyRegistrer += "<td align='center' style='padding:0;Margin:0;padding-top:25px'><p style=\"Margin:0;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;font-style:normal;font-weight:bold;color:#FFFFFF\">En el comercio identificado con el código: " + codcomercio + "</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "</table></td>";
             bodyRegistrer += "</tr>";
@@ -266,13 +266,13 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<td align='left' style='Margin:0;padding-top:10px;padding-bottom:10px;padding-left:10px;padding-right:10px'>";
             bodyRegistrer += "<table style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:500px' class='cke_show_border' cellspacing='1' cellpadding='1' border='0' align='left' role='presentation'>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Fecha y hora: " + fecha+"</p></td>";
+            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Fecha y hora: " + fecha + "</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Número de transacción: " + nrotransaccion+"</p></td>";
+            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Número de transacción: " + nrotransaccion + "</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Número de aprobación: " + nroaprobacion+"</p></td>";
+            bodyRegistrer += "<td style='padding:5px 10px 5px 0;Margin:0' width='80%' align='center'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:24px;color:#333333;font-size:16px\">Número de aprobación: " + nroaprobacion + "</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "</table></td>";
             bodyRegistrer += "</tr>";
@@ -319,7 +319,7 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<td valign='top' align='center' style='padding:0;Margin:0;width:530px'>";
             bodyRegistrer += "<table width='100%' cellspacing='0' cellpadding='0' role='presentation' style='mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px'>";
             bodyRegistrer += "<tr style='border-collapse:collapse'>";
-            bodyRegistrer += "<td esdev-links-color='#777777' align='center' class='es-m-txt-c' style='padding:0;Margin:0;padding-bottom:5px'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:21px;color:#777777;font-size:14px\">¿Dudas? Tranquilo, <u><a target='_blank' style='-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#777777;font-size:14px' class='unsubscribe' href='" + urlweb+"'>aquí</a></u> estamos para resolverlas.</p></td>";
+            bodyRegistrer += "<td esdev-links-color='#777777' align='center' class='es-m-txt-c' style='padding:0;Margin:0;padding-bottom:5px'><p style=\"Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;line-height:21px;color:#777777;font-size:14px\">¿Dudas? Tranquilo, <u><a target='_blank' style='-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#777777;font-size:14px' class='unsubscribe' href='" + urlweb + "'>aquí</a></u> estamos para resolverlas.</p></td>";
             bodyRegistrer += "</tr>";
             bodyRegistrer += "</table></td>";
             bodyRegistrer += "</tr>";
@@ -352,7 +352,7 @@ namespace wa_api_incomm.Smtp
             return bodyRegistrer;
         }
 
-        public string GetBodyFinal(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
+        public string GetBodyFinalAnterior(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
 
@@ -392,12 +392,11 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += "<td colspan=\"2\">";
             bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + fecha + "</p>";
             bodyRegistrer += "</td>";
-            bodyRegistrer += "</td>";
             bodyRegistrer += "<td colspan=\"2\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nrotransaccion  + "</p>";
+            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nrotransaccion + "</p>";
             bodyRegistrer += "</td>";
             bodyRegistrer += "<td colspan=\"1\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nroaprobacion+ "</p>";
+            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nroaprobacion + "</p>";
             bodyRegistrer += "</td>";
             bodyRegistrer += "<td rowspan=\"3\">";
             bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_10.png\" width=\"137\" height=\"266\" alt=\"\">";
@@ -447,6 +446,131 @@ namespace wa_api_incomm.Smtp
         }
 
 
+        public string GetBodyFinal(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
+        {
+            string bodyRegistrer = "";
+
+            bodyRegistrer += @"<html";
+            bodyRegistrer += @" xmlns=""http://www.w3.org/1999/xhtml""";
+            bodyRegistrer += @" xmlns:o=""urn:schemas-microsoft-com:office:office""";
+            bodyRegistrer += @" width=""100%""";
+            bodyRegistrer += @" style=""width: 100%; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 0; margin: 0;""";
+            bodyRegistrer += @" >";
+            bodyRegistrer += @" <head>";
+            bodyRegistrer += @" <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />";
+            bodyRegistrer += @" </head>";
+            bodyRegistrer += @" <style type=""text/css"">";
+            bodyRegistrer += @" table {";
+            bodyRegistrer += @" border-collapse: collapse;";
+            bodyRegistrer += @" border-spacing: 0;";
+            bodyRegistrer += @" mso-table-lspace: 0pt !important;";
+            bodyRegistrer += @" mso-table-rspace: 0pt !important;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" img {";
+            bodyRegistrer += @" display: block;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" </style>";
+            bodyRegistrer += @" <body bgcolor=""#FFFFFF"" leftmargin=""0"" topmargin=""0"" marginwidth=""0"" marginheight=""0"">";
+            bodyRegistrer += @" <table id=""Tabla_01"" width=""751"" height=""906"" border=""0"" cellpadding=""0"" cellspacing=""0"" bgcolor=""#000000"" align=""center"" style=""border: none; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse;"">";
+            bodyRegistrer += @" <tbody>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""7"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_01.png"" width=""751"" height=""432"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr> ";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""2"" width=""109"" height=""137"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_02.png"" width=""109"" height=""137"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""4"" align=""center"">";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 24px; color: #ffffff; font-size: 20px;"">";
+            bodyRegistrer += @" Realizaste una compra de contenido de: <b>" + categoria + "</b>, para el producto: " + producto + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 20px; color: #777777; font-size: 16px;"">";
+            bodyRegistrer += @" &nbsp;";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 12px; color: #777777; font-size: 16px;"">";
+            bodyRegistrer += @" En el comercio identificado con el código: " + codcomercio + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td>";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_04.png"" width=""137"" height=""137"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""8"" width=""751"" height=""70"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_05.png"" width=""751"" height=""70"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td rowspan=""3"" width=""108"" height=""266"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_06.png"" width=""108"" height=""266"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""2"">";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 30px; color: #777777; font-size: 12px;"">";
+            bodyRegistrer += @" " + fecha + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td> ";
+            bodyRegistrer += @" <td colspan=""2"">";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 30px; color: #777777; font-size: 12px;"">";
+            bodyRegistrer += @" " + nrotransaccion + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""1"">";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 30px; color: #777777; font-size: 12px;"">";
+            bodyRegistrer += @" " + nroaprobacion + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td rowspan=""3"" width=""137"" height=""266"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_10.png"" width=""137"" height=""266"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""3"" rowspan=""2"" width=""204"" height=""236"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11.png"" width=""204"" height=""236"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""2"" align=""bottom"" >";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 24px; color: #ffffff; font-size: 21px;""># PIN :<b> " + pin + "</b></p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr> ";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""2"" width=""302"" height=""192"" >";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_13.png"" width=""302"" height=""192"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td width=""108"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""108"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""1"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""1"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""152"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""152"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""51"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""51"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""134"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""134"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""168"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""168"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td width=""137"" height=""1"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""137"" height=""1"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" </tbody>";
+            bodyRegistrer += @" </table>";
+            bodyRegistrer += @" </body>";
+            bodyRegistrer += @" </html>";
+
+
+
+
+            return bodyRegistrer;
+        }
 
 
     }

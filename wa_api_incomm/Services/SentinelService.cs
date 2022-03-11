@@ -68,6 +68,7 @@ namespace wa_api_incomm.Services
         {
             try
             {
+                GlobalService global_service = new GlobalService();
                 SentinelApi api = new SentinelApi();
                 Encripta encripta = null;
                 EncriptaRest encripta_rest = null;
@@ -84,11 +85,11 @@ namespace wa_api_incomm.Services
                 TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
                 try
                 {
-                    tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
+                    tipodocidentidad_consultado = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado), nu_id_convenio);
                 }
                 catch (Exception ex)
                 {
-                    tipodocidentidad_consultado = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado);
+                    tipodocidentidad_consultado = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado, nu_id_convenio);
                 }
 
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
@@ -154,50 +155,8 @@ namespace wa_api_incomm.Services
 
                 if (rest.CodigoWS != "0")
                 {
-                    switch (rest.CodigoWS)
-                    {
-                        case "1":
-                            mensaje_error = "Usuario Incorrecto";
-                            break;
-                        case "2":
-                            mensaje_error = "Servicio Inválido";
-                            break;
-                        case "3":
-                            mensaje_error = "Documento inválido(No existe)";
-                            break;
-                        case "4":
-                            mensaje_error = "No tiene autorización a ver dicho CPT";
-                            break;
-                        case "6":
-                            mensaje_error = "El usuario no tiene permiso de consultar nuevos documentos";
-                            break;
-                        case "7":
-                            mensaje_error = "El servicio está suspendido";
-                            break;
-                        case "8":
-                            mensaje_error = "El usuario está suspendido";
-                            break;
-                        case "9":
-                            mensaje_error = "El usuario está bloqueado";
-                            break;
-                        case "10":
-                            mensaje_error = "El servicio no tiene disponible este producto";
-                            break;
-                        case "12":
-                            mensaje_error = "Usuario no se encuentra en servicio";
-                            break;
-                        case "97":
-                            mensaje_error = "Servicio no cuenta con acceso al web service";
-                            break;
-                        case "98":
-                            mensaje_error = "Error en credenciales usuario o password";
-                            break;
-                        case "99":
-                            mensaje_error = "Error en funcionamiento del web service";
-                            break;
-                    }
                     response.codigo = rest.CodigoWS;
-                    response.mensaje = mensaje_error;
+                    response.mensaje = global_service.get_mensaje_error(nu_id_convenio, rest.CodigoWS);
 
                     return response;
                 }
@@ -236,6 +195,8 @@ namespace wa_api_incomm.Services
 
             try
             {
+                GlobalService global_service = new GlobalService();
+
                 con_sql = new SqlConnection(conexion);
 
                 con_sql.Open();
@@ -248,7 +209,7 @@ namespace wa_api_incomm.Services
                 trx_hub.email = model.email_consultante;
                 trx_hub.id_producto = model.id_producto;
 
-                cmd = insTrxhub(con_sql, trx_hub);
+                cmd = global_service.insTrxhub(con_sql, trx_hub);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
                     tran_sql.Rollback();
@@ -260,6 +221,7 @@ namespace wa_api_incomm.Services
 
                 con_sql.Close();
 
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
 
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
                 {
@@ -274,7 +236,9 @@ namespace wa_api_incomm.Services
                 }
 
                 con_sql.Open();
-                DistribuidorModel distribuidor = get_distribuidor(con_sql, model.codigo_distribuidor);
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
@@ -282,9 +246,14 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
-                ComercioModel comercio = get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
+                ComercioModel comercio = global_service.get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
 
-                ProductoModel producto = get_producto(con_sql, Convert.ToInt32(model.id_producto), distribuidor.nu_id_distribuidor);
+
+                ProductoModel producto = new ProductoModel();
+                producto.nu_id_producto = Convert.ToInt32(model.id_producto);
+                producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                producto.nu_id_convenio = nu_id_convenio;
+                producto = global_service.get_producto(con_sql, producto);
 
                 if (producto.nu_id_producto <= 0)
                 {
@@ -295,14 +264,13 @@ namespace wa_api_incomm.Services
                 TipoDocIdentidadModel tipodocidentidad_consultante = new TipoDocIdentidadModel();
                 try
                 {
-                    tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
+                    tipodocidentidad_consultante = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante), nu_id_convenio);
                 }
                 catch (Exception ex)
                 {
-                    tipodocidentidad_consultante = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultante);
+                    tipodocidentidad_consultante = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultante, nu_id_convenio);
                 }
 
-                //TipoDocIdentidadModel tipodocidentidad_consultante = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante));
                 if (tipodocidentidad_consultante.nu_id_tipo_doc_identidad <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultante " + tipodocidentidad_consultante.nu_id_tipo_doc_identidad.ToString() + " no existe");
@@ -312,14 +280,13 @@ namespace wa_api_incomm.Services
                 TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
                 try
                 {
-                    tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
+                    tipodocidentidad_consultado = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado), nu_id_convenio);
                 }
                 catch (Exception ex)
                 {
-                    tipodocidentidad_consultado = get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado);
+                    tipodocidentidad_consultado = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado, nu_id_convenio);
                 }
 
-                //TipoDocIdentidadModel tipodocidentidad_consultado = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado));
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultado " + tipodocidentidad_consultado.nu_id_tipo_doc_identidad.ToString() + " no existe");
@@ -330,13 +297,13 @@ namespace wa_api_incomm.Services
                 TipoDocIdentidadModel tipodocidentidad_PDV = new TipoDocIdentidadModel();
                 try
                 {
-                    tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
+                    tipodocidentidad_PDV = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV), nu_id_convenio);
                 }
                 catch (Exception ex)
                 {
-                    tipodocidentidad_PDV = get_tipo_documento_codigo(con_sql, model.tipo_documento_PDV);
+                    tipodocidentidad_PDV = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_PDV, nu_id_convenio);
                 }
-                //TipoDocIdentidadModel tipodocidentidad_PDV = get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV));
+
                 if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe");
@@ -348,21 +315,28 @@ namespace wa_api_incomm.Services
                 con_sql.Close();
 
                 TransaccionModel trx = new TransaccionModel();
+                trx.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
                 trx.vc_cod_distribuidor = model.codigo_distribuidor;
+                trx.nu_id_comercio = comercio.nu_id_comercio;
                 trx.vc_cod_comercio = model.codigo_comercio;
+                trx.nu_id_tipo_doc_sol = tipodocidentidad_consultante.nu_id_tipo_doc_identidad;
                 trx.vc_cod_tipo_doc_sol = tipodocidentidad_consultante.vc_cod_tipo_doc_identidad;
                 trx.vc_nro_doc_sol = model.numero_documento_consultante;
                 trx.ch_dig_ver_sol = model.digito_verificador_consultante;
                 trx.vc_telefono_sol = model.telefono_consultante;
                 trx.vc_email_sol = model.email_consultante;
                 trx.vc_tipo_comprobante = model.tipo_documento_facturacion;
+                trx.nu_id_tipo_doc_cpt = tipodocidentidad_consultado.nu_id_tipo_doc_identidad;
                 trx.vc_cod_tipo_doc_cpt = tipodocidentidad_consultado.vc_cod_tipo_doc_identidad;
                 trx.vc_nro_doc_cpt = model.numero_documento_consultado;
+                trx.nu_id_producto = producto.nu_id_producto;
                 trx.vc_cod_producto = producto.vc_cod_producto;
                 trx.vc_ruc = model.numero_ruc;
+
                 trx.PDVTipoDoc = tipodocidentidad_PDV.vc_cod_tipo_doc_identidad;
                 trx.PDVNroDoc = model.numero_documento_PDV;
                 trx.PDVRazSocNom = model.razon_social_PDV;
+                trx.vc_tran_usua_regi = "API";
 
                 //encriptar el usuario
                 encripta = new Encripta();
@@ -429,7 +403,7 @@ namespace wa_api_incomm.Services
                 con_sql.Open();
 
                 //Variables BD
-                var idtran = get_id_transaccion(con_sql);
+                var idtran = global_service.get_id_transaccion(con_sql);
                 id_trans_global = idtran.ToString();
                 var fechatran = DateTime.Now;
 
@@ -443,17 +417,17 @@ namespace wa_api_incomm.Services
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@nu_id_trx", id_trans_global);
-                    cmd.Parameters.AddWithValue("@vc_cod_distribuidor", trx.vc_cod_distribuidor);
-                    cmd.Parameters.AddWithValue("@vc_cod_comercio", trx.vc_cod_comercio);
-                    cmd.Parameters.AddWithValue("@vc_cod_producto", trx.vc_cod_producto);
-                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_sol", trx.vc_cod_tipo_doc_sol);
+                    cmd.Parameters.AddWithValue("@nu_id_trx_hub", id_trx_hub);
+                    cmd.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
+                    cmd.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
+                    cmd.Parameters.AddWithValue("@nu_id_producto", trx.nu_id_producto);
+                    cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", trx.nu_id_tipo_doc_sol);
                     cmd.Parameters.AddWithValue("@vc_nro_doc_sol", trx.vc_nro_doc_sol);
                     cmd.Parameters.AddWithValue("@ch_dig_ver_sol", trx.ch_dig_ver_sol);
                     cmd.Parameters.AddWithValue("@vc_email_sol", trx.vc_email_sol);
                     cmd.Parameters.AddWithValue("@vc_telefono_sol", trx.vc_telefono_sol);
-                    cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_cpt", trx.vc_cod_tipo_doc_cpt);
+                    cmd.Parameters.AddWithValue("@nu_id_tipo_doc_cpt", trx.nu_id_tipo_doc_cpt);
                     cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", trx.vc_nro_doc_cpt);
-                    cmd.Parameters.AddWithValue("@vc_id_ref_trx", "");
                     cmd.Parameters.AddWithValue("@vc_tipo_comprobante", trx.vc_tipo_comprobante);
                     cmd.Parameters.AddWithValue("@vc_ruc", trx.vc_ruc);
 
@@ -463,6 +437,7 @@ namespace wa_api_incomm.Services
                     if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                     {
                         tran_sql.Rollback();
+                        ins_bd = false;
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                         return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                     }
@@ -487,9 +462,7 @@ namespace wa_api_incomm.Services
                     {
                         modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
 
-                        _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo enviado: " + JsonConvert.SerializeObject(modelo));
-                        response = api.ConsultaTitularFacturacion(modelo).Result;
-                        _logger.Information("idtrx: " + id_trx_hub + " / " + "URL: " + Config.vc_url_sentinel + " - Modelo recibido: " + JsonConvert.SerializeObject(response));
+                        response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
 
                     }
 
@@ -507,6 +480,7 @@ namespace wa_api_incomm.Services
                             if (cmd_upd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                             {
                                 tran_sql.Rollback();
+                                ins_bd = false;
                                 _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                 return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                             }
@@ -514,6 +488,10 @@ namespace wa_api_incomm.Services
                         }
 
                         tran_sql.Commit();
+                        ins_bd = false;
+                        con_sql.Close();
+
+                        _logger.Information("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 
                         object _info = new object();
 
@@ -523,7 +501,6 @@ namespace wa_api_incomm.Services
                             mensaje = "Operación exitosa, la información le llegará al correo electrónico registrado.",
                             nro_transaccion = id_trans_global
                         };
-                        con_sql.Close();
 
                         return _info;
 
@@ -532,15 +509,20 @@ namespace wa_api_incomm.Services
                     else
                     {
                         tran_sql.Rollback();
+                        ins_bd = false;
                         con_sql.Close();
 
                         TransaccionModel tm = new TransaccionModel();
                         tm.nu_id_trx = Convert.ToInt32(id_trans_global);
+                        tm.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
                         tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
                         tm.nu_id_comercio = comercio.nu_id_comercio;
                         tm.dt_fecha = DateTime.Now;
                         tm.nu_id_producto = producto.nu_id_producto;
                         tm.nu_precio = producto.nu_precio ?? 0;
+                        tm.nu_id_tipo_moneda_vta = 1;
+                        tm.vc_numero_servicio = "";
+                        tm.vc_tran_usua_regi = "API";
 
 
                         if (response.CodigoWS == null)
@@ -551,37 +533,35 @@ namespace wa_api_incomm.Services
                         else
                         {
                             tm.vc_cod_error = response.CodigoWS;
-                            tm.vc_desc_error = get_mensaje_error(response.CodigoWS);
+                            tm.vc_desc_error = global_service.get_mensaje_error(nu_id_convenio, response.CodigoWS);
                             foreach (var item in response.SDT_TitMas_Out)
                             {
-                                tm.vc_cod_error += "|" + item.CodigoVal;
-                                tm.vc_desc_error += "|" + get_mensaje_error(item.CodigoVal);
+                                tm.vc_cod_error += " - " + item.CodigoVal;
+                                tm.vc_desc_error += " - " + global_service.get_mensaje_error(nu_id_convenio, item.CodigoVal);
                             }
                         }
 
 
-                        tm.vc_desc_tipo_error = "";
+                        tm.vc_desc_tipo_error = "CONVENIO";
 
 
                         SqlTransaction tran_sql_error = null;
                         con_sql.Open();
 
                         tran_sql_error = con_sql.BeginTransaction();
-                        ins_bd = true;
 
-                        cmd = insTransaccionError(con_sql, tran_sql_error, tm);
+                        cmd = global_service.insTransaccionError(con_sql, tran_sql_error, tm);
 
                         if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                         {
-                            tran_sql.Rollback();
+                            tran_sql_error.Rollback();
                             _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                             return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                         }
 
                         tran_sql_error.Commit();
-                        _logger.Error("idtrx: " + id_trx_hub + " / " + "Transaccion error: " + tm.vc_cod_error + "/" + tm.vc_desc_tipo_error + "/" + tm.vc_desc_error);
+                        _logger.Error("idtrx: " + id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
                         return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
-                        //return UtilSql.sOutPutTransaccion("06", "Ocurrio un error en la transaccion.");
 
 
                     }
@@ -595,9 +575,9 @@ namespace wa_api_incomm.Services
                     tran_sql.Rollback();
                 }
 
-                _logger.Error("idtrx: " + id_trx_hub + " / " + "id_transaccion: " + id_trans_global + " / " + ex, ex.Message);
+                _logger.Error("idtrx: " + id_trx_hub + " / " + ex.Message);
+
                 return UtilSql.sOutPutTransaccion("500", ex.Message);
-                //return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
             }
             finally
             {
@@ -607,339 +587,5 @@ namespace wa_api_incomm.Services
 
         }
 
-        private DistribuidorModel get_distribuidor(SqlConnection cn, string vc_cod_distribuidor)
-        {
-            DistribuidorModel model = new DistribuidorModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_distribuidor", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                model.nu_tran_ruta = 2;
-                model.vc_cod_distribuidor = vc_cod_distribuidor;
-                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-                {
-                    if (UtilSql.Ec(dr, "nu_id_distribuidor"))
-                        model.nu_id_distribuidor = Convert.ToInt32(dr["nu_id_distribuidor"].ToString());
-                    if (UtilSql.Ec(dr, "vc_cod_distribuidor"))
-                        model.vc_cod_distribuidor = dr["vc_cod_distribuidor"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_distribuidor"))
-                        model.vc_desc_distribuidor = dr["vc_desc_distribuidor"].ToString();
-                    if (UtilSql.Ec(dr, "vc_zip_code"))
-                        model.vc_zip_code = dr["vc_zip_code"].ToString();
-                    if (UtilSql.Ec(dr, "vc_ruc"))
-                        model.vc_ruc = dr["vc_ruc"].ToString();
-                    if (UtilSql.Ec(dr, "vc_nombre_contacto"))
-                        model.vc_nombre_contacto = dr["vc_nombre_contacto"].ToString();
-                    if (UtilSql.Ec(dr, "vc_email_contacto"))
-                        model.vc_email_contacto = dr["vc_email_contacto"].ToString();
-                    if (UtilSql.Ec(dr, "vc_celular_contacto"))
-                        model.vc_celular_contacto = dr["vc_celular_contacto"].ToString();
-                    if (UtilSql.Ec(dr, "nu_id_comercio"))
-                        model.nu_id_comercio = dr["nu_id_comercio"].ToInt();
-                }
-            }
-            return model;
-        }
-        private ComercioModel get_comercio(SqlConnection cn, string vc_cod_comercio, string vc_nombre_comercio, int nu_id_distribuidor)
-        {
-            ComercioModel model = new ComercioModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_comercio", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                model.nu_tran_ruta = 1;
-                model.nu_id_distribuidor = nu_id_distribuidor;
-                model.vc_cod_comercio = vc_cod_comercio;
-                model.vc_nombre_comercio = vc_nombre_comercio;
-                model.vc_tran_usua_regi = "API";
-                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
-                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.vc_cod_comercio);
-                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.vc_nombre_comercio);
-                cmd.Parameters.AddWithValue("@vc_usuario", model.vc_tran_usua_regi);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "nu_id_comercio"))
-                        model.nu_id_comercio = Convert.ToInt32(dr["nu_id_comercio"].ToString());
-                    if (UtilSql.Ec(dr, "vc_cod_comercio"))
-                        model.vc_cod_comercio = dr["vc_cod_comercio"].ToString();
-                    if (UtilSql.Ec(dr, "vc_nombre_comercio"))
-                        model.vc_nombre_comercio = dr["vc_nombre_comercio"].ToString();
-                }
-            }
-            return model;
-        }
-
-        private ProductoModel get_producto(SqlConnection cn, int nu_id_producto, int nu_id_distribuidor)
-        {
-            ProductoModel _result = new ProductoModel();
-            ProductoModel model = new ProductoModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_distribuidor_producto", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                model.nu_tran_ruta = 1;
-                model.nu_id_producto = nu_id_producto;
-                cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
-                cmd.Parameters.AddWithValue("@nu_id_distribuidor", nu_id_distribuidor);
-                cmd.Parameters.AddWithValue("@nu_id_convenio", nu_id_convenio);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "nu_id_producto"))
-                        _result.nu_id_producto = Convert.ToInt32(dr["nu_id_producto"].ToString());
-                    if (UtilSql.Ec(dr, "vc_cod_producto"))
-                        _result.vc_cod_producto = dr["vc_cod_producto"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_producto"))
-                        _result.vc_desc_producto = dr["vc_desc_producto"].ToString();
-                    if (UtilSql.Ec(dr, "nu_precio"))
-                        _result.nu_precio = dr["nu_precio"].ToDecimal();
-
-                }
-            }
-            return _result;
-        }
-        private TipoDocIdentidadModel get_tipo_documento(SqlConnection cn, int nu_id_tipo_doc_identidad)
-        {
-            TipoDocIdentidadModel _result = new TipoDocIdentidadModel();
-            TipoDocIdentidadModel model = new TipoDocIdentidadModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_tipo_doc_identidad", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                model.nu_tran_ruta = 2;
-                model.nu_id_tipo_doc_identidad = nu_id_tipo_doc_identidad;
-                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_identidad", nu_id_tipo_doc_identidad);
-                cmd.Parameters.AddWithValue("@nu_id_convenio", nu_id_convenio);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "nu_id_tipo_doc_identidad"))
-                        _result.nu_id_tipo_doc_identidad = Convert.ToInt32(dr["nu_id_tipo_doc_identidad"].ToString());
-                    if (UtilSql.Ec(dr, "vc_cod_tipo_doc_identidad"))
-                        _result.vc_cod_tipo_doc_identidad = dr["vc_cod_tipo_doc_identidad"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_tipo_doc_identidad"))
-                        _result.vc_desc_tipo_doc_identidad = dr["vc_desc_tipo_doc_identidad"].ToString();
-
-                }
-            }
-            return _result;
-        }
-        private TipoDocIdentidadModel get_tipo_documento_codigo(SqlConnection cn, string vc_cod_tipo_doc_identidad)
-        {
-            TipoDocIdentidadModel _result = new TipoDocIdentidadModel();
-            TipoDocIdentidadModel model = new TipoDocIdentidadModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_tipo_doc_identidad", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                model.nu_tran_ruta = 3;
-                model.vc_cod_tipo_doc_identidad = vc_cod_tipo_doc_identidad;
-                cmd.Parameters.AddWithValue("@vc_cod_tipo_doc_identidad", model.vc_cod_tipo_doc_identidad);
-                cmd.Parameters.AddWithValue("@nu_id_convenio", nu_id_convenio);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "nu_id_tipo_doc_identidad"))
-                        _result.nu_id_tipo_doc_identidad = Convert.ToInt32(dr["nu_id_tipo_doc_identidad"].ToString());
-                    if (UtilSql.Ec(dr, "vc_cod_tipo_doc_identidad"))
-                        _result.vc_cod_tipo_doc_identidad = dr["vc_cod_tipo_doc_identidad"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_tipo_doc_identidad"))
-                        _result.vc_desc_tipo_doc_identidad = dr["vc_desc_tipo_doc_identidad"].ToString();
-
-                }
-            }
-            return _result;
-        }
-        private int get_id_transaccion(SqlConnection cn)
-        {
-            int r = 0;
-            ConvenioModel model = new ConvenioModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_id_transaccion", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "id_trans"))
-                        r = Convert.ToInt32(dr["id_trans"].ToString());
-                }
-            }
-            return r;
-        }
-        private string get_mensaje_error(string codigo)
-        {
-            string mensaje_error = "";
-            switch (codigo)
-            {
-                case "1":
-                    mensaje_error = "Usuario Incorrecto";
-                    break;
-                case "2":
-                    mensaje_error = "Servicio Inválido";
-                    break;
-                case "3":
-                    mensaje_error = "Documento inválido(No existe)";
-                    break;
-                case "4":
-                    mensaje_error = "No tiene autorización a ver dicho CPT";
-                    break;
-                case "6":
-                    mensaje_error = "El usuario no tiene permiso de consultar nuevos documentos";
-                    break;
-                case "7":
-                    mensaje_error = "El servicio está suspendido";
-                    break;
-                case "8":
-                    mensaje_error = "El usuario está suspendido";
-                    break;
-                case "9":
-                    mensaje_error = "El usuario está bloqueado";
-                    break;
-                case "10":
-                    mensaje_error = "El servicio no tiene disponible este producto";
-                    break;
-                case "12":
-                    mensaje_error = "Usuario no se encuentra en servicio";
-                    break;
-                case "30":
-                    mensaje_error = "No puede consultar CPT por no tener consultas disponibles";
-                    break;
-                case "40":
-                    mensaje_error = "Ingrese el tipo y número de documento del solicitante";
-                    break;
-                case "41":
-                    mensaje_error = "Ingrese los datos de la persona o empresa a consultar";
-                    break;
-                case "42":
-                    mensaje_error = "El correo ingresado no es valido";
-                    break;
-                case "43":
-                    mensaje_error = "No se puede consultar, hay consulta(s) disponible(s) que ya fue(ron) asignada(s)";
-                    break;
-                case "44":
-                    mensaje_error = "El servicio ya no cuenta con consultas disponibles";
-                    break;
-                case "45":
-                    mensaje_error = "El tiempo de duración del paquete de consultas ha vencido";
-                    break;
-                case "46":
-                    mensaje_error = "El usuario no cuenta con consultas disponibles";
-                    break;
-                case "49":
-                    mensaje_error = "No se enviaron los Términos y Condiciones";
-                    break;
-                case "50":
-                    mensaje_error = "Se ha realizado el envío de los Términos y Condiciones al correo del solicitante.Se ha guardado su consulta";
-                    break;
-                case "53":
-                    mensaje_error = "No tiene Información SUNAT";
-                    break;
-                case "54":
-                    mensaje_error = "No tiene permiso de usar el WebService";
-                    break;
-                case "55":
-                    mensaje_error = "Solicitante Inválido (datos incorrectos)";
-                    break;
-                case "56":
-                    mensaje_error = "Dígito Verificador Inválido (sólo aplica para DNI";
-                    break;
-                case "57":
-                    mensaje_error = "Ha superado la cantidad máxima de consultas gratuitas de su Nro. Doc.";
-                    break;
-                case "58":
-                    mensaje_error = "ReferenceCode inválido, ya se encuentra registrado o campo vacío";
-                    break;
-                case "59":
-                    mensaje_error = "Tipo de Comprobante Inválido";
-                    break;
-                case "60":
-                    mensaje_error = "Número de documento de facturación inválido (No existe)";
-                    break;
-                case "61":
-                    mensaje_error = "El reporte Flash sólo está disponible para consultas personales";
-                    break;
-                case "62":
-                    mensaje_error = "El tipo de reporte ingresado no es válido";
-                    break;
-                case "63":
-                    mensaje_error = "Ha superado la cantidad máxima de consultas gratuitas en el Mes del Servicio";
-                    break;
-                case "64":
-                    mensaje_error = "Número de documento vacío";
-                    break;
-                case "65":
-                    mensaje_error = "Número de documento inválido";
-                    break;
-                case "67":
-                    mensaje_error = "Tipo de documento inválido";
-                    break;
-                case "68":
-                    mensaje_error = "Punto de venta no encontrado en nuestras fuentes";
-                    break;
-                case "69":
-                    mensaje_error = "Razón Social del punto de venta vacío";
-                    break;
-                case "96":
-                    mensaje_error = "No se completó la operación. Revise el detalle de validación";
-                    break;
-                case "97":
-                    mensaje_error = "Servicio no cuenta con acceso al web service";
-                    break;
-                case "98":
-                    mensaje_error = "Error en credenciales usuario o password";
-                    break;
-                case "99":
-                    mensaje_error = "Error en funcionamiento del web service";
-                    break;
-            }
-            return mensaje_error;
-        }
-        private static SqlCommand insTransaccionError(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
-        {
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_transaccion_error", cn, tran))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
-                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
-                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
-                cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
-                cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
-                cmd.Parameters.AddWithValue("@nu_precio", model.nu_precio);
-                cmd.Parameters.AddWithValue("@vc_cod_error", model.vc_cod_error);
-                cmd.Parameters.AddWithValue("@vc_desc_error", model.vc_desc_error);
-                cmd.Parameters.AddWithValue("@vc_desc_tipo_error", model.vc_desc_tipo_error);
-
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
-        }
-        private static SqlCommand insTrxhub(SqlConnection cn, TrxHubModel model)
-        {
-
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_trxhub", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
-                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.codigo_comercio);
-                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombre_comercio);
-                cmd.Parameters.AddWithValue("@vc_nro_telefono", model.nro_telefono);
-                cmd.Parameters.AddWithValue("@vc_email", model.email);
-                cmd.Parameters.AddWithValue("@vc_id_producto", model.id_producto);
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
-
-        }
     }
 }

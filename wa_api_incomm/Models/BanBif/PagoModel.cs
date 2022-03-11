@@ -8,8 +8,6 @@ namespace wa_api_incomm.Models.BanBif
 {
     public class PagoModel
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? nu_id_trx { get; set; }
         public E_recaudador recaudador { get; set; }
         public E_convenio convenio { get; set; }
         public E_cliente cliente { get; set; }

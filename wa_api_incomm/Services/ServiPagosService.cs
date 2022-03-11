@@ -18,7 +18,7 @@ namespace wa_api_incomm.Services
     public class ServiPagosService
     {
         public int nu_id_convenio = 6;
-        public string vc_desc_convenio = "ServiPagos";
+
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
         private readonly Serilog.ILogger _logger;
@@ -29,7 +29,6 @@ namespace wa_api_incomm.Services
         public object RealizarRecarga(string conexion, ServiPagos_Input model)
         {
             bool ins_bd = false;
-            string id_trx_hub = "";
             string id_trans_global = "";
             SqlConnection con_sql = null;
             SqlTransaction tran_sql = null;
@@ -42,6 +41,8 @@ namespace wa_api_incomm.Services
             ServiPagosModel model_sql = new ServiPagosModel();
             try
             {
+                _logger.Information("idtrx: " + model.id_trx_hub + " / " + "Inicio de transaccion");
+
                 con_sql = new SqlConnection(conexion);
                 con_sql.Open();
 
@@ -88,28 +89,6 @@ namespace wa_api_incomm.Services
 
                 con_sql.Open();
 
-                TrxHubModel trx = new TrxHubModel();
-                trx.codigo_distribuidor = model.codigo_distribuidor;
-                trx.codigo_comercio = model.codigo_comercio;
-                trx.nombre_comercio = model.nombre_comercio;
-                trx.nro_telefono = model.numero_servicio;
-                trx.email = "";
-                trx.id_producto = model.id_producto;
-
-                cmd = global_service.insTrxhub(con_sql, trx);
-                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                {
-                    tran_sql.Rollback();
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                }
-
-                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
-
-                con_sql.Close();
-
-                con_sql.Open();
-
                 //Variables BD
                 var idtran = global_service.get_id_transaccion(con_sql);
                 id_trans_global = idtran.ToString();
@@ -125,11 +104,13 @@ namespace wa_api_incomm.Services
                 model_sql.vc_numero_servicio = model.numero_servicio;
                 model_sql.nu_id_tipo_moneda_vta = 1; // SOLES
                 model_sql.nu_precio_vta = Convert.ToDecimal(model.importe_recarga);
+                model_sql.vc_tran_usua_regi = "API";
 
                 using (cmd = new SqlCommand("tisi_global.usp_ins_transaccion_recargas", con_sql, tran_sql))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@nu_id_trx", id_trans_global);
+                    cmd.Parameters.AddWithValue("@nu_id_trx_hub", model.id_trx_hub);
                     cmd.Parameters.AddWithValue("@nu_id_distribuidor", distribuidor.nu_id_distribuidor);
                     cmd.Parameters.AddWithValue("@nu_id_comercio", comercio.nu_id_comercio);
                     cmd.Parameters.AddWithValue("@nu_id_producto", producto.nu_id_producto);
@@ -143,7 +124,8 @@ namespace wa_api_incomm.Services
                     if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                     {
                         tran_sql.Rollback();
-                        _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                        ins_bd = false;
+                        _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                         return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                     }
                     model_sql.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
@@ -155,10 +137,8 @@ namespace wa_api_incomm.Services
                     model_api.vc_numero_servicio = model_sql.vc_numero_servicio;
                     model_api.nu_precio_vta = model_sql.nu_precio_vta.ToString();
 
-                    _logger.Information("idtrx: " + model.id_trx_hub + " / " + "URL: " + Config.vc_url_servipagos + " - Modelo enviado: " + model_sql.nu_id_trx_app.ToString() + " - " + JsonConvert.SerializeObject(model_api));
-                    var response = api.Recargar(model_api, model_sql.nu_id_trx_app).Result;
-                    _logger.Information("idtrx: " + model.id_trx_hub + " / " + "URL: " + Config.vc_url_servipagos + " - Modelo recibido: " + JsonConvert.SerializeObject(response));
-
+                    var response = api.Recargar(model_api, model_sql.nu_id_trx_app, _logger, model.id_trx_hub).Result;
+                    
                     if (response.respuesta.resultado == "200")
                     {
                         model_sql.vc_id_ref_trx = response.respuesta.transacid.ToString();
@@ -175,17 +155,20 @@ namespace wa_api_incomm.Services
                             if (cmd_upd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                             {
                                 tran_sql.Rollback();
-                                _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                ins_bd = false;
+                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                 return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                             }
                             cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                         }
 
                         tran_sql.Commit();
+                        ins_bd = false;
+                        con_sql.Close();
+
+                        _logger.Information("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 
                         object info = new object();
-
-                        _logger.Information(vc_desc_convenio + "| " + "idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 
                         info = new
                         {
@@ -193,7 +176,6 @@ namespace wa_api_incomm.Services
                             mensaje = "Operación exitosa, la recarga se hará efectiva en unos segundos.",
                             nro_transaccion = id_trans_global
                         };
-                        con_sql.Close();
 
                         return info;
 
@@ -205,55 +187,41 @@ namespace wa_api_incomm.Services
 
                         TransaccionModel tm = new TransaccionModel();
                         tm.nu_id_trx = Convert.ToInt32(id_trans_global);
+                        tm.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
                         tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
                         tm.nu_id_comercio = comercio.nu_id_comercio;
                         tm.dt_fecha = DateTime.Now;
                         tm.nu_id_producto = producto.nu_id_producto;
                         tm.nu_precio = model_sql.nu_precio_vta ?? 0;
+                        tm.nu_id_tipo_moneda_vta = model_sql.nu_id_tipo_moneda_vta;
+                        tm.vc_numero_servicio = model_sql.vc_numero_servicio;
+                        tm.vc_tran_usua_regi = "API";
 
                         tm.vc_cod_error = response.respuesta.resultado;
 
-                        switch (tm.vc_cod_error)
-                        {
-                            case "460":
-                                tm.vc_desc_error = "Error desconocido" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                            case "461":
-                                tm.vc_desc_error = "Número incorrecto (por formato)" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                            case "462":
-                                tm.vc_desc_error = "Monto incorrecto (no válido o no autorizado)" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                            case "463":
-                                tm.vc_desc_error = "Producto incorrecto (id no válido)" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                            case "465":
-                                tm.vc_desc_error = "Saldo insuficiente para ejecutar la operación" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                            case "500":
-                                tm.vc_desc_error = "Error interno en el servidor" + response.respuesta.obs != "" ? ("|" + response.respuesta.obs) : "";
-                                break;
-                        }
-
-                        tm.vc_desc_tipo_error = "";
+                        tm.vc_desc_error = global_service.get_mensaje_error(nu_id_convenio, tm.vc_cod_error) + (response.respuesta.obs != "" ? (" - " + response.respuesta.obs) : "");
+                        
+                        tm.vc_desc_tipo_error = "CONVENIO";
 
                         SqlTransaction tran_sql_error = null;
                         con_sql.Open();
 
                         tran_sql_error = con_sql.BeginTransaction();
-                        ins_bd = true;
 
                         cmd = global_service.insTransaccionError(con_sql, tran_sql_error, tm);
 
                         if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                         {
-                            tran_sql.Rollback();
-                            _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
+                            tran_sql_error.Rollback();
+                            ins_bd = false;
+                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                             return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                         }
 
                         tran_sql_error.Commit();
-                        _logger.Error("idtrx: " + id_trx_hub + " / " + "Transaccion error: " + tm.vc_cod_error + "/" + tm.vc_desc_tipo_error + "/" + tm.vc_desc_error);
+                        ins_bd = false;
+                        _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
+                        
                         return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
 
                     }
@@ -265,8 +233,8 @@ namespace wa_api_incomm.Services
                 {
                     tran_sql.Rollback();
                 }
-
-                _logger.Error("idtrx: " + id_trx_hub + " / " + "id_transaccion: " + id_trans_global + " / " + ex, ex.Message);
+                
+                _logger.Error("idtrx: " + model.id_trx_hub + " / " + ex.Message);
                 return UtilSql.sOutPutTransaccion("500", ex.Message);
             }
             finally

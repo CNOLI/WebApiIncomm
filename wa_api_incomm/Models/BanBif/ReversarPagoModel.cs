@@ -8,31 +8,15 @@ namespace wa_api_incomm.Models.BanBif
 {
     public class ReversarPagoModel
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? nu_id_trx { get; set; }
-        public E_recaudador recaudador { get; set; }
-        public E_convenio convenio { get; set; }
-        public E_cliente cliente { get; set; }
-        public string moneda { get; set; }
-        public int cantidadPagos { get; set; }
-        public bool agrupacion { get; set; }
-        public decimal? montoTotalDeuda { get; set; }
-        public decimal? montoTotalSaldo { get; set; }
+        public string numeroPago { get; set; }
+        public string tipoOperacion { get; set; }
+        public string medioPago { get; set; }
+        public decimal? monto { get; set; }
         public List<E_datos> deudas { get; set; }
+        
         public ReversarPagoModel()
         {
-            this.recaudador = new E_recaudador();
-            this.convenio = new E_convenio();
-            this.cliente = new E_cliente();
             this.deudas = new List<E_datos>();
-        }
-        public class E_recaudador
-        {
-            public string codigo { get; set; }
-        }
-        public class E_convenio
-        {
-            public string codigo { get; set; }
         }
         public class E_cliente
         {
@@ -44,24 +28,22 @@ namespace wa_api_incomm.Models.BanBif
             public string fechaVencimiento { get; set; }
             public E_cliente cliente { get; set; }
             public string idConsulta { get; set; }
-            public List<E_servicios> servicios { get; set; }
-            public decimal? montoSaldoDestino { get; set; }
-            public decimal? montoDescuentoDestino { get; set; }
-            public decimal? montoMultaDestino { get; set; }
-            public decimal? montoVencidoDestino { get; set; }
-            public decimal? montoInteresDestino { get; set; }
-            public decimal? montoReajusteDestino { get; set; }
-            public decimal? montoTotalDestino { get; set; }
+            public decimal? montoSaldoOrigen { get; set; }
+            public decimal? montoDescuentoOrigen { get; set; }
+            public decimal? montoMultaOrigen { get; set; }
+            public decimal? montoVencidoOrigen { get; set; }
+            public decimal? montoInteresOrigen { get; set; }
+            public decimal? montoReajusteOrigen { get; set; }
+            public decimal? montoTotalOrigen { get; set; }
 
             public E_documento documento { get; set; }
-            public List<E_pagos> pagos { get; set; }
+            public List<E_servicios> servicios { get; set; }
             public E_datos()
             {
                 this.datosAdicionales = new List<E_datosAdicionales>();
                 this.cliente = new E_cliente();
                 this.servicios = new List<E_servicios>();
                 this.documento = new E_documento();
-                this.pagos = new List<E_pagos>();
             }
         }
         public class E_datosAdicionales
@@ -76,37 +58,6 @@ namespace wa_api_incomm.Models.BanBif
         public class E_documento
         {
             public string numero { get; set; }
-        }
-        public class E_pagos
-        {
-            public string tipoOperacion { get; set; }
-            public string medioPago { get; set; }
-            public E_documento cuentaCargo { get; set; }
-            public decimal? monto { get; set; }
-            public decimal? deudaAPagar { get; set; }
-            public E_pagos()
-            {
-                this.cuentaCargo = new E_documento();
-            }
-        }
-        public class Pago_Input
-        {
-            public string codigo_distribuidor { get; set; }
-            public string codigo_comercio { get; set; }
-            public string nombre_comercio { get; set; }
-            public string id_servicio { get; set; }
-            public string numero_servicio { get; set; }
-            public string numero_documento { get; set; }
-            public string importe_pago { get; set; }
-            public string clave { get; set; }
-            public string fecha_envio { get; set; }
-
-
-            public string vc_cod_convenio { get; set; }
-            public string id_trx_hub { get; set; }
-            public string id_distribuidor { get; set; }
-            public string id_comercio { get; set; }
-
         }
     }
 }

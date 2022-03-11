@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -15,9 +16,9 @@ namespace wa_api_incomm.ApiRest
 
         private HttpClient api = new HttpClient();
 
-        public IncommApi(string merchantId,string auth,string posid, string source)
+        public IncommApi(string merchantId, string auth, string posid, string source)
         {
-            api.BaseAddress = new Uri(ApiURL);
+            //api.BaseAddress = new Uri(ApiURL);
             api.DefaultRequestHeaders.Accept.Clear();
             api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -33,7 +34,7 @@ namespace wa_api_incomm.ApiRest
         public async Task<Categories> SelCategories()
         {
             Categories result = new Categories();
-            HttpResponseMessage response = await api.GetAsync("moviired-api/digitalContent/v1/pines/categories");
+            HttpResponseMessage response = await api.GetAsync(ApiURL + "moviired-api/digitalContent/v1/pines/categories");
             if (response.IsSuccessStatusCode)
             {
                 result = await response.Content.ReadAsAsync<Categories>();
@@ -41,15 +42,41 @@ namespace wa_api_incomm.ApiRest
             return result;
         }
 
-        public async Task<ResultTransaccionIncomm> Transaccion(TransaccionIncommModel model)
+        public async Task<ResultTransaccionIncomm> Transaccion(TransaccionIncommModel model, Serilog.ILogger logger, string id_trx_hub = "")
         {
             ResultTransaccionIncomm result = new ResultTransaccionIncomm();
-            HttpResponseMessage response = await api.PostAsJsonAsync("moviired-api/digitalContent/v1/pines", model);
-            if (response.IsSuccessStatusCode)
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
             {
-                result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
+                string url = ApiURL + "moviired-api/digitalContent/v1/pines";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(IncommApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Transaccion): " + JsonConvert.SerializeObject(model);
+                logger.Information(msg_request);
+
+                response = await api.PostAsJsonAsync(url, model);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IncommApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Transaccion): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ". Transaccion_Incomm " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
+            //HttpResponseMessage response = await api.PostAsJsonAsync("moviired-api/digitalContent/v1/pines", model);
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
+            //}
+            //return result;
         }
 
 

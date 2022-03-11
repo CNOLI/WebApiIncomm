@@ -53,7 +53,7 @@ namespace wa_api_incomm.ApiRest
             return sb.ToString();
         }
 
-        public async Task<ServiPagos_ResponseModel> Recargar(ServiPagos_InputModel modelo, decimal? idTransaccion)
+        public async Task<ServiPagos_ResponseModel> Recargar(ServiPagos_InputModel modelo, decimal? idTransaccion, Serilog.ILogger logger, string id_trx_hub = "")
         {
             ServiPagos_ResponseModel Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
@@ -70,7 +70,18 @@ namespace wa_api_incomm.ApiRest
                 parametros += "&monto=" + Convert.ToInt32(modelo.nu_precio_vta);
                 parametros += "&firma=" + hash;
 
-                response = await api.GetAsync(ApiURL + "venta/" + parametros);
+                string url = ApiURL + "venta/" + parametros;
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(ServiPagosApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Recargar): ''";
+                logger.Information(msg_request);
+
+                response = await api.GetAsync(url).ConfigureAwait(false);
+                
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(ServiPagosApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Recargar): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)

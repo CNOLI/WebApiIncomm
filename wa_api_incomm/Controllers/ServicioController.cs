@@ -130,6 +130,6 @@ namespace wa_api_incomm.Controllers
             {
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
-        }
+         }
     }
 }

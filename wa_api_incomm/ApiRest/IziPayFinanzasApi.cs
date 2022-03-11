@@ -35,9 +35,9 @@ namespace wa_api_incomm.ApiRest
 
             izikey = config.GetSection("IzipayFinanzasInfo:izikey").Value;
             model.bin_acq = config.GetSection("IzipayFinanzasInfo:bin_acq").Value;
-           
 
-            api.BaseAddress = new Uri(ApiURL);
+
+            //api.BaseAddress = new Uri(ApiURL);
             api.DefaultRequestHeaders.Accept.Clear();
             api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -76,7 +76,7 @@ namespace wa_api_incomm.ApiRest
 
                 //ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };                
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
-                response = await api.PostAsync("psr-fin-fe/t-auth", httpContent).ConfigureAwait(false);
+                response = await api.PostAsync(ApiURL + "psr-fin-fe/t-auth", httpContent).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -92,17 +92,50 @@ namespace wa_api_incomm.ApiRest
             }
         }
 
-        public async Task<ResultPagoDirecto> PagoDirecto(object modelo)
+        public async Task<ResultPagoDirecto> PagoDirecto(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
         {
             ResultPagoDirecto result = new ResultPagoDirecto();
-            ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
-            var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await api.PostAsync("psr-fin-fe/pagoDirecto", httpContent).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
+            HttpResponseMessage response = new HttpResponseMessage();
+
+            try
             {
-                result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+                var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
+
+                string url = ApiURL + "psr-fin-fe/pagoDirecto";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (PagoDirecto): " + JsonConvert.SerializeObject(modelo);
+                logger.Information(msg_request);
+
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (PagoDirecto): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+                }
+                //else
+                //{
+                //    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+                //}
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
+
+            //ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
+            //var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
+            //HttpResponseMessage response = await api.PostAsync("psr-fin-fe/pagoDirecto", httpContent).ConfigureAwait(false);
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+            //}
+            //return result;
         }
     }
 }

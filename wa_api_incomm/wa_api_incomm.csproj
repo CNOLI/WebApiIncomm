@@ -24,4 +24,5 @@
       <HintPath>bin\Debug\netcoreapp3.1\Hub_Encrypt.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

@@ -22,7 +22,7 @@ namespace wa_api_incomm.ApiRest
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-        public BanBifApi()
+        public BanBifApi(bool bi_pago = false)
         {
 
             String client_id = config.GetSection("BanBifInfo:client_id").Value;
@@ -31,13 +31,15 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
-            //api.Timeout = TimeSpan.FromSeconds(1);
-            
+            if (bi_pago)
+            {
+                //api.Timeout = TimeSpan.FromMilliseconds(1200);
+                //api.Timeout = TimeSpan.FromMilliseconds(1000);
+            }
+
             token = GetTokenAsync(client_id, client_secret).Result;
 
-
             api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.access_token);
-            
         }
 
 
@@ -123,7 +125,7 @@ namespace wa_api_incomm.ApiRest
                 api.DefaultRequestHeaders.Add("cantidadRegistros", "100");
 
                 string parametros = "";
-                parametros += "?codigoRecaudador="+ codigoRecaudador;
+                parametros += "?codigoRecaudador=" + codigoRecaudador;
 
                 response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/rubros/" + model.vc_cod_rubro + "/empresas" + parametros);
 
@@ -221,7 +223,7 @@ namespace wa_api_incomm.ApiRest
             return Result;
         }
 
-        public async Task<Response.Ls_Response_Trx> Consultar_Deuda(DeudaModel.Deuda_Input model)
+        public async Task<Response.Ls_Response_Trx> Consultar_Deuda(DeudaModel.Deuda_Input model, Serilog.ILogger logger, string id_trx_hub = "")
         {
             Response.Ls_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
@@ -246,7 +248,23 @@ namespace wa_api_incomm.ApiRest
                 parametros += "&idServicio=" + model.numero_servicio;
                 parametros += "&idTransaccionOrigen=" + string.Concat(DateTime.Now.ToString("yyyyMMddHHmmss"), new Random().Next(1, 9).ToString("D1"));
 
-                response = await api.GetAsync(ApiURL + "api-recaudaciones/v1/convenios/" + model.vc_cod_convenio + "/deudas" + parametros);
+                string url = ApiURL + "api-recaudaciones/v1/convenios/" + model.vc_cod_convenio + "/deudas" + parametros;
+
+                if (logger != null)
+                {
+                    string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                         " - Modelo enviado (Consultar_Deuda): ''";
+                    logger.Information(msg_request);
+                }
+
+                response = await api.GetAsync(url);
+
+                if (logger != null)
+                {
+                    string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                          " - Modelo recibido (Consultar_Deuda): " + response.Content.ReadAsStringAsync().Result;
+                    logger.Information(msg_response);
+                }
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
@@ -257,6 +275,10 @@ namespace wa_api_incomm.ApiRest
                 {
                     Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
                 }
+            }
+            catch (OperationCanceledException e)
+            {
+                throw new Exception(e.Message + ". Consultar_Deuda TIMEOUT " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result) + " - " + e.Message);
             }
             catch (Exception ex)
             {
@@ -264,20 +286,34 @@ namespace wa_api_incomm.ApiRest
             }
             return Result;
         }
-        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model,decimal? idTransaccionOrigen)
+        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model, decimal? idTransaccionOrigen, Serilog.ILogger logger, string id_trx_hub = "")
         {
-            Response.E_Response_Trx Result = null;
+            Response.E_Response_Trx Result = new Response.E_Response_Trx();
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
+                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
+
+                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
+
                 string parametros = "";
                 parametros += "?idTransaccionOrigen=" + idTransaccionOrigen.ToString();
 
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.Default, "application/json");
 
-                response = await api.PostAsync(ApiURL + "api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
-            
+                string url = ApiURL + "api-recaudaciones/v1/pagos" + parametros;
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Procesar_Pago): " + JsonConvert.SerializeObject(model);
+                logger.Information(msg_request);
+
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Procesar_Pago): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -287,17 +323,13 @@ namespace wa_api_incomm.ApiRest
                 {
                     Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
                 }
+
+                //Temporal
+                //Result.timeout = true;
             }
-            catch (WebException e)
+            catch (OperationCanceledException e)
             {
-                if (e.Status == WebExceptionStatus.Timeout)
-                {
-                    Result.timeout = true;
-                }
-                else
-                {
-                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                }
+                Result.timeout = true;
             }
             catch (Exception ex)
             {
@@ -305,19 +337,43 @@ namespace wa_api_incomm.ApiRest
             }
             return Result;
         }
-        public async Task<Response.E_Response_Trx> Reversar_Pago(ReversarPagoModel model, decimal? idTransaccionOrigen)
+        public async Task<Response.E_Response_Trx> Reversar_Pago(ReversarPagoParamModel param_model, ReversarPagoModel model, decimal? idTransaccionOrigen, Serilog.ILogger logger, string id_trx_hub = "")
         {
             Response.E_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
+                String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
+                String codigoRecaudador = config.GetSection("BanBifInfo:codigoRecaudador").Value;
+
+                api.DefaultRequestHeaders.Add("codigoCanal", codigoCanal);
+
                 string parametros = "";
-                parametros += "?idTransaccionOrigen=" + idTransaccionOrigen.ToString();
+                parametros += "?codigoRecaudador=" + codigoRecaudador;
+                parametros += "&codigoConvenio=" + param_model.codigoConvenio.ToString();
+                parametros += "&fechaHora=" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                parametros += "&idTransaccionOrigen=" + idTransaccionOrigen.ToString();
+                parametros += "&codigoMoneda=" + param_model.codigoMoneda.ToString();
+                parametros += "&cantidadPagos=" + param_model.cantidadPagos.ToString();
+                parametros += "&agrupacion=" + (param_model.agrupacion == true ? 1 : 0);
+                parametros += "&montoTotalDeuda=" + param_model.montoTotalDeuda.ToString();
+                parametros += "&montoTotalSaldo=" + param_model.montoTotalSaldo.ToString();
 
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.Default, "application/json");
 
-                response = await api.PostAsync(ApiURL + "api-recaudaciones/v1/pagos" + parametros, httpContent).ConfigureAwait(false);
+
+                string url = ApiURL + "api-recaudaciones/v1/extornosPagos" + parametros;
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Reversar_Pago): " + JsonConvert.SerializeObject(model);
+                logger.Information(msg_request);
+
+                response = await api.PutAsync(url, httpContent).ConfigureAwait(false);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Reversar_Pago): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)
@@ -337,12 +393,12 @@ namespace wa_api_incomm.ApiRest
                 }
                 else
                 {
-                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                    throw new Exception(e.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
         }

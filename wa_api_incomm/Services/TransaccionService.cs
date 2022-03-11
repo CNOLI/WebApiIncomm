@@ -23,10 +23,11 @@ namespace wa_api_incomm.Services
 {
     public class TransaccionService : ITransaccionService
     {
+        public int nu_id_convenio = 1;
 
         private readonly Serilog.ILogger _logger;
         private readonly Send _send;
-        public TransaccionService(Serilog.ILogger logger,Send send)
+        public TransaccionService(Serilog.ILogger logger, Send send)
         {
             _send = send;
             _logger = logger;
@@ -36,13 +37,14 @@ namespace wa_api_incomm.Services
 
             bool ins_bd = false;
             string id_trans_global = "";
-            string id_incomm_global = "";
-            string id_trx_incomm_global = "";
+            string id_trx_hub = "";
             SqlConnection con_sql = null;
             SqlTransaction tran_sql = null;
+            SqlTransaction tran_sql_error = null;
             SqlCommand cmd = null;
             try
             {
+                GlobalService global_service = new GlobalService();
 
                 con_sql = new SqlConnection(conexion);
                 con_sql.Open();
@@ -55,14 +57,13 @@ namespace wa_api_incomm.Services
                 trx.email = input.email;
                 trx.id_producto = input.id_producto;
 
-                cmd = insTrxhub(con_sql, trx);
+                cmd = global_service.insTrxhub(con_sql, trx);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
                     tran_sql.Rollback();
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                     return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                 }
-
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
                     tran_sql.Commit();
@@ -71,8 +72,7 @@ namespace wa_api_incomm.Services
                 }
 
 
-                var id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
-                id_trx_incomm_global = id_trx_hub;
+                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
 
                 con_sql.Close();
 
@@ -121,16 +121,16 @@ namespace wa_api_incomm.Services
 
                 con_sql.Open();
                 DistribuidorModel distribuidor = get_distribuidor(con_sql, input.codigo_distribuidor);
-                
+
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + input.codigo_distribuidor + " no existe");
                     return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
                 }
 
-                ComercioModel comercio =  get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
+                ComercioModel comercio = get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
 
-                ProductoModel producto = get_producto(con_sql, Convert.ToInt32(input.id_producto),distribuidor.nu_id_distribuidor);
+                ProductoModel producto = get_producto(con_sql, Convert.ToInt32(input.id_producto), distribuidor.nu_id_distribuidor);
 
                 if (producto.nu_id_producto <= 0)
                 {
@@ -138,36 +138,57 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("06", "El producto no existe");
                 }
 
-                ConvenioModel convenio = get_convenio(con_sql, 1);
+                ConvenioModel convenio = get_convenio(con_sql, nu_id_convenio);
 
-                var idtran = get_id_transaccion(con_sql);
+                var idtran = global_service.get_id_transaccion(con_sql);
 
                 id_trans_global = idtran.ToString();
 
-                TransaccionIncommModel tim = new TransaccionIncommModel();
-                tim.correlationId = idtran.ToString();
+                con_sql.Close();
 
                 var fechatran = DateTime.Now;
 
+                
+
+                TransaccionModel tm = new TransaccionModel();
+                tm.nu_id_trx = idtran;
+                tm.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
+                tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                tm.nu_id_comercio = comercio.nu_id_comercio;
+                tm.dt_fecha = fechatran;
+                tm.nu_id_producto = producto.nu_id_producto;
+                tm.nu_precio = producto.nu_precio ?? 0;   // Math.Round(Convert.ToDecimal(result.amount), 3);
+                tm.vc_tran_usua_regi = "API";
+                tm.nu_id_tipo_moneda_vta = 1;
+                tm.vc_numero_servicio = "";
+
+                if (bi_envio_sms_firts)
+                {
+                    tm.vc_telefono_sol = input.nro_telefono;
+                }
+                if (bi_envio_email_firts)
+                {
+                    tm.vc_email_sol = input.email;
+                }
+
+                con_sql.Open();
+                tran_sql = con_sql.BeginTransaction();
+                ins_bd = true;
+                cmd = insTransaccion(con_sql, tran_sql, tm);
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                {
+                    tran_sql.Rollback();
+                    ins_bd = false;
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+                tm.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+
+                TransaccionIncommModel tim = new TransaccionIncommModel();
+                tim.correlationId = tm.nu_id_trx_app.ToString();
                 tim.issueDate = fechatran.ToString("yyyyMMddHHmmss.mss");
-
                 tim.issuerId = distribuidor.vc_cod_distribuidor;
-
-                //if (input.id_opcion_telefono == "0")
-                //{
-                //    tim.phoneNumber = input.nro_telefono.Substring(3);
-                //}
-                //else if (input.id_opcion_telefono == "1")
-                //{
-                //    tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(3);
-                //}
-                //else
-                //{
-                //    tim.phoneNumber = convenio.vc_nro_telefono_tran_incomm;
-                //}
-
-                //tim.phoneNumber = input.nro_telefono.Substring(3);
-
                 if (!bi_envio_sms_firts)
                 {
                     input.nro_telefono = convenio.vc_celular_def;
@@ -178,12 +199,8 @@ namespace wa_api_incomm.Services
                     input.email = convenio.vc_email_def;
                 }
 
-
                 tim.phoneNumber = convenio.vc_nro_complete_incomm + input.nro_telefono.Substring(2);
                 tim.email = input.email;
-
-
-
                 tim.source = convenio.vc_source_body;
                 tim.ip = convenio.vc_nro_ip;
                 tim.amount = producto.nu_valor_facial.ToString();
@@ -192,79 +209,49 @@ namespace wa_api_incomm.Services
                 tim.zipCode = distribuidor.vc_zip_code;
                 tim.channel = "API";
 
-                IncommApi client = new IncommApi(convenio.vc_merchant_id, convenio.vc_clave_encrip_aut, convenio.vc_pos_id, convenio.vc_source_header);
-
+                //QA
                 //ResultTransaccionIncomm result = new ResultTransaccionIncomm();
-                //string path = @"c:\product.json";
-                //using (StreamReader jsonStream = File.OpenText(path))
-                //{
-                //    var json = jsonStream.ReadToEnd();
-                //    result = JsonConvert.DeserializeObject<ResultTransaccionIncomm>(json);
-                //}
+                //result.errorCode = "00";
+                //result.transactionId = "ON222222.2222.A22222";
+                //result.authorizationCode = "00000000002222222222";
+                //result.pin = "QnappNOLbkFd+9/2XeOAs3+Swu3c50odsq6DLx3ifyQxn0YeclHuqcqq";
 
-                var result = client.Transaccion(tim).Result;
+                //PROD
+                IncommApi client = new IncommApi(convenio.vc_merchant_id, convenio.vc_clave_encrip_aut, convenio.vc_pos_id, convenio.vc_source_header);
+                var result = client.Transaccion(tim, _logger, id_trx_hub).Result;
 
-
-                con_sql.Close();
 
                 if (result.errorCode == "00")
                 {
-
-                    id_incomm_global = result.transactionId;
-
-                    TransaccionModel tm = new TransaccionModel(); 
-                    tm.nu_id_trx = idtran;
-                    tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
-                    tm.nu_id_comercio = comercio.nu_id_comercio;
-                    tm.dt_fecha = fechatran;
-                    tm.nu_id_producto = producto.nu_id_producto;
-                    tm.nu_precio = Math.Round(Convert.ToDecimal(result.amount),3);
                     tm.vc_id_ref_trx = result.transactionId;
-
                     tm.vc_cod_autorizacion = result.authorizationCode;
                     tm.vc_nro_pin = result.pin;
 
-                    if (bi_envio_sms_firts)
+                    using (var cmd_upd = new SqlCommand("tisi_trx.usp_upd_transacciones_trx_ref", con_sql, tran_sql))
                     {
-                        tm.vc_telefono_sol = input.nro_telefono;
+                        cmd_upd.CommandType = CommandType.StoredProcedure;
+                        cmd_upd.Parameters.AddWithValue("@nu_id_trx", tm.nu_id_trx_app);
+                        cmd_upd.Parameters.AddWithValue("@vc_id_ref_trx", tm.vc_id_ref_trx);
+                        cmd_upd.Parameters.AddWithValue("@vc_cod_autorizacion", tm.vc_cod_autorizacion);
+                        cmd_upd.Parameters.AddWithValue("@vc_nro_pin", tm.vc_nro_pin);
+                        UtilSql.iUpd(cmd_upd, trx);
+                        cmd_upd.ExecuteNonQuery();
+                        if (cmd_upd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                        {
+                            tran_sql.Rollback();
+                            ins_bd = false;
+                            _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                            return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                        }
+                        cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                     }
-                    if (bi_envio_email_firts)
-                    {
-                        tm.vc_email_sol = input.email;
-                        //tm.vc_email_sol = convenio.vc_email_envio;
-                    }
-
-
-                    con_sql.Open();
-                    tran_sql = con_sql.BeginTransaction();
-                    ins_bd = true;
-                    cmd = insTransaccion(con_sql, tran_sql, tm);
-                    if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                    {
-                        tran_sql.Rollback();
-                        _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                    }
-
-                    if(cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
-                    {
-
-                        tran_sql.Commit();
-                        _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-
-                    }
-                    
-
 
                     //desencryptar pin
                     AESApi _aesapi = new AESApi(convenio.vc_url_api_aes);
                     DatosPinModel dpm = new DatosPinModel();
-                    dpm.key = convenio.vc_clave_aes; 
+                    dpm.key = convenio.vc_clave_aes;
                     dpm.pin = result.pin;
                     var _rpin = _aesapi.GetPin(dpm).Result;
-
-
 
                     if (bi_envio_sms_firts)
                     {
@@ -281,42 +268,45 @@ namespace wa_api_incomm.Services
                         if (producto.bi_envio_email)
                         {
                             //envio de correo
-                            var body = _send.GetBodyFinal(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
+                            var body = _send.GetBodyIncomm(convenio.vc_desc_empresa, producto.vc_desc_categoria, producto.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, _rpin.pin, comercio.vc_cod_comercio, fechatran.ToString(), result.transactionId, result.authorizationCode, tm.nu_precio.ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin);
                             var titulo = "Confirmación de transacción #" + result.transactionId;
                             _send.Email(id_trans_global, input.email, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
                         }
 
                     }
 
-
-
                     tran_sql.Commit();
-                    _logger.Information("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + "Transaccion incomm exitosa " + idtran + " " + result.transactionId);
+                    ins_bd = false;
+                    con_sql.Close();
+
+                    _logger.Information("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 
                     object info = new object();
 
                     info = new
                     {
                         codigo = "00",
-                        mensaje = "OK",
+                        mensaje = "Transacción realizada correctamente.",
                         nro_transaccion = id_trans_global
                     };
-                   
 
                     return info;
 
                 }
-                else 
+                else
                 {
-                    TransaccionModel tm = new TransaccionModel();
-                    tm.nu_id_trx = idtran;
-                    tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
-                    tm.nu_id_comercio = comercio.nu_id_comercio;
-                    tm.dt_fecha = fechatran;
-                    tm.nu_id_producto = producto.nu_id_producto;
-                    tm.nu_precio = producto.nu_valor_facial;
+                    tran_sql.Rollback();
+                    ins_bd = false;
+                    con_sql.Close();
+                    //TransaccionModel tm = new TransaccionModel();
+                    //tm.nu_id_trx = idtran;
+                    //tm.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                    //tm.nu_id_comercio = comercio.nu_id_comercio;
+                    //tm.dt_fecha = fechatran;
+                    //tm.nu_id_producto = producto.nu_id_producto;
+                    //tm.nu_precio = producto.nu_valor_facial;
 
-                    if (result.errorMessage== null)
+                    if (result.errorMessage == null)
                         tm.vc_desc_error = "";
                     else
                         tm.vc_desc_error = result.errorMessage;
@@ -326,29 +316,30 @@ namespace wa_api_incomm.Services
                     else
                         tm.vc_cod_error = result.errorCode;
 
+                    tm.vc_desc_tipo_error = "CONVENIO";
 
-                    if (result.errorType == null)
-                        tm.vc_desc_tipo_error = "";
-                    else
-                        tm.vc_desc_tipo_error = result.errorType;
+                    //if (result.errorType == null)
+                    //    tm.vc_desc_tipo_error = "CONVENIO";
+                    //else
+                    //    tm.vc_desc_tipo_error = result.errorType;
 
 
                     con_sql.Open();
-                    tran_sql = con_sql.BeginTransaction();
+                    tran_sql_error = con_sql.BeginTransaction();
 
-                    ins_bd = true;
-
-                    cmd = insTransaccionError(con_sql, tran_sql, tm);
+                    cmd = global_service.insTransaccionError(con_sql, tran_sql_error, tm);
 
                     if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                     {
-                        tran_sql.Rollback();
+                        tran_sql_error.Rollback();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                         return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                     }
 
-                    tran_sql.Commit();
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "Transaccion incomm error: " +tm.vc_cod_error + "/" + tm.vc_desc_tipo_error + "/"+ tm.vc_desc_error);
+                    tran_sql_error.Commit();
+                    con_sql.Close();
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
+
                     return UtilSql.sOutPutTransaccion("06", "Ocurrio un error en la transaccion.");
 
                 }
@@ -361,7 +352,8 @@ namespace wa_api_incomm.Services
                     tran_sql.Rollback();
                 }
 
-                _logger.Error("idtrx: " + id_trx_incomm_global + " / " + "id_transaccion: " + id_trans_global + " / " + "id_transaccion_incomm: " + id_incomm_global + " / " + ex,ex.Message);
+                _logger.Error("idtrx: " + id_trx_hub + " / " + ex.Message);
+
                 return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
             }
             finally
@@ -405,7 +397,7 @@ namespace wa_api_incomm.Services
                 var id_trans_global = "0";
 
                 //Prueba
-                var body = _send.GetBodyFinal(convenio.vc_desc_empresa, "PlayStation", "Pin Virtual Peru Playstation Plus 12 Meses", convenio.vc_color_header_email, convenio.vc_color_body_email, "XXXX -XXXX-XXXX", "XXXXXXXXXXX", DateTime.Now.ToString(), "ON220113.1019.A00001", "00000000001316140195", "20.00", convenio.vc_url_web_terminos, false);
+                var body = _send.GetBodyIncomm(convenio.vc_desc_empresa, "PlayStation", "Pin Virtual Peru Playstation Plus 12 Meses", convenio.vc_color_header_email, convenio.vc_color_body_email, "XXXX -XXXX-XXXX", "XXXXXXXXXXX", DateTime.Now.ToString(), "ON220113.1019.A00001", "00000000001316140195", "20.00", convenio.vc_url_web_terminos, false);
                 var titulo = "Confirmación de transacción #XXXXXXXX.XXXX.XXXXXX";
 
                 _send.Email(id_trans_global, correo_destino, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email, convenio.bi_ssl_email, convenio.vc_desc_empresa, con_sql);
@@ -418,7 +410,7 @@ namespace wa_api_incomm.Services
             }
         }
 
-        private async Task SendMessage(string mensaje,string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
+        private async Task SendMessage(string mensaje, string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
         {
             try
             {
@@ -438,12 +430,12 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "id_trx: "+ id_trx + ex.Message);
+                _logger.Error(ex, "id_trx: " + id_trx + ex.Message);
                 ReenvioMensajeModel rm = new ReenvioMensajeModel();
                 rm.nu_id_trx = id_trx;
                 rm.ch_tipo_mensaje = "M";
                 var cmd = insSendInfoError(cn, rm);
-            } 
+            }
         }
 
         private static SqlCommand insTransaccion(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
@@ -453,6 +445,7 @@ namespace wa_api_incomm.Services
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_trx_hub", model.nu_id_trx_hub);
                 cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
                 cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
                 cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
@@ -471,24 +464,6 @@ namespace wa_api_incomm.Services
 
 
         }
-        private static SqlCommand insTrxhub(SqlConnection cn, TrxHubModel model)
-        {
-
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_trxhub", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
-                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.codigo_comercio);
-                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombre_comercio);
-                cmd.Parameters.AddWithValue("@vc_nro_telefono", model.nro_telefono);
-                cmd.Parameters.AddWithValue("@vc_email", model.email);
-                cmd.Parameters.AddWithValue("@vc_id_producto", model.id_producto);
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
-
-        }
         private static SqlCommand insSendInfoError(SqlConnection cn, ReenvioMensajeModel model)
         {
 
@@ -502,26 +477,6 @@ namespace wa_api_incomm.Services
                 return cmd;
             }
 
-        }
-        private static SqlCommand insTransaccionError(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
-        {
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_transaccion_error_incomm", cn, tran))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
-                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
-                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
-                cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
-                cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
-                cmd.Parameters.AddWithValue("@nu_precio", model.nu_precio);
-                cmd.Parameters.AddWithValue("@vc_cod_error", model.vc_cod_error);
-                cmd.Parameters.AddWithValue("@vc_desc_error", model.vc_desc_error);
-                cmd.Parameters.AddWithValue("@vc_desc_tipo_error", model.vc_desc_tipo_error);
-                
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
         }
         private DistribuidorModel get_distribuidor(SqlConnection cn, string vc_cod_distribuidor)
         {
@@ -575,7 +530,7 @@ namespace wa_api_incomm.Services
             }
             return model;
         }
-        private ProductoModel get_producto(SqlConnection cn, int nu_id_producto,int nu_id_distribuidor)
+        private ProductoModel get_producto(SqlConnection cn, int nu_id_producto, int nu_id_distribuidor)
         {
             ProductoModel _result = new ProductoModel();
             ProductoModel model = new ProductoModel();
@@ -605,10 +560,12 @@ namespace wa_api_incomm.Services
 
                     if (UtilSql.Ec(dr, "vc_desc_categoria"))
                         _result.vc_desc_categoria = dr["vc_desc_categoria"].ToString();
+                    if (UtilSql.Ec(dr, "nu_precio_vta"))
+                        _result.nu_precio = Convert.ToDecimal(dr["nu_precio_vta"].ToString());
 
 
                     if (UtilSql.Ec(dr, "bi_envio_sms"))
-                        _result.bi_envio_sms =  dr["bi_envio_sms"].ToBool();
+                        _result.bi_envio_sms = dr["bi_envio_sms"].ToBool();
                     if (UtilSql.Ec(dr, "bi_envio_email"))
                         _result.bi_envio_email = dr["bi_envio_email"].ToBool();
 
@@ -684,28 +641,10 @@ namespace wa_api_incomm.Services
             }
             return _result;
         }
-        private int get_id_transaccion(SqlConnection cn)
-        {
-            int r = 0;
-            ConvenioModel model = new ConvenioModel();
-            using (var cmd = new SqlCommand("tisi_global.usp_get_id_transaccion", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "id_trans"))
-                        r = Convert.ToInt32(dr["id_trans"].ToString());
-                }
-            }
-            return r;
-        }
 
 
 
-  
+
 
 
 

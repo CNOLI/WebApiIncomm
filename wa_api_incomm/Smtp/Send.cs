@@ -117,9 +117,7 @@ namespace wa_api_incomm.Smtp
                 return cmd;
             }
         }
-
-
-
+               
         public string GetBody(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
@@ -351,102 +349,9 @@ namespace wa_api_incomm.Smtp
 
             return bodyRegistrer;
         }
-
-        public string GetBodyFinalAnterior(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
-        {
-            string bodyRegistrer = "";
-
-            bodyRegistrer += "<html xmlns='http://www.w3.org/1999/xhtml' xmlns:o='urn:schemas-microsoft-com:office:office' style=\"width:100%;font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0\">";
-            bodyRegistrer += "<head>";
-            bodyRegistrer += "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
-            bodyRegistrer += "</head>";
-            bodyRegistrer += "<body bgcolor=\"#FFFFFF\" leftmargin=\"0\" topmargin=\"0\" marginwidth=\"0\" marginheight=\"0\">";
-            bodyRegistrer += "<table id=\"Tabla_01\" width=\"751\" height=\"906\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"#000000\" align=\"center\" style=\"transform: scale(1, 1) !important;\"> ";
-            bodyRegistrer += "<tr style=\"font-size:0px !important;\">";
-            bodyRegistrer += "<td colspan=\"7\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_01.png\" width=\"751\" height=\"432\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr style=\"font-size:0px !important;\">";
-            bodyRegistrer += "<td colspan=\"2\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_02.png\" width=\"109\" height=\"137\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td colspan=\"4\" align=\"center\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:24px; color:#FFFFFF;Font-size:20px\">Realizaste una compra de contenido de: <b>" + categoria + "</b>, para el producto: " + producto + "</p>";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:20px; color:#777777;Font-size:16px\">&nbsp</p>";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:12px; color:#777777;Font-size:16px\">En el comercio identificado con el código: " + codcomercio + "</p>";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_04.png\" width=\"137\" height=\"137\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr style=\"font-size:0px !important;\">";
-            bodyRegistrer += "<td colspan=\"8\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_05.png\" width=\"751\" height=\"70\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr>";
-            bodyRegistrer += "<td rowspan=\"3\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_06.png\" width=\"108\" height=\"266\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td colspan=\"2\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + fecha + "</p>";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td colspan=\"2\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nrotransaccion + "</p>";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td colspan=\"1\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:30px; color:#777777;font-size:12px\">" + nroaprobacion + "</p>";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td rowspan=\"3\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_10.png\" width=\"137\" height=\"266\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr>";
-            bodyRegistrer += "<td colspan=\"3\" rowspan=\"2\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11.png\" width=\"204\" height=\"236\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td colspan=\"2\" valign=\"bottom\">";
-            bodyRegistrer += "<p style=\"Margin:0; font-family:'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height:24px; color:#FFFFFF;Font-size:21px\"># PIN :<b> " + pin + "</b></p>";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr>";
-            bodyRegistrer += "<td colspan=\"2\">";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_13.png\" width=\"302\" height=\"192\" alt=\"\" style=\"padding-top:20px;\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "<tr>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"108\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"1\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"152\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"51\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"134\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"168\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "<td>";
-            bodyRegistrer += "<img src=\"https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif\" width=\"137\" height=\"1\" alt=\"\">";
-            bodyRegistrer += "</td>";
-            bodyRegistrer += "</tr>";
-            bodyRegistrer += "</table>";
-            bodyRegistrer += "</body>";
-            bodyRegistrer += "</html>";
-
-            return bodyRegistrer;
-        }
-
-
-        public string GetBodyFinal(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
+           
+        
+        public string GetBodyIncomm(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
 
@@ -572,6 +477,14 @@ namespace wa_api_incomm.Smtp
             return bodyRegistrer;
         }
 
+
+        public string GetBodyPagoServicios(string vc_desc_servicio, string vc_nombre_comercio, string vc_cod_comercio, string vc_fecha, string vc_nro_transaccion, string vc_empresa)
+        {
+            string bodyRegistrer = "";
+
+            
+            return bodyRegistrer;
+        }
 
     }
 }

@@ -32,7 +32,7 @@ namespace wa_api_incomm.ApiRest
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
 
-            api.BaseAddress = new Uri(ApiURL);
+            //api.BaseAddress = new Uri(ApiURL);
 
             token = GetTokenAsync(username, password).Result;
                         
@@ -48,7 +48,7 @@ namespace wa_api_incomm.ApiRest
                 api.DefaultRequestHeaders.Add("username", username);
                 api.DefaultRequestHeaders.Add("password", password);
 
-                response = await api.PostAsync("api/v1/auth", null);
+                response = await api.PostAsync(ApiURL + "api/v1/auth", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -65,7 +65,7 @@ namespace wa_api_incomm.ApiRest
             }
             return accessToken;
         }
-        public async Task<Generar_Reporte_Response> Generar_Reporte(Generar_Reporte_Input model)
+        public async Task<Generar_Reporte_Response> Generar_Reporte(Generar_Reporte_Input model, Serilog.ILogger logger, string id_trx_hub = "")
         {
             Generar_Reporte_Response Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
@@ -77,7 +77,17 @@ namespace wa_api_incomm.ApiRest
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
-                response = await api.PostAsync("api/v1/sales" , httpContent).ConfigureAwait(false);
+                string url = ApiURL + "api/v1/sales";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(EquifaxApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Generar_Reporte): " + JsonConvert.SerializeObject(model);
+                logger.Information(msg_request);
+
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+           
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(EquifaxApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Generar_Reporte): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
                 if (response.IsSuccessStatusCode)

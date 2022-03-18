@@ -251,6 +251,12 @@ namespace wa_api_incomm.Services
                     if (mensaje.Length > 0)
                         mensaje = mensaje.Substring(0, mensaje.Length - 2);
 
+                    if (codigo == "ESM25")
+                    {
+                        codigo = "ESM25";
+                        mensaje = "No se puede obtener la información de pago (fuera de horario).";
+                    }
+
                     return UtilSql.sOutPutTransaccion(codigo, mensaje);
                 }
                 foreach (var e_datos in ls_datos)
@@ -259,6 +265,17 @@ namespace wa_api_incomm.Services
 
                     e_deuda.fecha_vencimento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
                     e_deuda.cliente = e_datos.cliente.id;
+                    if (e_deuda.cliente == "")
+                    {
+                        foreach (var item in e_datos.datosAdicionales)
+                        {
+                            if (item.nombre == "Nombre")
+                            {
+                                e_deuda.cliente = item.valor;
+
+                            }
+                        }
+                    }
 
                     e_deuda.monto_deuda = e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino;
                     e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
@@ -292,7 +309,64 @@ namespace wa_api_incomm.Services
 
                     ls_deuda.Add(e_deuda);
                 }
+                #region Pruebas temporales
+                //DeudaModel e_deuda = new DeudaModel();
 
+                //e_deuda.fecha_vencimento = "2022-02-19";
+                //e_deuda.cliente = "PANTA PAZO VICTOR M";
+                //e_deuda.monto_deuda = (decimal)341.00;
+                //e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                //e_deuda.numero_documento = "2048010328";
+                //e_deuda.moneda = "SOL";
+                //e_deuda.simbolo_moneda = "S/";
+                //e_deuda.fecha_factura = "2020-02-19";
+
+                //ls_deuda.Add(e_deuda);
+                //e_deuda = new DeudaModel();
+                //e_deuda.fecha_vencimento = "2020-03-20";
+                //e_deuda.cliente = "PANTA PAZO VICTOR M";
+                //e_deuda.monto_deuda = (decimal)282.60;
+                //e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                //e_deuda.numero_documento = "2048010330";
+                //e_deuda.moneda = "SOL";
+                //e_deuda.simbolo_moneda = "S/";
+                //e_deuda.fecha_factura = "2020-03-20";
+
+                //ls_deuda.Add(e_deuda);
+                //e_deuda = new DeudaModel();
+                //e_deuda.fecha_vencimento = "2020-04-22";
+                //e_deuda.cliente = "PANTA PAZO VICTOR M";
+                //e_deuda.monto_deuda = (decimal)276.10;
+                //e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                //e_deuda.numero_documento = "2048010331";
+                //e_deuda.moneda = "SOL";
+                //e_deuda.simbolo_moneda = "S/";
+                //e_deuda.fecha_factura = "2020-04-22";
+
+                //ls_deuda.Add(e_deuda);
+                //e_deuda = new DeudaModel();
+                //e_deuda.fecha_vencimento = "2020-05-21";
+                //e_deuda.cliente = "PANTA PAZO VICTOR M";
+                //e_deuda.monto_deuda = (decimal)277;
+                //e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                //e_deuda.numero_documento = "2048010332";
+                //e_deuda.moneda = "SOL";
+                //e_deuda.simbolo_moneda = "S/";
+                //e_deuda.fecha_factura = "2020-05-21";
+
+                //ls_deuda.Add(e_deuda);
+                //e_deuda = new DeudaModel();
+                //e_deuda.fecha_vencimento = "2020-07-04";
+                //e_deuda.cliente = "PANTA PAZO VICTOR M";
+                //e_deuda.monto_deuda = (decimal)298.20;
+                //e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                //e_deuda.numero_documento = "2048010334";
+                //e_deuda.moneda = "SOL";
+                //e_deuda.simbolo_moneda = "S/";
+                //e_deuda.fecha_factura = "2020-07-04";
+
+                //ls_deuda.Add(e_deuda);
+                #endregion
             }
             catch (Exception ex)
             {
@@ -347,9 +421,15 @@ namespace wa_api_incomm.Services
                     if (mensaje.Length > 0)
                         mensaje = mensaje.Substring(0, mensaje.Length - 2);
 
+                    if (codigo == "ESM25")
+                    {
+                        codigo = "ESM25";
+                        mensaje = "No se puede obtener la información de pago (fuera de horario).";
+                    }
+
                     return UtilSql.sOutPutTransaccion(codigo, mensaje);
                 }
-
+                                                                      
                 PagoModel e_pago = new PagoModel();
                 foreach (var e_datos in ls_datos)
                 {
@@ -383,7 +463,7 @@ namespace wa_api_incomm.Services
                         var fechatran = DateTime.Now;
 
                         con_sql.Close();
-                        
+
                         //Graba BD
                         con_sql.Open();
                         tran_sql = con_sql.BeginTransaction();
@@ -625,206 +705,6 @@ namespace wa_api_incomm.Services
                                 };
                                 con_sql.Close();
 
-                                //Temporal para pruebas
-
-
-                                //if (result_pago.timeout)
-                                //{
-                                //    //Variables BD
-                                //    con_sql.Open();
-                                //    var idtran_reverso = global_service.get_id_transaccion(con_sql);
-                                //    var id_trans_global_reverso = idtran_reverso.ToString();
-                                //    con_sql.Close();
-
-                                //    ReversarPagoParamModel e_reversar_pago_param = new ReversarPagoParamModel();
-                                //    e_reversar_pago_param.codigoConvenio = e_pago.convenio.codigo;
-                                //    e_reversar_pago_param.codigoMoneda = e_pago.moneda;
-                                //    e_reversar_pago_param.cantidadPagos = e_pago.cantidadPagos;
-                                //    e_reversar_pago_param.agrupacion = e_pago.agrupacion;
-                                //    e_reversar_pago_param.montoTotalDeuda = e_pago.montoTotalDeuda;
-                                //    e_reversar_pago_param.montoTotalSaldo = e_pago.montoTotalSaldo;
-
-                                //    ReversarPagoModel e_reversar_pago = new ReversarPagoModel();
-                                //    e_reversar_pago.numeroPago = "0";
-                                //    e_reversar_pago.tipoOperacion = e_p.tipoOperacion;
-                                //    e_reversar_pago.medioPago = e_p.medioPago;
-                                //    e_reversar_pago.monto = e_p.monto;
-
-
-                                //    //Agregar datos principales
-                                //    ReversarPagoModel.E_datos e_datos_pago_reversar = new ReversarPagoModel.E_datos();
-                                //    e_datos_pago_reversar.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
-                                //    e_datos_pago_reversar.cliente.id = e_datos.cliente.id;
-                                //    e_datos_pago_reversar.idConsulta = e_datos.idConsulta.ToString();
-
-                                //    foreach (var item_serv in e_datos.servicios)
-                                //    {
-                                //        ReversarPagoModel.E_servicios e_sv = new ReversarPagoModel.E_servicios();
-                                //        e_sv.id = item_serv.id;
-                                //        e_datos_pago_reversar.servicios.Add(e_sv);
-                                //    }
-
-                                //    e_datos_pago_reversar.montoSaldoOrigen = e_datos.montoSaldoDestino;
-                                //    e_datos_pago_reversar.montoDescuentoOrigen = e_datos.montoDescuentoDestino;
-                                //    e_datos_pago_reversar.montoMultaOrigen = e_datos.montoMultaDestino;
-                                //    e_datos_pago_reversar.montoVencidoOrigen = e_datos.montoVencidoDestino;
-                                //    e_datos_pago_reversar.montoInteresOrigen = e_datos.montoInteresDestino;
-                                //    e_datos_pago_reversar.montoReajusteOrigen = e_datos.montoReajusteDestino;
-                                //    e_datos_pago_reversar.montoTotalOrigen = e_datos.montoTotalDestino;
-
-                                //    e_datos_pago_reversar.documento.numero = e_datos.documento.numero;
-
-                                //    #region DatosAdicionales
-                                //    ReversarPagoModel.E_datosAdicionales e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "CODEBRANCH";
-                                //    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "TRNCODE";
-                                //    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "TELLUSERID";
-                                //    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "Cod_RED";
-                                //    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "Cod_TRX";
-                                //    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "Des_TRX";
-                                //    e_datos_adicionales_reversar.valor = "";
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    foreach (var item_add in e_datos.datosAdicionales)
-                                //    {
-                                //        if (item_add.nombre == "NOMBRE")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "NOMBRE";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //        if (item_add.nombre == "OLCAE")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "OLCAE";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //    }
-
-                                //    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //    e_datos_adicionales_reversar.nombre = "ESTADODEUDOR";
-                                //    e_datos_adicionales_reversar.valor = "01";
-                                //    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                //    foreach (var item_add in e_datos.datosAdicionales)
-                                //    {
-                                //        if (item_add.nombre == "DESCRIPCIONDOCPAGO")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "DESCRIPCIONDOCPAGO";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //        if (item_add.nombre == "IMPORTEORIGINALDEUDA")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "IMPORTEORIGINALDEUDA";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //        if (item_add.nombre == "FECHAEMISION")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "FECHAEMISION";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //        if (item_add.nombre == "CANAL")
-                                //        {
-                                //            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                //            e_datos_adicionales_reversar.nombre = "CANAL";
-                                //            e_datos_adicionales_reversar.valor = item_add.valor;
-                                //            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                //        }
-                                //    }
-                                //    #endregion
-
-                                //    e_reversar_pago.deudas.Add(e_datos_pago_reversar);
-
-                                //    TransaccionModel trx_reverso = new TransaccionModel();
-                                //    trx_reverso.nu_id_trx = Convert.ToInt32(id_trans_global_reverso);
-
-                                //    trx_reverso.nu_id_trx_hub = Convert.ToInt32(model.id_trx_hub);
-                                //    trx_reverso.nu_id_distribuidor = trx.nu_id_distribuidor;
-                                //    trx_reverso.nu_id_comercio = trx.nu_id_comercio;
-                                //    trx_reverso.nu_id_producto = trx.nu_id_producto;
-                                //    trx_reverso.dt_fecha = DateTime.Now.Date;
-                                //    trx_reverso.nu_id_tipo_moneda_vta = trx.nu_id_tipo_moneda_vta;
-                                //    trx_reverso.nu_precio = trx.nu_precio;
-
-                                //    trx_reverso.vc_numero_servicio = trx.vc_numero_servicio;
-                                //    trx_reverso.vc_nro_doc_pago = trx.vc_nro_doc_pago;
-
-                                //    var json = JsonConvert.SerializeObject(e_reversar_pago);
-
-                                //    client = new BanBifApi();
-
-                                //    var result_reversion_pago = client.Reversar_Pago(e_reversar_pago_param, e_reversar_pago, trx.nu_id_trx_app, _logger, model.id_trx_hub).Result;
-
-                                //    Response.E_meta e_meta_pago_reversion = (Response.E_meta)result_reversion_pago.meta;
-                                //    Response.E_datos_trx e_datos_pago_result_reversion = (Response.E_datos_trx)result_reversion_pago.datos;
-                                //    if (e_meta_pago_reversion != null &&
-                                //        e_meta_pago_reversion.mensajes[0].codigo == "ESM00")
-                                //    {
-                                //        trx_reverso.vc_id_ref_trx = e_meta.idTransaccion;
-                                //        trx_reverso.vc_cod_autorizacion = "";
-
-                                //        con_sql.Open();
-                                //        var tran_sql_rev = con_sql.BeginTransaction();
-
-                                //        cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
-
-                                //        if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
-                                //        {
-                                //            tran_sql_rev.Rollback();
-                                //            ins_bd = false;
-                                //            _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                //            return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                //        }
-                                //        trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
-
-                                //        tran_sql_rev.Commit();
-                                //        con_sql.Close();
-                                //        ins_bd = false;
-
-                                //        //tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
-
-                                //        //tm.vc_cod_error = "99";
-                                //        //tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (1)";
-                                //    }
-                                //    //else
-                                //    //{
-                                //    //    tm.vc_cod_error = "99";
-                                //    //    tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (2)";
-                                //    //}
-
-                                //}
-
-
                                 return info;
                             }
                             else
@@ -855,9 +735,9 @@ namespace wa_api_incomm.Services
                                     }
 
                                     if (tm.vc_cod_error.Length > 0)
-                                        tm.vc_cod_error = tm.vc_cod_error.Substring(0, tm.vc_cod_error.Length - 1);
+                                        tm.vc_cod_error = tm.vc_cod_error.Substring(0, tm.vc_cod_error.Length - 3);
                                     if (tm.vc_desc_error.Length > 0)
-                                        tm.vc_desc_error = tm.vc_desc_error.Substring(0, tm.vc_desc_error.Length - 1);
+                                        tm.vc_desc_error = tm.vc_desc_error.Substring(0, tm.vc_desc_error.Length - 3);
 
                                 }
                                 else
@@ -869,7 +749,7 @@ namespace wa_api_incomm.Services
                                 tm.vc_desc_tipo_error = "CONVENIO";
 
 
-                                if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "0210")
+                                if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "EEG02")
                                 {
                                     //Variables BD
                                     con_sql.Open();
@@ -1081,7 +961,13 @@ namespace wa_api_incomm.Services
 
                                 tran_sql_error.Commit();
                                 _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
-                                
+
+                                if (tm.vc_cod_error == "ESM25")
+                                {
+                                    tm.vc_cod_error = "ESM25";
+                                    tm.vc_desc_error = "El pago no puede ser procesado por realizarse fuera de horario.";
+                                }
+
                                 return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
                             }
                         }

@@ -50,14 +50,18 @@ namespace wa_api_incomm.Services
                 trx_hub.nombre_comercio = model.nombre_comercio;
                 trx_hub.nro_telefono = model.numero;
                 trx_hub.email = "";
-                trx_hub.id_producto = model.importe;
+                trx_hub.id_producto = model.id_producto;
 
                 cmd = global_service.insTrxhub(con_sql, trx_hub);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    tran_sql.Rollback();
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                     return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
+                {
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();

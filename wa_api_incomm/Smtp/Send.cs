@@ -117,7 +117,7 @@ namespace wa_api_incomm.Smtp
                 return cmd;
             }
         }
-               
+
         public string GetBody(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
@@ -349,8 +349,8 @@ namespace wa_api_incomm.Smtp
 
             return bodyRegistrer;
         }
-           
-        
+
+
         public string GetBodyIncomm(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
         {
             string bodyRegistrer = "";
@@ -477,12 +477,279 @@ namespace wa_api_incomm.Smtp
             return bodyRegistrer;
         }
 
+        public string GetBodyPagos(string vc_desc_servicio, string vc_nombre_comercio, string vc_cod_comercio, string vc_fecha, string vc_nro_transaccion, string vc_empresa, string vc_tipo_identificador, string vc_identificador, string vc_valor, string vc_valor_comision, string vc_valor_total)
+        {
+            string bodyRegistrer = "";
+            bodyRegistrer += @"<html";
+            bodyRegistrer += @" xmlns=""http://www.w3.org/1999/xhtml""";
+            bodyRegistrer += @" xmlns:o=""urn:schemas-microsoft-com:office:office""";
+            bodyRegistrer += @" width=""100%""";
+            bodyRegistrer += @" style=""width: 100%; font-family: 'Open Sans', sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 0; margin: 0;""";
+            bodyRegistrer += @" >";
+            bodyRegistrer += @" <head>";
+            bodyRegistrer += @" <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />";
+            bodyRegistrer += @" <link rel=""preconnect"" href=""https://fonts.googleapis.com"" />";
+            bodyRegistrer += @" <link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin />";
+            bodyRegistrer += @" <link href=""https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap"" rel=""stylesheet"" />";
+            bodyRegistrer += @" </head>";
+            bodyRegistrer += @" <style type=""text/css"">";
+            bodyRegistrer += @" table {";
+            bodyRegistrer += @" border-collapse: collapse;";
+            bodyRegistrer += @" border-spacing: 0px;";
+            bodyRegistrer += @" mso-table-lspace: 0pt !important;";
+            bodyRegistrer += @" mso-table-rspace: 0pt !important;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" img {";
+            bodyRegistrer += @" display: block;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" </style>";
+            bodyRegistrer += @" <body bgcolor=""#FFFFFF"" leftmargin=""0"" topmargin=""0"" marginwidth=""0"" marginheight=""0"">";
+            bodyRegistrer += @" <table";
+            bodyRegistrer += @" id=""Tabla_01""";
+            bodyRegistrer += @" width=""834""";
+            bodyRegistrer += @" height=""926""";
+            bodyRegistrer += @" border=""0""";
+            bodyRegistrer += @" cellpadding=""0""";
+            bodyRegistrer += @" cellspacing=""0""";
+            bodyRegistrer += @" bgcolor=""#896BFF""";
+            bodyRegistrer += @" align=""center""";
+            bodyRegistrer += @" style=""border: none; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; border-spacing: 0px;""";
+            bodyRegistrer += @" >";
+            bodyRegistrer += @" <tbody>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""12"" width=""834"" height=""375"">";
+            bodyRegistrer += @" <img src=""MPPago_01.jpg"" width=""834"" height=""375"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""7"" width=""262"" height=""152"">";
+            bodyRegistrer += @" <img src=""MPCompra_02_01.jpg"" width=""262"" height=""152"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 28px; margin-left: -200; margin-top: -118px; text-align: center; margin-bottom: 0px; font-weight: 600; width: 500px;""> ";
+            bodyRegistrer += @" Realizaste un PAGO DE SERVICIO " + vc_desc_servicio + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-left: -200px; margin-top: 18px; text-align: center; font-weight: 100; width: 500px;""> ";
+            bodyRegistrer += @" En el comercio " + vc_nombre_comercio + " identificado con el código: " + vc_cod_comercio + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""7"" width=""262"" height=""150"">";
+            bodyRegistrer += @" <img src=""MPCompra_03_01.jpg"" width=""262"" height=""150"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-left: -175px; margin-top: -30px; margin-bottom: 0px; font-weight: 600;"">";
+            bodyRegistrer += @" Fecha y hora:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_fecha + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-left: -175px; margin-bottom: 0px; font-weight: 600;"">";
+            bodyRegistrer += @" Número de transacción:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_nro_transaccion + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-bottom: 0px; font-weight: 600; margin-left: -150px; width: 300px; text-align: center;""> ";
+            bodyRegistrer += @" Empresa:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_empresa + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-bottom: 0px; font-weight: 600; margin-left: -255px; width: 500px; text-align: center;""> ";
+            bodyRegistrer += @" Tipo de identificador:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100;"">";
+            bodyRegistrer += @" " + vc_tipo_identificador + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-bottom: 0px; font-weight: 600; margin-left: -120px; width: 300px; text-align: center;""> ";
+            bodyRegistrer += @" Identificador:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_identificador + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-bottom: 0px; font-weight: 600; margin-left: -280px; width: 600px; text-align: center;""> ";
+            bodyRegistrer += @" Valor recaudado:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 18px; margin-top: 18px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" S/ " + vc_valor + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" / Comisión: S/ " + vc_valor_comision + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""12"" width=""834"" height=""157"">";
+            bodyRegistrer += @" <img src=""MPCompra_04.jpg"" width=""834"" height=""157"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""1"" width=""120"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_05.jpg"" width=""120"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""1"" width=""143"" height=""82"">";
+            bodyRegistrer += @" <p style=""line-height: 30px; color: #fff; font-size: 40px; font-weight: 600;"">";
+            bodyRegistrer += @" <span> " + vc_valor_total + " </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""1"" width=""46"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_06_01.jpg"" width=""46"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""8"" width=""525"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_07.jpg"" width=""525"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""6"" width=""434"" height=""89"">";
+            bodyRegistrer += @" <div style=""background-color: #030346; width: 433px; height: 89; margin-left: 1px;"">";
+            bodyRegistrer += @" <p style=""line-height: 30px; color: #fff; font-size: 14px; font-weight: 600; margin-left: 90px;"">";
+            bodyRegistrer += @" ¿Dudas? Tranquilo,";
+            bodyRegistrer += @" <a style=""color: #896bff; text-decoration: underline; cursor: pointer;"" href=""#"">";
+            bodyRegistrer += @" aquí";
+            bodyRegistrer += @" </a>";
+            bodyRegistrer += @" estamos para resolverlas.";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </div>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""6"" width=""400"" height=""89"">";
+            bodyRegistrer += @" <img src=""MPCompra_08_01.png"" width=""400"" height=""89"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr> ";
+            bodyRegistrer += @" </tbody>";
+            bodyRegistrer += @" </table>";
+            bodyRegistrer += @" </body>";
+            bodyRegistrer += @"</html>";
 
-        public string GetBodyPagoServicios(string vc_desc_servicio, string vc_nombre_comercio, string vc_cod_comercio, string vc_fecha, string vc_nro_transaccion, string vc_empresa)
+
+            return bodyRegistrer;
+        }
+
+        public string GetBodyCompras(string vc_desc_producto, string vc_nombre_comercio, string vc_cod_comercio, string vc_fecha, string vc_nro_transaccion, string vc_celular, string vc_valor)
         {
             string bodyRegistrer = "";
 
-            
+            bodyRegistrer += @"<html";
+            bodyRegistrer += @" xmlns=""http://www.w3.org/1999/xhtml""";
+            bodyRegistrer += @" xmlns:o=""urn:schemas-microsoft-com:office:office""";
+            bodyRegistrer += @" width=""100%""";
+            bodyRegistrer += @" style=""width: 100%; font-family: 'Open Sans', sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; padding: 0; margin: 0;""";
+            bodyRegistrer += @" >";
+            bodyRegistrer += @" <head>";
+            bodyRegistrer += @" <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />";
+            bodyRegistrer += @" <link rel=""preconnect"" href=""https://fonts.googleapis.com"" />";
+            bodyRegistrer += @" <link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin />";
+            bodyRegistrer += @" <link href=""https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap"" rel=""stylesheet"" />";
+            bodyRegistrer += @" </head>";
+            bodyRegistrer += @" <style type=""text/css"">";
+            bodyRegistrer += @" table {";
+            bodyRegistrer += @" border-collapse: collapse;";
+            bodyRegistrer += @" border-spacing: 0px;";
+            bodyRegistrer += @" mso-table-lspace: 0pt !important;";
+            bodyRegistrer += @" mso-table-rspace: 0pt !important;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" img {";
+            bodyRegistrer += @" display: block;";
+            bodyRegistrer += @" }";
+            bodyRegistrer += @" </style>";
+            bodyRegistrer += @" <body bgcolor=""#FFFFFF"" leftmargin=""0"" topmargin=""0"" marginwidth=""0"" marginheight=""0"">";
+            bodyRegistrer += @" <table";
+            bodyRegistrer += @" id=""Tabla_01""";
+            bodyRegistrer += @" width=""834""";
+            bodyRegistrer += @" height=""926""";
+            bodyRegistrer += @" border=""0""";
+            bodyRegistrer += @" cellpadding=""0""";
+            bodyRegistrer += @" cellspacing=""0""";
+            bodyRegistrer += @" bgcolor=""#896BFF""";
+            bodyRegistrer += @" align=""center""";
+            bodyRegistrer += @" style=""border: none; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; border-spacing: 0px;""";
+            bodyRegistrer += @" >";
+            bodyRegistrer += @" <tbody>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""12"" width=""834"" height=""375"">";
+            bodyRegistrer += @" <img src=""MPCompra_01.jpg"" width=""834"" height=""375"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr style=""font-size: 0px !important;"">";
+            bodyRegistrer += @" <td colspan=""7"" width=""262"" height=""152"">";
+            bodyRegistrer += @" <img src=""MPCompra_02_01.jpg"" width=""262"" height=""152"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 28px; margin-left: -300; margin-top: -120px; text-align: center; margin-bottom: 4px; font-weight: 600;"">";
+            bodyRegistrer += @" Realizaste una Recarga " + vc_desc_producto + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-left: -200px; margin-top: 20px; text-align: center; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" En el comercio " + vc_nombre_comercio + " identificado con el código: " + vc_cod_comercio + "";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""7"" width=""262"" height=""150"">";
+            bodyRegistrer += @" <img src=""MPCompra_03_01.jpg"" width=""262"" height=""150"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-left: -175px; margin-top: -30px; margin-bottom: 4px; font-weight: 600;"">";
+            bodyRegistrer += @" Fecha y hora:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-top: 20px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_fecha + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-left: -175px; margin-bottom: 4px; font-weight: 600;"">";
+            bodyRegistrer += @" Número de transacción:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-top: 20px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_nro_transaccion + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" <p style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-bottom: 4px; font-weight: 600; margin-left: -110px; width: 300px; text-align: center;"">";
+            bodyRegistrer += @" Celular:";
+            bodyRegistrer += @" <span style=""margin: 0; line-height: 30px; color: #fff; font-size: 23px; margin-top: 20px; font-weight: 100; width: 500px;"">";
+            bodyRegistrer += @" " + vc_celular + "";
+            bodyRegistrer += @" </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""12"" width=""834"" height=""157"">";
+            bodyRegistrer += @" <img src=""MPCompra_04.jpg"" width=""834"" height=""157"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""1"" width=""120"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_05.jpg"" width=""120"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""1"" width=""143"" height=""82"">";
+            bodyRegistrer += @" <p style=""line-height: 30px; color: #fff; font-size: 42px; font-weight: 600;"">";
+            bodyRegistrer += @" <span> " + vc_valor + " </span>";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""1"" width=""46"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_06_01.jpg"" width=""46"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""8"" width=""525"" height=""82"">";
+            bodyRegistrer += @" <img src=""MPCompra_07.jpg"" width=""525"" height=""82"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" <tr>";
+            bodyRegistrer += @" <td colspan=""6"" width=""434"" height=""89"">";
+            bodyRegistrer += @" <div style=""background-color: #030346; width: 433px; height: 89; margin-left: 1px;"">";
+            bodyRegistrer += @" <p style=""line-height: 30px; color: #fff; font-size: 14px; font-weight: 600; margin-left: 90px;"">";
+            bodyRegistrer += @" ¿Dudas? Tranquilo,";
+            bodyRegistrer += @" <a style=""color: #896bff; text-decoration: underline; cursor: pointer;"" href=""#"">";
+            bodyRegistrer += @" aquí";
+            bodyRegistrer += @" </a>";
+            bodyRegistrer += @" estamos para resolverlas.";
+            bodyRegistrer += @" </p>";
+            bodyRegistrer += @" </div>";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" <td colspan=""6"" width=""400"" height=""89"">";
+            bodyRegistrer += @" <img src=""MPCompra_08_01.png"" width=""400"" height=""89"" alt="""" />";
+            bodyRegistrer += @" </td>";
+            bodyRegistrer += @" </tr>";
+            bodyRegistrer += @" </tbody>";
+            bodyRegistrer += @" </table>";
+            bodyRegistrer += @" </body>";
+            bodyRegistrer += @"</html>";
+
+
             return bodyRegistrer;
         }
 

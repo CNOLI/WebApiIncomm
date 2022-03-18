@@ -29,9 +29,9 @@ namespace wa_api_incomm.Models
 
         public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.dombif.peru/";
         public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.dombif.peru/auth/realms/Banbif-API/protocol/openid-connect/token";
-        public const string vc_url_banbif_prod = "";
-        public const string vc_url_banbif_token_prod = "";
-
+        public const string vc_url_banbif_prod = "https://api-recaudaciones.apps.dombif.peru/";
+        public const string vc_url_banbif_token_prod = "https://ssorh.apps.dombif.peru/auth/realms/Banbif-API/protocol/openid-connect/token";
+        
         public const string vc_url_servipagos_qa = "https://apisrv1.servipagos.pe:20791/";
         public const string vc_url_servipagos_consulta_qa = "https://apisrv1.servipagos.pe:20791/consulta";
 

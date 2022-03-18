@@ -104,9 +104,13 @@ namespace wa_api_incomm.Services
                 cmd = global_service.insTrxhub(con_sql, trx);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    tran_sql.Rollback();
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                     return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                }
+                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
+                {
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();

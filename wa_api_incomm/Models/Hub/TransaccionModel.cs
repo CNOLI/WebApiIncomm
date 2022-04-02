@@ -10,11 +10,11 @@ namespace wa_api_incomm.Models.Hub
         public decimal? nu_id_convenio { get; set; }
         public Int64? nu_id_trx_hub { get; set; }
 
-        public Int64 nu_id_trx                { get; set; }
+        public Int64? nu_id_trx                { get; set; }
         public decimal? nu_id_trx_app       { get; set; }
         public int nu_id_distribuidor       { get; set; }
         public int nu_id_comercio           { get; set; }
-        public DateTime dt_fecha            { get; set; }
+        public DateTime? dt_fecha            { get; set; }
         public int? nu_id_producto           { get; set; }
         public decimal nu_precio            { get; set; }
         public string vc_id_ref_trx         { get; set; }
@@ -54,6 +54,19 @@ namespace wa_api_incomm.Models.Hub
         public decimal? nu_saldo_izipay { get; set; }
 
         public decimal? nu_id_trx_extorno { get; set; }
+
+
+        //Reportes
+        public string vc_desc_distribuidor { get; set; }
+        public string vc_nombre_comercio { get; set; }
+        public decimal? nu_valor_comision { get; set; }
+        public decimal? nu_precio_vta { get; set; }
+        public decimal? nu_imp_trx { get; set; }
+        public string vc_tipo_doc_sol { get; set; }
+        public string vc_tipo_doc_cpt { get; set; }
+        public string vc_fecha_reg { get; set; }
+
+
 
     }
 }

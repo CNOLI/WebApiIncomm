@@ -435,6 +435,24 @@ namespace wa_api_incomm.Services
                             cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                         }
 
+                        using (var cmd_upd_confirmar = new SqlCommand("tisi_trx.usp_upd_transaccion_confirmar", con_sql, tran_sql))
+                        {
+                            cmd_upd_confirmar.CommandType = CommandType.StoredProcedure;
+                            cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_trx", model_sql.nu_id_trx_app);
+                            cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_distribuidor", distribuidor.nu_id_distribuidor);
+                            cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_comercio", comercio.nu_id_comercio);
+                            cmd_upd_confirmar.Parameters.AddWithValue("@bi_confirmado", true);
+                            UtilSql.iUpd(cmd_upd_confirmar, model_sql);
+                            cmd_upd_confirmar.ExecuteNonQuery();
+                            if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                            {
+                                tran_sql.Rollback();
+                                ins_bd = false;
+                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                            }
+                        }
+
                         tran_sql.Commit();
                         _logger.Information("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
 

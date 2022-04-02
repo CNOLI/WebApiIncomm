@@ -15,14 +15,14 @@ using Hub_Encrypt;
 namespace wa_api_incomm.Controllers
 {
     [Route("Transaccion")]
-    public class TransaccionController : Controller
+    public class IncommController : Controller
     {
-        private readonly ITransaccionService _ITransaccionService;
+        private readonly IIncommService _IIncommService;
         public IConfigurationRoot Configuration { get; }
         private readonly Serilog.ILogger _logger;
-        public TransaccionController(Serilog.ILogger logger, IHostingEnvironment env, ITransaccionService ITransaccionService)
+        public IncommController(Serilog.ILogger logger, IHostingEnvironment env, IIncommService IIncommService)
         {
-            _ITransaccionService = ITransaccionService;
+            _IIncommService = IIncommService;
             _logger = logger;
 
             var builder = new ConfigurationBuilder()
@@ -35,7 +35,7 @@ namespace wa_api_incomm.Controllers
 
 
         [HttpPost("generar")]
-        public IActionResult generar([FromBody]InputTransModel model)
+        public IActionResult generar([FromBody]Incomm_InputTransModel model)
         {
             if (!this.ModelState.IsValid)
             {
@@ -55,7 +55,38 @@ namespace wa_api_incomm.Controllers
                 else 
                 {
 
-                    return this.Ok(_ITransaccionService.execute_trans(Configuration.GetSection("SQL").Value, model));
+                    return this.Ok(_IIncommService.execute_trans(Configuration.GetSection("SQL").Value, model));
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
+            }
+        }
+
+        [HttpPost("confirmar")]
+        public IActionResult confirmar([FromBody]Incomm_InputITransConfirmarModel model)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+
+                _logger.Error(allErrors.First());
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos"));
+            }
+            try
+            {
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.nro_transaccion);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else
+                {
+
+                    return this.Ok(_IIncommService.confirmar(Configuration.GetSection("SQL").Value, model));
                 }
 
             }
@@ -71,7 +102,7 @@ namespace wa_api_incomm.Controllers
         {
             try
             {
-                return this.Ok(_ITransaccionService.pr_sms(Configuration.GetSection("SQL").Value, nroCelular));
+                return this.Ok(_IIncommService.pr_sms(Configuration.GetSection("SQL").Value, nroCelular));
             }
             catch (Exception ex)
             {
@@ -84,7 +115,7 @@ namespace wa_api_incomm.Controllers
         {
             try
             {
-                return this.Ok(_ITransaccionService.pr_email(Configuration.GetSection("SQL").Value, correoDestino));
+                return this.Ok(_IIncommService.pr_email(Configuration.GetSection("SQL").Value, correoDestino));
             }
             catch (Exception ex)
             {

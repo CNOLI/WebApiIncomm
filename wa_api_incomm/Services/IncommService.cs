@@ -21,18 +21,18 @@ using wa_api_incomm.Smtp;
 
 namespace wa_api_incomm.Services
 {
-    public class TransaccionService : ITransaccionService
+    public class IncommService : IIncommService
     {
         public int nu_id_convenio = 1;
 
         private readonly Serilog.ILogger _logger;
         private readonly Send _send;
-        public TransaccionService(Serilog.ILogger logger, Send send)
+        public IncommService(Serilog.ILogger logger, Send send)
         {
             _send = send;
             _logger = logger;
         }
-        public object execute_trans(string conexion, InputTransModel input)
+        public object execute_trans(string conexion, Incomm_InputTransModel input)
         {
 
             bool ins_bd = false;
@@ -145,7 +145,7 @@ namespace wa_api_incomm.Services
 
                 var fechatran = DateTime.Now;
 
-                
+
 
                 TransaccionModel tm = new TransaccionModel();
                 tm.nu_id_trx = idtran;
@@ -255,8 +255,9 @@ namespace wa_api_incomm.Services
                         if (producto.bi_envio_sms)
                         {
                             //envio de mensaje
+                            var mensajefrom = "POSA";
                             var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
-                            SendMessage(mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
+                            SendMessage(mensajefrom, mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
                         }
 
                     }
@@ -358,6 +359,123 @@ namespace wa_api_incomm.Services
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
             }
         }
+        public object confirmar(string conexion, Incomm_InputITransConfirmarModel input)
+        {
+
+            bool ins_bd = false;
+            SqlConnection con_sql = null;
+            SqlTransaction tran_sql = null;
+            SqlTransaction tran_sql_error = null;
+            SqlCommand cmd = null;
+            con_sql = new SqlConnection(conexion);
+            try
+            {
+                GlobalService global_service = new GlobalService();
+
+                con_sql.Open();
+
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                }
+                ComercioModel comercio = new ComercioModel();
+                comercio.vc_cod_comercio = input.codigo_comercio;
+                comercio = global_service.get_comercio_busqueda(con_sql, input.codigo_comercio, distribuidor.nu_id_distribuidor);
+
+                if (comercio.nu_id_comercio <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                }
+
+                IncommModel model_sql = new IncommModel();
+                model_sql.nu_id_trx = Convert.ToDecimal(input.nro_transaccion);
+                model_sql.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                model_sql.nu_id_comercio = comercio.nu_id_comercio;
+
+                model_sql = get_transaccion(con_sql, model_sql);
+
+                con_sql.Close();
+
+                if (model_sql.nu_id_trx <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("99", "No se encontró transacción con los datos enviados.");
+                }
+
+
+                con_sql.Open();
+                tran_sql = con_sql.BeginTransaction();
+
+                using (var cmd_upd_confirmar = new SqlCommand("tisi_trx.usp_upd_transaccion_confirmar", con_sql, tran_sql))
+                {
+                    cmd_upd_confirmar.CommandType = CommandType.StoredProcedure;
+                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_trx", model_sql.nu_id_trx);
+                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_distribuidor", model_sql.nu_id_distribuidor);
+                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_comercio", model_sql.nu_id_comercio);
+                    cmd_upd_confirmar.Parameters.AddWithValue("@bi_confirmado", true);
+                    UtilSql.iUpd(cmd_upd_confirmar, model_sql);
+                    cmd_upd_confirmar.ExecuteNonQuery();
+                    if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                    {
+                        tran_sql.Rollback();
+                        return UtilSql.sOutPutTransaccion("99", cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToString());
+                    }
+                }
+                tran_sql.Commit();
+                con_sql.Close();
+
+                AESApi _aesapi = new AESApi(model_sql.vc_url_api_aes);
+                DatosPinModel dpm = new DatosPinModel();
+                dpm.key = model_sql.vc_clave_aes;
+                dpm.pin = model_sql.vc_nro_pin;
+                var _rpin = _aesapi.GetPin(dpm).Result;
+
+                if (input.envio_sms)
+                {
+                    //envio de mensaje
+                    var mensajefrom = "POSA";
+                    var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + model_sql.vc_url_web_terminos;
+                    SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, model_sql.vc_aws_access_key_id, model_sql.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), con_sql);
+                }
+
+                if (input.envio_email)
+                {
+                    //envio de correo
+                    var body = _send.GetBodyIncomm(model_sql.vc_desc_empresa, model_sql.vc_desc_categoria, model_sql.vc_desc_producto, model_sql.vc_color_header_email, model_sql.vc_color_body_email, _rpin.pin, model_sql.vc_cod_comercio, model_sql.dt_fec_reg.ToString(), model_sql.vc_id_ref_trx, model_sql.vc_cod_autorizacion, (model_sql.nu_precio_vta ?? 0).ToString("0.000"), model_sql.vc_url_web_terminos, model_sql.bi_valor_pin ?? false);
+                    var titulo = "Confirmación de transacción #" + model_sql.vc_id_ref_trx;
+                    _send.Email(model_sql.nu_id_trx.ToString(), model_sql.vc_email_sol, titulo, body, model_sql.vc_email_envio, model_sql.vc_password_email, model_sql.vc_smtp_email, model_sql.nu_puerto_smtp_email ?? 587, model_sql.bi_ssl_email ?? true, model_sql.vc_desc_empresa, con_sql);
+                }
+
+                object info = new object();
+
+                info = new
+                {
+                    codigo = "00",
+                    mensaje = "Transacción confirmada correctamente.",
+                    nro_transaccion = model_sql.nu_id_trx
+                };
+                return info;
+
+            }
+            catch (Exception ex)
+            {
+                if (ins_bd)
+                {
+                    tran_sql.Rollback();
+                }
+
+                _logger.Error("idtrx_app: " + input.nro_transaccion + " / " + ex.Message);
+
+                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+            }
+            finally
+            {
+                if (con_sql.State == ConnectionState.Open) con_sql.Close();
+            }
+        }
 
 
         public object pr_sms(string conexion, string nro_telefono)
@@ -371,8 +489,9 @@ namespace wa_api_incomm.Services
                 ConvenioModel convenio = get_convenio(con_sql, 1);
                 var id_trans_global = "0";
 
+                var mensajefrom = "POSA";
                 var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es:. terminos y condiciones en " + convenio.vc_url_web_terminos;
-                SendMessage(mensajetxt, nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
+                SendMessage(mensajefrom, mensajetxt, nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
 
                 return 1;
             }
@@ -407,7 +526,7 @@ namespace wa_api_incomm.Services
             }
         }
 
-        private async Task SendMessage(string mensaje, string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
+        private async Task SendMessage(string from, string mensaje, string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
         {
             try
             {
@@ -423,6 +542,20 @@ namespace wa_api_incomm.Services
 
                 };
 
+                if (from.Length > 11)
+                {
+                    from = from.Substring(0, 11);
+                }
+
+                Dictionary<string, MessageAttributeValue> MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                  {
+                    {
+                      "AWS.SNS.SMS.SenderID", new MessageAttributeValue
+                        { DataType = "String", StringValue = from.Replace(" ","-")}
+                    }
+                  };
+                request.MessageAttributes = MessageAttributes;
+                
                 await client.PublishAsync(request);
             }
             catch (Exception ex)
@@ -633,6 +766,84 @@ namespace wa_api_incomm.Services
                         _result.vc_celular_def = dr["vc_celular_def"].ToString();
                     if (UtilSql.Ec(dr, "vc_email_def"))
                         _result.vc_email_def = dr["vc_email_def"].ToString();
+
+                }
+            }
+            return _result;
+        }
+        private IncommModel get_transaccion(SqlConnection cn, IncommModel model)
+        {
+            IncommModel _result = new IncommModel();
+            using (var cmd = new SqlCommand("tisi_trx.usp_get_transaccion_incomm", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+                if (dr.Read())
+
+                {
+                    if (UtilSql.Ec(dr, "vc_url_api_aes"))
+                        _result.vc_url_api_aes = dr["vc_url_api_aes"].ToString();
+                    if (UtilSql.Ec(dr, "vc_clave_aes"))
+                        _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
+                    if (UtilSql.Ec(dr, "vc_aws_access_key_id"))
+                        _result.vc_aws_access_key_id = dr["vc_aws_access_key_id"].ToString();
+                    if (UtilSql.Ec(dr, "vc_aws_secrect_access_key"))
+                        _result.vc_aws_secrect_access_key = dr["vc_aws_secrect_access_key"].ToString();
+
+                    if (UtilSql.Ec(dr, "vc_desc_empresa"))
+                        _result.vc_desc_empresa = dr["vc_desc_empresa"].ToString();
+                    if (UtilSql.Ec(dr, "vc_color_header_email"))
+                        _result.vc_color_header_email = dr["vc_color_header_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_color_body_email"))
+                        _result.vc_color_body_email = dr["vc_color_body_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_envio"))
+                        _result.vc_email_envio = dr["vc_email_envio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_password_email"))
+                        _result.vc_password_email = dr["vc_password_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_smtp_email"))
+                        _result.vc_smtp_email = dr["vc_smtp_email"].ToString();
+                    if (UtilSql.Ec(dr, "nu_puerto_smtp_email"))
+                        _result.nu_puerto_smtp_email = dr["nu_puerto_smtp_email"].ToInt();
+                    if (UtilSql.Ec(dr, "bi_ssl_email"))
+                        _result.bi_ssl_email = dr["bi_ssl_email"].ToBool();
+                    if (UtilSql.Ec(dr, "vc_url_web_terminos"))
+                        _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
+
+                    if (UtilSql.Ec(dr, "nu_id_trx"))
+                        _result.nu_id_trx = Convert.ToDecimal(dr["nu_id_trx"].ToString());
+                    if (UtilSql.Ec(dr, "nu_id_distribuidor"))
+                        _result.nu_id_distribuidor = Convert.ToInt32(dr["nu_id_distribuidor"].ToString());
+                    if (UtilSql.Ec(dr, "nu_id_comercio"))
+                        _result.nu_id_comercio = Convert.ToInt32(dr["nu_id_comercio"].ToString());
+                    if (UtilSql.Ec(dr, "dt_fec_reg"))
+                        _result.dt_fec_reg = dr["dt_fec_reg"].ToDateTime();
+                    if (UtilSql.Ec(dr, "vc_telefono_sol"))
+                        _result.vc_telefono_sol = dr["vc_telefono_sol"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_sol"))
+                        _result.vc_email_sol = dr["vc_email_sol"].ToString();
+                    if (UtilSql.Ec(dr, "nu_precio_vta"))
+                        _result.nu_precio_vta = dr["nu_precio_vta"].ToDecimal();
+                    if (UtilSql.Ec(dr, "vc_nro_pin"))
+                        _result.vc_nro_pin = dr["vc_nro_pin"].ToString();
+                    if (UtilSql.Ec(dr, "vc_id_ref_trx"))
+                        _result.vc_id_ref_trx = dr["vc_id_ref_trx"].ToString();
+                    if (UtilSql.Ec(dr, "vc_cod_autorizacion"))
+                        _result.vc_cod_autorizacion = dr["vc_cod_autorizacion"].ToString();
+
+                    if (UtilSql.Ec(dr, "vc_cod_comercio"))
+                        _result.vc_cod_comercio = dr["vc_cod_comercio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_desc_categoria"))
+                        _result.vc_desc_categoria = dr["vc_desc_categoria"].ToString();
+                    if (UtilSql.Ec(dr, "vc_desc_producto"))
+                        _result.vc_desc_producto = dr["vc_desc_producto"].ToString();
+                    if (UtilSql.Ec(dr, "vc_url_web_terminos"))
+                        _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
+                    if (UtilSql.Ec(dr, "bi_valor_pin"))
+                        _result.bi_valor_pin = dr["bi_valor_pin"].ToBool();
 
                 }
             }

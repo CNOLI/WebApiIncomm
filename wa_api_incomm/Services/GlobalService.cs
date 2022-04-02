@@ -79,6 +79,35 @@ namespace wa_api_incomm.Services
             }
             return model;
         }
+        public ComercioModel get_comercio_busqueda(SqlConnection cn, string vc_cod_comercio, int nu_id_distribuidor)
+        {
+            ComercioModel model = new ComercioModel();
+            using (var cmd = new SqlCommand("tisi_global.usp_get_comercio", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_tran_ruta = 2;
+                model.nu_id_distribuidor = nu_id_distribuidor;
+                model.vc_cod_comercio = vc_cod_comercio;
+                model.vc_tran_usua_regi = "API";
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.vc_cod_comercio);
+                cmd.Parameters.AddWithValue("@vc_nombre_comercio", "");
+                cmd.Parameters.AddWithValue("@vc_usuario", model.vc_tran_usua_regi);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+                if (dr.Read())
+
+                {
+                    if (UtilSql.Ec(dr, "nu_id_comercio"))
+                        model.nu_id_comercio = Convert.ToInt32(dr["nu_id_comercio"].ToString());
+                    if (UtilSql.Ec(dr, "vc_cod_comercio"))
+                        model.vc_cod_comercio = dr["vc_cod_comercio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nombre_comercio"))
+                        model.vc_nombre_comercio = dr["vc_nombre_comercio"].ToString();
+                }
+            }
+            return model;
+        }
         public ProductoModel get_producto(SqlConnection cn, ProductoModel model)
         {
             ProductoModel _result = new ProductoModel();
@@ -427,6 +456,69 @@ namespace wa_api_incomm.Services
                 cmd.ExecuteNonQuery();
                 return cmd;
             }
+        }
+        public TransaccionModel get_transaccion(SqlConnection cn, TransaccionModel model)
+        {
+            using (var cmd = new SqlCommand("tisi_trx.usp_get_transaccion", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_tran_ruta = 1;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+                if (dr.Read())
+                {
+                    if (UtilSql.Ec(dr, "nu_id_trx"))
+                        model.nu_id_trx = Convert.ToInt32(dr["nu_id_trx"].ToString());
+                    if (UtilSql.Ec(dr, "vc_cod_distribuidor"))
+                        model.vc_cod_distribuidor = dr["vc_cod_distribuidor"].ToString();
+                    if (UtilSql.Ec(dr, "vc_desc_distribuidor"))
+                        model.vc_desc_distribuidor = dr["vc_desc_distribuidor"].ToString();
+                    if (UtilSql.Ec(dr, "vc_cod_comercio"))
+                        model.vc_cod_comercio = dr["vc_cod_comercio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nombre_comercio"))
+                        model.vc_nombre_comercio = dr["vc_nombre_comercio"].ToString();
+                    if (UtilSql.Ec(dr, "dt_fecha"))
+                        model.dt_fecha = dr["dt_fecha"].ToDateTime();
+                    if (UtilSql.Ec(dr, "vc_desc_producto"))
+                        model.vc_desc_producto = dr["vc_desc_producto"].ToString();
+                    if (UtilSql.Ec(dr, "nu_precio_vta"))
+                        model.nu_precio_vta = dr["nu_precio_vta"].ToDecimal();
+                    if (UtilSql.Ec(dr, "nu_valor_comision"))
+                        model.nu_valor_comision = dr["nu_valor_comision"].ToDecimal();
+                    if (UtilSql.Ec(dr, "nu_imp_trx"))
+                        model.nu_imp_trx = dr["nu_imp_trx"].ToDecimal();
+                    if (UtilSql.Ec(dr, "vc_id_ref_trx"))
+                        model.vc_id_ref_trx = dr["vc_id_ref_trx"].ToString();
+                    if (UtilSql.Ec(dr, "vc_cod_autorizacion"))
+                        model.vc_cod_autorizacion = dr["vc_cod_autorizacion"].ToString();
+                    if (UtilSql.Ec(dr, "vc_tipo_doc_sol"))
+                        model.vc_tipo_doc_sol = dr["vc_tipo_doc_sol"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_doc_sol"))
+                        model.vc_nro_doc_sol = dr["vc_nro_doc_sol"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_sol"))
+                        model.vc_email_sol = dr["vc_email_sol"].ToString();
+                    if (UtilSql.Ec(dr, "vc_telefono_sol"))
+                        model.vc_telefono_sol = dr["vc_telefono_sol"].ToString();
+                    if (UtilSql.Ec(dr, "vc_tipo_doc_cpt"))
+                        model.vc_tipo_doc_cpt = dr["vc_tipo_doc_cpt"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_doc_cpt"))
+                        model.vc_nro_doc_cpt = dr["vc_nro_doc_cpt"].ToString();
+                    if (UtilSql.Ec(dr, "vc_tipo_comprobante"))
+                        model.vc_tipo_comprobante = dr["vc_tipo_comprobante"].ToString();
+                    if (UtilSql.Ec(dr, "vc_ruc"))
+                        model.vc_ruc = dr["vc_ruc"].ToString();
+                    if (UtilSql.Ec(dr, "vc_numero_servicio"))
+                        model.vc_numero_servicio = dr["vc_numero_servicio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_doc_pago"))
+                        model.vc_nro_doc_pago = dr["vc_nro_doc_pago"].ToString();
+                    if (UtilSql.Ec(dr, "vc_fecha_reg"))
+                        model.vc_fecha_reg = dr["vc_fecha_reg"].ToString();
+                }
+            }
+            return model;
         }
     }
 }

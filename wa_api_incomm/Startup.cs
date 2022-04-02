@@ -90,7 +90,7 @@ namespace wa_api_incomm
                 endpoints.MapControllers();
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("Welcome to running ASP.NET Core on AWS Lambda");
+                    await context.Response.WriteAsync("API HUB");
                 });
             });
         }

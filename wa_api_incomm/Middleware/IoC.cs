@@ -14,7 +14,7 @@ namespace wa_api_incomm.Middleware
         public static IServiceCollection AddRegistration(this IServiceCollection services)
         {
             services.AddSingleton<ICategoriesService, CategoriesService>();
-            services.AddSingleton<ITransaccionService, TransaccionService>();
+            services.AddSingleton<IIncommService, IncommService>();
             services.AddSingleton<IPinService, PinService>();
             services.AddSingleton<Send, Send>();
             services.AddSingleton<IProductoService, ProductoService>();
@@ -29,6 +29,7 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<IIzipayService, IzipayService>();
             services.AddSingleton<IRecargaService, RecargaService>();
 
+            services.AddSingleton<IConsultaService, ConsultaService>();
             return services;
         }
     }

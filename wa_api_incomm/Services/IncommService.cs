@@ -256,7 +256,7 @@ namespace wa_api_incomm.Services
                         {
                             //envio de mensaje
                             var mensajefrom = "POSA";
-                            var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + convenio.vc_url_web_terminos;
+                            var mensajetxt = "Gracias por tu compra.  Tu PIN está listo para ser activado, el código es: " + _rpin.pin + ". Términos y condiciones en " + convenio.vc_url_web_terminos;
                             SendMessage(mensajefrom, mensajetxt, input.nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
                         }
 
@@ -437,7 +437,7 @@ namespace wa_api_incomm.Services
                 {
                     //envio de mensaje
                     var mensajefrom = "POSA";
-                    var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es: " + _rpin.pin + ". terminos y condiciones en " + model_sql.vc_url_web_terminos;
+                    var mensajetxt = "Gracias por tu compra.  Tu PIN está listo para ser activado, el código es: " + _rpin.pin + ". Términos y condiciones en " + model_sql.vc_url_web_terminos;
                     SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, model_sql.vc_aws_access_key_id, model_sql.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), con_sql);
                 }
 
@@ -490,7 +490,7 @@ namespace wa_api_incomm.Services
                 var id_trans_global = "0";
 
                 var mensajefrom = "POSA";
-                var mensajetxt = "felicitaciones. tu pin esta listo para ser activado, el codigo es:. terminos y condiciones en " + convenio.vc_url_web_terminos;
+                var mensajetxt = "Gracias por tu compra. Tu PIN está listo para ser activado, el código es:. Términos y condiciones en " + convenio.vc_url_web_terminos;
                 SendMessage(mensajefrom, mensajetxt, nro_telefono, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, id_trans_global, con_sql);
 
                 return 1;

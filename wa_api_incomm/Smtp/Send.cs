@@ -429,11 +429,18 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += @" <td rowspan=""3"" width=""137"" height=""266"">";
             bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_10.png"" width=""137"" height=""266"" alt="""" />";
             bodyRegistrer += @" </td>";
-            bodyRegistrer += @" </tr";
+            bodyRegistrer += @" </tr>";
             bodyRegistrer += @" <tr>";
-            bodyRegistrer += @" <td colspan=""3"" rowspan=""2"" width=""204"" height=""236"">";
-            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11.png"" width=""204"" height=""236"" alt="""" />";
-            bodyRegistrer += @" </td>";
+
+            //bodyRegistrer += @" <td colspan=""3"" rowspan=""2"" width=""204"" height=""236"">";
+            //bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11.png"" width=""204"" height=""236"" alt="""" />";
+            //bodyRegistrer += @" </td>";
+
+
+            bodyRegistrer += @" <td colspan=""3"" rowspan=""2"" width=""204"" height=""236"" style=""vertical-align: top;"">";
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11_1.png"" width=""204"" height=""150"" alt="""" />";
+            bodyRegistrer += @" <a href=""" + urlweb + @""" target = ""_blank"" style = ""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 30px; color: #777777; font-size: 15px;"">Ver términos y condiciones</a></td>";
+                       
             bodyRegistrer += @" <td colspan=""2"" align=""bottom"" >";
             bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 24px; color: #ffffff; font-size: 21px;""># PIN :<b> " + pin + "</b></p>";
             bodyRegistrer += @" </td>";
@@ -442,7 +449,7 @@ namespace wa_api_incomm.Smtp
             bodyRegistrer += @" <td colspan=""2"" width=""302"" height=""192"" >";
             bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_13.png"" width=""302"" height=""192"" alt="""" />";
             bodyRegistrer += @" </td>";
-            bodyRegistrer += @" </tr";
+            bodyRegistrer += @" </tr>";
             bodyRegistrer += @" <tr>";
             bodyRegistrer += @" <td width=""108"" height=""1"">";
             bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/espacio.gif"" width=""108"" height=""1"" alt="""" />";

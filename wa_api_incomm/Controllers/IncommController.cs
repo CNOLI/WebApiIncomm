@@ -45,7 +45,7 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos"));
             }
             try
-            {           
+            {
                 EncrypDecrypt enc = new EncrypDecrypt();
                 var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
                 if (a != model.clave)

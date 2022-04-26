@@ -15,6 +15,7 @@ namespace wa_api_incomm.Models
         public decimal? nu_precio_vta { get; set; }
         public string vc_cod_autorizacion { get; set; }
         public decimal? nu_saldo_izipay { get; set; }
+        public string vc_id_ref_trx_distribuidor { get; set; }
 
         public class InfoBase
         {

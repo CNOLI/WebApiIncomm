@@ -15,6 +15,7 @@ namespace wa_api_incomm.Models.ServiPagos
         public decimal? nu_precio_vta { get; set; }
         public string vc_id_ref_trx { get; set; }
         public string vc_cod_autorizacion { get; set; }
+        public string vc_id_ref_trx_distribuidor { get; set; }
 
     }
 }

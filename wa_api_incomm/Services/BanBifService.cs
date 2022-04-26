@@ -453,6 +453,7 @@ namespace wa_api_incomm.Services
                             return UtilSql.sOutPutTransaccion("500", "La moneda de pago no esta definida.");
                         }
                         trx.vc_tran_usua_regi = "API";
+                        trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
 
 
                         con_sql.Open();
@@ -481,6 +482,7 @@ namespace wa_api_incomm.Services
                             cmd.Parameters.AddWithValue("@vc_nro_doc_pago", trx.vc_nro_doc_pago);
                             cmd.Parameters.AddWithValue("@nu_id_tipo_moneda_vta", trx.nu_id_tipo_moneda_vta);
                             cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
+                            cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
 
                             UtilSql.iIns(cmd, trx);
                             cmd.ExecuteNonQuery();
@@ -664,6 +666,11 @@ namespace wa_api_incomm.Services
 
                             Response.E_meta e_meta_pago = (Response.E_meta)result_pago.meta;
                             Response.E_datos_trx e_datos_pago_result = (Response.E_datos_trx)result_pago.datos;
+
+                            //Solo para provocar el extorno
+                            //result_pago.timeout = true;
+                            //e_meta_pago.mensajes[0].codigo = "EEG02";
+
                             if (e_meta_pago != null &&
                                 e_datos_pago_result != null &&
                                 e_meta_pago.mensajes[0].codigo == "ESM00")
@@ -727,10 +734,19 @@ namespace wa_api_incomm.Services
                             }
                             else
                             {
-                                tran_sql.Rollback();
-                                ins_bd = false;
-                                con_sql.Close();
-
+                                //Solo para extorno Automatico guardar el registro principal
+                                if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "EEG02")
+                                {
+                                    tran_sql.Commit();
+                                    ins_bd = false;
+                                    con_sql.Close();
+                                }
+                                else
+                                {
+                                    tran_sql.Rollback();
+                                    ins_bd = false;
+                                    con_sql.Close();
+                                }
 
                                 TransaccionModel tm = new TransaccionModel();
                                 tm.nu_id_trx = Convert.ToInt32(id_trans_global);
@@ -903,7 +919,7 @@ namespace wa_api_incomm.Services
                                     #endregion
 
                                     e_reversar_pago.deudas.Add(e_datos_pago_reversar);
-
+                                                                                                                                          
                                     TransaccionModel trx_reverso = new TransaccionModel();
                                     trx_reverso.nu_id_trx = Convert.ToInt32(id_trans_global_reverso);
 
@@ -917,6 +933,7 @@ namespace wa_api_incomm.Services
 
                                     trx_reverso.vc_numero_servicio = trx.vc_numero_servicio;
                                     trx_reverso.vc_nro_doc_pago = trx.vc_nro_doc_pago;
+                                    trx_reverso.nu_id_trx_ref = Convert.ToInt32(id_trans_global);
 
                                     var json = JsonConvert.SerializeObject(e_reversar_pago);
 
@@ -929,8 +946,10 @@ namespace wa_api_incomm.Services
                                     if (e_meta_pago_reversion != null &&
                                         e_meta_pago_reversion.mensajes[0].codigo == "ESM00")
                                     {
-                                        trx_reverso.vc_id_ref_trx = e_meta.idTransaccion;
+                                        trx_reverso.vc_id_ref_trx = e_meta_pago_reversion.idTransaccion;
                                         trx_reverso.vc_cod_autorizacion = "";
+                                        trx_reverso.bi_confirmado = true;
+                                        trx_reverso.vc_tran_usua_regi = "API";
 
                                         con_sql.Open();
                                         var tran_sql_rev = con_sql.BeginTransaction();
@@ -953,12 +972,37 @@ namespace wa_api_incomm.Services
                                         tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
 
                                         tm.vc_cod_error = "99";
-                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (1)";
+                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (Confirmado)";
                                     }
                                     else
                                     {
+                                        trx_reverso.vc_id_ref_trx = "";
+                                        trx_reverso.vc_cod_autorizacion = "";
+                                        trx_reverso.bi_confirmado = false;
+                                        trx_reverso.vc_tran_usua_regi = "API";
+
+                                        con_sql.Open();
+                                        var tran_sql_rev = con_sql.BeginTransaction();
+
+                                        cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
+
+                                        if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                        {
+                                            tran_sql_rev.Rollback();
+                                            ins_bd = false;
+                                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                            return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        }
+                                        trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+                                        tran_sql_rev.Commit();
+                                        con_sql.Close();
+                                        ins_bd = false;
+
+                                        tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
+
                                         tm.vc_cod_error = "99";
-                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (2)";
+                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (No confirmado)";
                                     }
 
                                 }

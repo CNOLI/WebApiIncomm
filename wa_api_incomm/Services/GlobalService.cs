@@ -376,7 +376,7 @@ namespace wa_api_incomm.Services
                     }
                     break;
             }
-            
+
             return mensaje_error;
         }
         public SqlCommand insTransaccionError(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
@@ -422,7 +422,7 @@ namespace wa_api_incomm.Services
         }
         public SqlCommand insTransaccionExtorno(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
         {
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_transaccion_extorno", cn, tran))
+            using (SqlCommand cmd = new SqlCommand("tisi_trx.usp_ins_transaccion_extorno", cn, tran))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
@@ -444,13 +444,15 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@nu_id_tipo_documento", model.nu_id_tipo_comprobante);
                 cmd.Parameters.AddWithValue("@vc_ruc", model.vc_ruc);
 
-
                 cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
                 cmd.Parameters.AddWithValue("@vc_nro_doc_pago", model.vc_nro_doc_pago);
                 cmd.Parameters.AddWithValue("@vc_cod_autorizacion", model.vc_cod_autorizacion);
                 cmd.Parameters.AddWithValue("@vc_nro_pin", model.vc_nro_pin);
                 cmd.Parameters.AddWithValue("@vc_id_ref_trx", model.vc_id_ref_trx);
                 cmd.Parameters.AddWithValue("@nu_saldo_izipay", model.nu_saldo_izipay);
+
+                cmd.Parameters.AddWithValue("@nu_id_trx_ref", model.nu_id_trx_ref);
+                cmd.Parameters.AddWithValue("@bi_confirmado", model.bi_confirmado);
 
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();
@@ -519,6 +521,91 @@ namespace wa_api_incomm.Services
                 }
             }
             return model;
+        }
+        public TransaccionModel get_transaccion_validar_datos(SqlConnection cn, TransaccionModel model)
+        {
+            TransaccionModel model_result = new TransaccionModel();
+            using (var cmd = new SqlCommand("TISI_TRX.USP_GET_TRANSACCION_VALIDAR_DATOS", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_tran_ruta = 1;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
+                cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
+                cmd.Parameters.AddWithValue("@nu_imp_trx", model.nu_imp_trx);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", model.nu_id_tipo_doc_sol);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.vc_nro_doc_sol);
+                cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.ch_dig_ver_sol);
+                cmd.Parameters.AddWithValue("@vc_email_sol", model.vc_email_sol);
+                cmd.Parameters.AddWithValue("@vc_telefono_sol", model.vc_telefono_sol);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_cpt", model.nu_id_tipo_doc_cpt);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", model.vc_nro_doc_cpt);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_documento", model.nu_id_tipo_comprobante);
+                cmd.Parameters.AddWithValue("@vc_ruc", model.vc_ruc);
+                cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_pago", model.vc_nro_doc_pago);
+                cmd.Parameters.AddWithValue("@bi_extorno", model.bi_extorno);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    if (UtilSql.Ec(dr, "nu_id_trx"))
+                        model_result.nu_id_trx = Convert.ToInt64(dr["nu_id_trx"].ToString());
+                }
+                else
+                {
+                    model_result.nu_id_trx = null;
+                    model_result.vc_observacion = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+
+                }
+            }
+            return model_result;
+        }
+        public TransaccionModel get_transaccion_validar_datos_extorno(SqlConnection cn, TransaccionModel model)
+        {
+            TransaccionModel model_result = new TransaccionModel();
+            using (var cmd = new SqlCommand("TISI_TRX.USP_GET_TRANSACCION_VALIDAR_DATOS", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_tran_ruta = 2;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", model.vc_id_ref_trx_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
+                cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
+                cmd.Parameters.AddWithValue("@nu_imp_trx", model.nu_imp_trx);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", model.nu_id_tipo_doc_sol);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.vc_nro_doc_sol);
+                cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.ch_dig_ver_sol);
+                cmd.Parameters.AddWithValue("@vc_email_sol", model.vc_email_sol);
+                cmd.Parameters.AddWithValue("@vc_telefono_sol", model.vc_telefono_sol);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_cpt", model.nu_id_tipo_doc_cpt);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", model.vc_nro_doc_cpt);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_documento", model.nu_id_tipo_comprobante);
+                cmd.Parameters.AddWithValue("@vc_ruc", model.vc_ruc);
+                cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_pago", model.vc_nro_doc_pago);
+                cmd.Parameters.AddWithValue("@bi_extorno", model.bi_extorno);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    if (UtilSql.Ec(dr, "nu_id_trx"))
+                        model_result.nu_id_trx = Convert.ToInt64(dr["nu_id_trx"].ToString());
+                }
+                else
+                {
+                    model_result.nu_id_trx = null;
+                    model_result.vc_observacion = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+
+                }
+            }
+            return model_result;
         }
     }
 }

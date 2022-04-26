@@ -22,6 +22,7 @@ namespace wa_api_incomm.Models.ServiPagos
 
             public string clave { get; set; }
             public string fecha_envio { get; set; }
+            public string nro_transaccion_referencia { get; set; }
 
 
             public string id_trx_hub { get; set; }

@@ -39,7 +39,10 @@ namespace wa_api_incomm.Controllers
         public IActionResult obtenerRubros([FromBody]RubroClientModelInput model)
         {
             if (!this.ModelState.IsValid)
-                return this.BadRequest(this.ModelState);
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
             try
             {
                 return this.Ok(_IServicioService.obtenerRubros(Configuration.GetSection("SQL").Value, model));
@@ -53,7 +56,10 @@ namespace wa_api_incomm.Controllers
         public IActionResult obtenerEmpresas([FromBody]EmpresaClientModelInput model)
         {
             if (!this.ModelState.IsValid)
-                return this.BadRequest(this.ModelState);
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
             try
             {
                 return this.Ok(_IServicioService.obtenerEmpresas(Configuration.GetSection("SQL").Value, model));
@@ -67,7 +73,10 @@ namespace wa_api_incomm.Controllers
         public IActionResult obtenerServicios([FromBody]ServicioModelInput model)
         {
             if (!this.ModelState.IsValid)
-                return this.BadRequest(this.ModelState);
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
             try
             {
                 return this.Ok(_IServicioService.obtenerServicios(Configuration.GetSection("SQL").Value, model));
@@ -84,7 +93,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -111,7 +120,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {

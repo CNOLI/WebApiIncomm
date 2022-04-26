@@ -341,6 +341,7 @@ namespace wa_api_incomm.Services
                 trx.PDVNroDoc = model.numero_documento_PDV;
                 trx.PDVRazSocNom = model.razon_social_PDV;
                 trx.vc_tran_usua_regi = "API";
+                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
 
                 //encriptar el usuario
                 encripta = new Encripta();
@@ -434,6 +435,7 @@ namespace wa_api_incomm.Services
                     cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", trx.vc_nro_doc_cpt);
                     cmd.Parameters.AddWithValue("@vc_tipo_comprobante", trx.vc_tipo_comprobante);
                     cmd.Parameters.AddWithValue("@vc_ruc", trx.vc_ruc);
+                    cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
 
                     UtilSql.iIns(cmd, trx);
                     cmd.ExecuteNonQuery();

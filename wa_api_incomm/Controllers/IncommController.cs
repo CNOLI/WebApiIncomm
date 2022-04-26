@@ -42,7 +42,7 @@ namespace wa_api_incomm.Controllers
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
 
                 _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos"));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -73,7 +73,7 @@ namespace wa_api_incomm.Controllers
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
 
                 _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos"));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -96,6 +96,36 @@ namespace wa_api_incomm.Controllers
             }
         }
 
+        [HttpPost("extornar")]
+        public IActionResult extornar([FromBody]Incomm_InputTransExtornoModel model)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+
+                _logger.Error(allErrors.First());
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
+            try
+            {
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
+                if (a != model.clave)
+                {
+                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                }
+                else
+                {
+
+                    return this.Ok(_IIncommService.extornar(Configuration.GetSection("SQL").Value, model));
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion"));
+            }
+        }
 
         [HttpPost("prSms")]
         public IActionResult prSms([FromQuery] string nroCelular)

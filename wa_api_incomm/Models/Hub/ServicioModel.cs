@@ -36,6 +36,7 @@ namespace wa_api_incomm.Models.Hub
             public string importe_pago { get; set; }
             public string clave { get; set; }
             public string fecha_envio { get; set; }
+            public string nro_transaccion_referencia { get; set; }
         }
     }
 }

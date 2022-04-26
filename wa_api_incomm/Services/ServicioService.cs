@@ -315,6 +315,7 @@ namespace wa_api_incomm.Services
                     model_banbif.numero_servicio = input.numero_servicio;
                     model_banbif.numero_documento = input.numero_documento;
                     model_banbif.importe_pago = input.importe_pago;
+                    model_banbif.nro_transaccion_referencia = input.nro_transaccion_referencia;
                     BanBifService Banbif_Service = new BanBifService(_logger);
                     obj = Banbif_Service.post_pago(conexion, model_banbif);
 

@@ -34,7 +34,10 @@ namespace wa_api_incomm.Controllers
         public IActionResult generar([FromBody]ProductoClientModelInput model)
         {
             if (!this.ModelState.IsValid)
-                return this.BadRequest(this.ModelState);
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
             try
             {
                 return this.Ok(_IProductoService.sel(Configuration.GetSection("SQL").Value, model));

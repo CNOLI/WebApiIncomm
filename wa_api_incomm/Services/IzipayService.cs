@@ -355,6 +355,7 @@ namespace wa_api_incomm.Services
                 model_sql.nu_id_tipo_moneda_vta = 1; // SOLES
                 model_sql.nu_precio_vta = Convert.ToDecimal(model.importe_recarga);
                 model_sql.vc_tran_usua_regi = "API";
+                model_sql.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
 
                 using (cmd = new SqlCommand("tisi_global.usp_ins_transaccion_recargas", con_sql, tran_sql))
                 {
@@ -367,6 +368,7 @@ namespace wa_api_incomm.Services
                     cmd.Parameters.AddWithValue("@vc_numero_servicio", model_sql.vc_numero_servicio);
                     cmd.Parameters.AddWithValue("@nu_id_tipo_moneda_vta", model_sql.nu_id_tipo_moneda_vta);
                     cmd.Parameters.AddWithValue("@nu_precio_vta", model_sql.nu_precio_vta);
+                    cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", model_sql.vc_id_ref_trx_distribuidor);
 
                     UtilSql.iIns(cmd, model_sql);
                     cmd.ExecuteNonQuery();

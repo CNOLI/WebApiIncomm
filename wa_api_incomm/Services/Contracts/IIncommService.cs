@@ -10,6 +10,7 @@ namespace wa_api_incomm.Services.Contracts
     {
         object execute_trans(string conexion, Incomm_InputTransModel input);
         object confirmar(string conexion, Incomm_InputITransConfirmarModel input);
+        object extornar(string conexion, Incomm_InputTransExtornoModel input);
         object pr_sms(string conexion, string nro_telefono);
         object pr_email(string conexion, string correo_destino);
     }

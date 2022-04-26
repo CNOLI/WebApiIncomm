@@ -221,6 +221,7 @@ namespace wa_api_incomm.Services
                     cmd.Parameters.AddWithValue("@vc_email_sol", model.email_consultante);
                     cmd.Parameters.AddWithValue("@nu_id_tipo_doc_cpt", tipodocidentidad_consultado.nu_id_tipo_doc_identidad);
                     cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", model.numero_documento_consultado);
+                    cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", model.nro_transaccion_referencia);
 
                     UtilSql.iIns(cmd, model_sql);
                     cmd.ExecuteNonQuery();

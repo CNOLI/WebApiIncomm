@@ -108,6 +108,7 @@ namespace wa_api_incomm.Services
                     model_izipay.id_producto = model.id_producto;
                     model_izipay.numero_servicio = model.numero;
                     model_izipay.importe_recarga = model.importe;
+                    model_izipay.nro_transaccion_referencia = model.nro_transaccion_referencia;
 
                     IzipayService Izipay_Service = new IzipayService(_logger);
 
@@ -124,6 +125,7 @@ namespace wa_api_incomm.Services
                     model_servipago.id_producto = model.id_producto;
                     model_servipago.numero_servicio = model.numero;
                     model_servipago.importe_recarga = model.importe;
+                    model_servipago.nro_transaccion_referencia = model.nro_transaccion_referencia;
 
                     ServiPagosService ServiPagos_Service = new ServiPagosService(_logger);
 

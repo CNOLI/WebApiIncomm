@@ -66,7 +66,12 @@ namespace wa_api_incomm.Models.Hub
         public string vc_tipo_doc_cpt { get; set; }
         public string vc_fecha_reg { get; set; }
 
+        public Int64? nu_id_trx_ref { get; set; }
+        public bool bi_confirmado { get; set; }
+        public bool bi_extorno { get; set; }
+        public string vc_observacion { get; set; }
 
+        public string vc_id_ref_trx_distribuidor { get; set; }
 
     }
 }

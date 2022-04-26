@@ -40,7 +40,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -58,7 +58,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -77,7 +77,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(this.ModelState);
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {

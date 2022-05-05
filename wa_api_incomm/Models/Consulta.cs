@@ -17,6 +17,12 @@ namespace wa_api_incomm.Models
             public string clave { get; set; }
 
         }
+        public class Transaccion_Input_Estado
+        {
+            public string codigo_distribuidor { get; set; }
+            public string codigo_comercio { get; set; }
+            public string nro_transaccion { get; set; }
+        }
         public class Transaccion_Result
         {
             public string nro_transaccion { get; set; }

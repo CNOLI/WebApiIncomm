@@ -32,6 +32,7 @@ namespace wa_api_incomm.Models
         //public string id_opcion_telefono { get; set; }
         public string clave { get; set; }
         public string fecha_envio { get; set; }
+        [Required(AllowEmptyStrings = false, ErrorMessage = "El {0} es obligatorio")]
         public string nro_transaccion_referencia { get; set; }
     }
 }

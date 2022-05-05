@@ -37,6 +37,7 @@ namespace wa_api_incomm.Models
         public string vc_desc_producto { get; set; }
         public string vc_url_web_terminos { get; set; }
         public bool? bi_valor_pin { get; set; }
+        public bool? bi_confirmado { get; set; }
 
     }
 }

@@ -9,5 +9,6 @@ namespace wa_api_incomm.Services.Contracts
     public interface IConsultaService
     {
         object Transaccion(string conexion, Consulta.Transaccion_Input model);
+        object Estado(string conexion, Consulta.Transaccion_Input_Estado model);
     }
 }

@@ -58,5 +58,18 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
+        [HttpPost("estado")]
+        public IActionResult Estado([FromBody]Consulta.Transaccion_Input_Estado model)
+        {
+            try
+            {
+                return this.Ok(_IConsultaService.Estado(Configuration.GetSection("SQL").Value, model));
+
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+            }
+        }
     }
 }

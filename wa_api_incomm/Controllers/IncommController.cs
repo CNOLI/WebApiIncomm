@@ -52,7 +52,7 @@ namespace wa_api_incomm.Controllers
                 {
                     return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
                 }
-                else 
+                else
                 {
 
                     return this.Ok(_IIncommService.execute_trans(Configuration.GetSection("SQL").Value, model));

@@ -49,7 +49,7 @@ namespace wa_api_incomm.ApiRest
                 api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
 
-                response = await api.PostAsync(ApiURL + "rest/RWS_Tda_SolDat", httpContent).ConfigureAwait(false);
+                response = await api.PostAsync("https://www2.sentinelperu.com/wsrest/" + "rest/RWS_Tda_SolDat", httpContent).ConfigureAwait(false);
 
                 result = JsonConvert.DeserializeObject<ConsultaPersonaRest>(await response.Content.ReadAsStringAsync());
             }

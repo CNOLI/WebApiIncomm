@@ -87,7 +87,7 @@ namespace wa_api_incomm.Services
                     info = new
                     {
                         codigo = "00",
-                        mensaje = "Transacción cosultada correctamente.",
+                        mensaje = "Transacción consultada correctamente.",
                         datos = trx_result
                     };
                 }
@@ -114,10 +114,74 @@ namespace wa_api_incomm.Services
             }
         }
 
+        public object Estado(string conexion, Consulta.Transaccion_Input_Estado model)
+        {
+
+            SqlConnection con_sql = new SqlConnection(conexion);
+
+            try
+            {
+                GlobalService global_service = new GlobalService();
+
+                con_sql.Open();
+
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                }
+                ComercioModel comercio = new ComercioModel();
+                comercio.vc_cod_comercio = model.codigo_comercio;
+                comercio = global_service.get_comercio_busqueda(con_sql, model.codigo_comercio, distribuidor.nu_id_distribuidor);
+
+                if (comercio.nu_id_comercio <= 0)
+                {
+                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                }
+
+                TransaccionModel trx = new TransaccionModel();
+                trx.nu_id_trx = model.nro_transaccion.ToInt64();
+                trx.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                trx.nu_id_comercio = comercio.nu_id_comercio;
+
+                trx = global_service.get_transaccion(con_sql, trx);
+
+                con_sql.Close();
+
+                object info = new object();
+                if (trx.vc_fecha_reg != null)
+                {
+                    info = new
+                    {
+                        codigo = "00",
+                        mensaje = "Transacción consultada correctamente.",
+                        confirmado = (trx.bi_confirmado == true ? "1" : "0")
+                    };
+                }
+                else
+                {
+                    info = new
+                    {
+                        codigo = "99",
+                        mensaje = "No se encontró transacción."
+                    };
+
+                }
 
 
-
-
-
+                return info;
+            }
+            catch (Exception ex)
+            {
+                return UtilSql.sOutPutCatch(ex.Message);
+            }
+            finally
+            {
+                if (con_sql.State == ConnectionState.Open) con_sql.Close();
+            }
+        }
     }
 }

@@ -477,7 +477,6 @@ namespace wa_api_incomm.Services
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
             }
         }
-
         public object extornar(string conexion, Incomm_InputTransExtornoModel input)
         {
 
@@ -573,7 +572,7 @@ namespace wa_api_incomm.Services
                 tm_validar.nu_id_comercio = comercio.nu_id_comercio;
                 tm_validar.nu_id_producto = producto.nu_id_producto;
                 tm_validar.dt_fecha = fechatran;
-                tm_validar.nu_imp_trx = producto.nu_precio ?? 0;
+                tm_validar.nu_precio = producto.nu_precio ?? 0;
                 tm_validar.vc_email_sol = input.email;
                 tm_validar.vc_telefono_sol = input.nro_telefono;
                 tm_validar.bi_extorno = true;
@@ -1076,6 +1075,9 @@ namespace wa_api_incomm.Services
                         _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
                     if (UtilSql.Ec(dr, "bi_valor_pin"))
                         _result.bi_valor_pin = dr["bi_valor_pin"].ToBool();
+
+                    if (UtilSql.Ec(dr, "bi_confirmado"))
+                        _result.bi_confirmado = dr["bi_confirmado"].ToBool();
 
                 }
             }

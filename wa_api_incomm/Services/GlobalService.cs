@@ -518,6 +518,8 @@ namespace wa_api_incomm.Services
                         model.vc_nro_doc_pago = dr["vc_nro_doc_pago"].ToString();
                     if (UtilSql.Ec(dr, "vc_fecha_reg"))
                         model.vc_fecha_reg = dr["vc_fecha_reg"].ToString();
+                    if (UtilSql.Ec(dr, "bi_confirmado"))
+                        model.bi_confirmado = dr["bi_confirmado"].ToBool();
                 }
             }
             return model;
@@ -534,7 +536,7 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
                 cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
                 cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
-                cmd.Parameters.AddWithValue("@nu_imp_trx", model.nu_imp_trx);
+                cmd.Parameters.AddWithValue("@nu_precio", model.nu_precio);
                 cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", model.nu_id_tipo_doc_sol);
                 cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.vc_nro_doc_sol);
                 cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.ch_dig_ver_sol);
@@ -577,7 +579,7 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
                 cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
                 cmd.Parameters.AddWithValue("@dt_fecha", model.dt_fecha);
-                cmd.Parameters.AddWithValue("@nu_imp_trx", model.nu_imp_trx);
+                cmd.Parameters.AddWithValue("@nu_precio", model.nu_precio);
                 cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", model.nu_id_tipo_doc_sol);
                 cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.vc_nro_doc_sol);
                 cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.ch_dig_ver_sol);

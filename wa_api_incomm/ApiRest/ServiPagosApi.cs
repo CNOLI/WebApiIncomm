@@ -92,10 +92,66 @@ namespace wa_api_incomm.ApiRest
                 {
                     Result = JsonConvert.DeserializeObject<ServiPagos_ResponseModel>(await response.Content.ReadAsStringAsync());
                 }
+
+            }
+            catch (OperationCanceledException e)
+            {
+                Result.timeout = true;
             }
             catch (Exception ex)
             {
+                logger.Error(ex.Message + ". Recarga_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Recarga_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return Result;
+        }
+        public async Task<ServiPagos_ResponseConsultaModel> Consultar(ServiPagos_InputModel modelo, decimal? idTransaccion, Serilog.ILogger logger, string id_trx_hub = "")
+        {
+            ServiPagos_ResponseConsultaModel Result = null;
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
+            {
+                string hash = "1" + usuario + clave + "2" + idTransaccion;
+                hash = GetSHA1(hash);
+
+                string parametros = "";
+                parametros += "?tipo=1";
+                parametros += "&usuario=" + usuario;
+                parametros += "&parametro=2";
+                parametros += "&valor=" + idTransaccion;
+                parametros += "&firma=" + hash;
+
+                string url = ApiURL + "consulta/" + parametros;
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(ServiPagosApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (Consultar): ''";
+                logger.Information(msg_request);
+
+                response = await api.GetAsync(url).ConfigureAwait(false);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(ServiPagosApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (Consultar): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+
+                var jsonrpta = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    Result = JsonConvert.DeserializeObject<ServiPagos_ResponseConsultaModel>(await response.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    Result = JsonConvert.DeserializeObject<ServiPagos_ResponseConsultaModel>(await response.Content.ReadAsStringAsync());
+                }
+            }
+            //catch (OperationCanceledException e)
+            //{
+            //    Result.timeout = true;
+            //}
+            catch (Exception ex)
+            {
+                logger.Error(ex.Message + ". Consulta_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". Consulta_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
         }

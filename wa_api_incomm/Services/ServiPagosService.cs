@@ -140,7 +140,28 @@ namespace wa_api_incomm.Services
                     model_api.nu_precio_vta = model_sql.nu_precio_vta.ToString();
 
                     var response = api.Recargar(model_api, model_sql.nu_id_trx_app, _logger, model.id_trx_hub).Result;
-                    
+
+                    //Validar Timeout
+                    if (response.timeout == true)
+                    {
+                        var response_consulta = api.Consultar(model_api, model_sql.nu_id_trx_app, _logger, model.id_trx_hub).Result;
+
+                        if (response_consulta.respuesta.resultado == "200")
+                        {
+                            response = new ServiPagos_ResponseModel();
+                            response.respuesta.resultado = response_consulta.respuesta.datos.resultado;
+                            response.respuesta.transacid = response_consulta.respuesta.datos.transacid;
+                            response.respuesta.nro_op = response_consulta.respuesta.datos.nro_op;
+                        }
+                        else
+                        {
+                            response = new ServiPagos_ResponseModel();
+                            response.respuesta.resultado = response_consulta.respuesta.resultado;
+                            response.respuesta.obs = response_consulta.respuesta.obs;
+                        }
+                    }
+
+
                     if (response.respuesta.resultado == "200")
                     {
                         model_sql.vc_id_ref_trx = response.respuesta.transacid.ToString();
@@ -242,7 +263,8 @@ namespace wa_api_incomm.Services
                         ins_bd = false;
                         _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
                         
-                        return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
+                        //return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
+                        return UtilSql.sOutPutTransaccion("99", tm.vc_desc_error);
 
                     }
                 }

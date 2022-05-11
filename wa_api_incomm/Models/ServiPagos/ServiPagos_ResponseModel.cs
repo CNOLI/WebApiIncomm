@@ -10,6 +10,12 @@ namespace wa_api_incomm.Models.ServiPagos
     {
         public Solicitud solicitud { get; set; }
         public Respuesta respuesta { get; set; }
+        public bool timeout { get; set; } = false;
+        public ServiPagos_ResponseModel()
+        {
+            this.solicitud = new Solicitud();
+            this.respuesta = new Respuesta();
+        }
         public class Solicitud
         {
             public string producto { get; set; }

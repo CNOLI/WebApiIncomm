@@ -14,6 +14,8 @@ namespace wa_api_incomm.Models.BanBif
         public string fecha_vencimento { get; set; }
         public string moneda { get; set; }
         public string simbolo_moneda { get; set; }
+        public decimal? monto_documento { get; set; }
+        public decimal? comision_cliente { get; set; }
         public decimal? monto_deuda { get; set; }
         public class Deuda_Input
         {

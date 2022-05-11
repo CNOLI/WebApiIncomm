@@ -277,6 +277,9 @@ namespace wa_api_incomm.Services
                         }
                     }
 
+                    e_deuda.monto_documento = (e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino) - e_datos.comisionCliente;
+                    e_deuda.monto_documento = Decimal.Round(Convert.ToDecimal((e_deuda.monto_documento ?? 0).ToString("N")), 2);
+                    e_deuda.comision_cliente = Decimal.Round(Convert.ToDecimal((e_datos.comisionCliente ?? 0).ToString("N")), 2);  ;
                     e_deuda.monto_deuda = e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino;
                     e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
                     e_deuda.numero_documento = e_datos.documento.numero;
@@ -386,6 +389,16 @@ namespace wa_api_incomm.Services
             SqlCommand cmd = null;
 
             string mensaje_error = "";
+
+            //object info_prueba = new object();
+
+            //info_prueba = new
+            //{
+            //    codigo = "00",
+            //    mensaje = "Se realizó el pago correctamente.",
+            //    nro_transaccion = "1339"
+            //};
+            //return info_prueba;
 
             try
             {

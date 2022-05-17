@@ -352,6 +352,9 @@ namespace wa_api_incomm.Services
 
                     switch (codigo)
                     {
+                        case "99":
+                            mensaje_error = "No hubo respuesta por parte del operador.";
+                            break;
                         case "404":
                             mensaje_error = "Transacción no encontrada";
                             break;

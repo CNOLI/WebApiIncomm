@@ -345,7 +345,8 @@ namespace wa_api_incomm.Services
 
                 //encriptar el usuario
                 encripta = new Encripta();
-                encripta.keysentinel = info.keysentinel;
+                encripta.keysentinel = (model.bono ? info.keysentinel_bonos : info.keysentinel);
+                //encripta.keysentinel = info.keysentinel;
                 encripta.parametro = info.Usuario;
                 encripta_rest = api.Encriptacion(encripta).Result;
                 if (encripta_rest.coderror != 0)
@@ -365,7 +366,8 @@ namespace wa_api_incomm.Services
 
                 //encriptar la contraseña
                 encripta = new Encripta();
-                encripta.keysentinel = info.keysentinel;
+                encripta.keysentinel = (model.bono ? info.keysentinel_bonos : info.keysentinel);
+                //encripta.keysentinel = info.keysentinel;
                 encripta.parametro = info.Contrasena;
                 encripta_rest = api.Encriptacion(encripta).Result;
                 if (encripta_rest.coderror != 0)
@@ -396,7 +398,8 @@ namespace wa_api_incomm.Services
                 modelo.PDVNroDoc = trx.PDVNroDoc;
                 modelo.PDVRazSocNom = trx.PDVRazSocNom;
 
-                modelo.Gx_Key = info.Gx_Key;
+                modelo.Gx_Key = (model.bono ? info.Gx_Key_bonos : info.Gx_Key);
+                //modelo.Gx_Key = info.Gx_Key;
                 modelo.SDT_TitMas.Add(new ConsultaTitularDet()
                 {
                     TipoDocCPT = trx.vc_cod_tipo_doc_cpt,
@@ -466,9 +469,18 @@ namespace wa_api_incomm.Services
                     //PRODUCCION
                     if (Config.bi_produccion == true || info.EnvioSentinelQA == "1")
                     {
-                        modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
-
-                        response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
+                        if (Config.bi_produccion)
+                        {
+                            modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
+                        }
+                        if (model.bono)
+                        {
+                            response = api.ConsultaTitularSinFacturacion(modelo, _logger, id_trx_hub).Result;
+                        }
+                        else
+                        {
+                            response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
+                        }
 
                     }
 
@@ -600,7 +612,6 @@ namespace wa_api_incomm.Services
                 }
 
                 _logger.Error("idtrx: " + id_trx_hub + " / " + ex.Message);
-
                 return UtilSql.sOutPutTransaccion("500", ex.Message);
             }
             finally

@@ -112,11 +112,9 @@ namespace wa_api_incomm.ApiRest
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (PagoDirecto): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
+                
+                result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
 
-                if (response.IsSuccessStatusCode)
-                {
-                    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
-                }
                 //else
                 //{
                 //    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
@@ -124,18 +122,10 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
+                logger.Error(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
-
-            //ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
-            //var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
-            //HttpResponseMessage response = await api.PostAsync("psr-fin-fe/pagoDirecto", httpContent).ConfigureAwait(false);
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
-            //}
-            //return result;
         }
     }
 }

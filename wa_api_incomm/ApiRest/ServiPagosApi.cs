@@ -55,7 +55,7 @@ namespace wa_api_incomm.ApiRest
 
         public async Task<ServiPagos_ResponseModel> Recargar(ServiPagos_InputModel modelo, decimal? idTransaccion, Serilog.ILogger logger, string id_trx_hub = "")
         {
-            ServiPagos_ResponseModel Result = null;
+            ServiPagos_ResponseModel Result = new ServiPagos_ResponseModel();
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
@@ -107,7 +107,7 @@ namespace wa_api_incomm.ApiRest
         }
         public async Task<ServiPagos_ResponseConsultaModel> Consultar(ServiPagos_InputModel modelo, decimal? idTransaccion, Serilog.ILogger logger, string id_trx_hub = "")
         {
-            ServiPagos_ResponseConsultaModel Result = null;
+            ServiPagos_ResponseConsultaModel Result = new ServiPagos_ResponseConsultaModel();
             HttpResponseMessage response = new HttpResponseMessage();
             try
             {
@@ -144,10 +144,11 @@ namespace wa_api_incomm.ApiRest
                     Result = JsonConvert.DeserializeObject<ServiPagos_ResponseConsultaModel>(await response.Content.ReadAsStringAsync());
                 }
             }
-            //catch (OperationCanceledException e)
-            //{
-            //    Result.timeout = true;
-            //}
+            catch (OperationCanceledException e)
+            {
+                Result.respuesta.resultado = "99";
+                Result.timeout = true;
+            }
             catch (Exception ex)
             {
                 logger.Error(ex.Message + ". Consulta_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));

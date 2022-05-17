@@ -60,23 +60,15 @@ namespace wa_api_incomm.ApiRest
                                       " - Modelo recibido (Transaccion): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
-                }
+                result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
 
             }
             catch (Exception ex)
             {
+                logger.Error(ex.Message + ". Transaccion_Incomm " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Transaccion_Incomm " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
-            //HttpResponseMessage response = await api.PostAsJsonAsync("moviired-api/digitalContent/v1/pines", model);
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
-            //}
-            //return result;
         }
 
 

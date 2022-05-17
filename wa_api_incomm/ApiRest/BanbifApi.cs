@@ -257,7 +257,7 @@ namespace wa_api_incomm.ApiRest
                     logger.Information(msg_request);
                 }
 
-                response = await api.GetAsync(url);
+                response = await api.GetAsync(url).ConfigureAwait(false);
 
                 if (logger != null)
                 {
@@ -266,22 +266,25 @@ namespace wa_api_incomm.ApiRest
                     logger.Information(msg_response);
                 }
 
-                var jsonrpta = response.Content.ReadAsStringAsync().Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
+                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
+
+                Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
+
             }
             catch (OperationCanceledException e)
             {
-                throw new Exception(e.Message + ". Consultar_Deuda TIMEOUT " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result) + " - " + e.Message);
+                if (logger != null)
+                {
+                    logger.Error(e.Message + ". Consultar_Deuda TIMEOUT" + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
+                throw new Exception(e.Message + ". Consultar_Deuda TIMEOUT " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             catch (Exception ex)
             {
+                if (logger != null)
+                {
+                    logger.Error(ex.Message + ". Consultar_Deuda " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
                 throw new Exception(ex.Message + ". Consultar_Deuda " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
@@ -314,15 +317,9 @@ namespace wa_api_incomm.ApiRest
                                       " - Modelo recibido (Procesar_Pago): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                var jsonrpta = response.Content.ReadAsStringAsync().Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
+                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
+
+                Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
 
                 //Temporal
                 //Result.timeout = true;
@@ -333,6 +330,7 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
+                logger.Error(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;
@@ -375,15 +373,10 @@ namespace wa_api_incomm.ApiRest
                                       " - Modelo recibido (Reversar_Pago): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                var jsonrpta = response.Content.ReadAsStringAsync().Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
-                }
+                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
+
+                Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+
             }
             catch (WebException e)
             {
@@ -393,11 +386,13 @@ namespace wa_api_incomm.ApiRest
                 }
                 else
                 {
+                    logger.Error(e.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                     throw new Exception(e.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 }
             }
             catch (Exception ex)
             {
+                logger.Error(ex.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return Result;

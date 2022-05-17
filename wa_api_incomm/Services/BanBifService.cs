@@ -446,6 +446,11 @@ namespace wa_api_incomm.Services
                 PagoModel e_pago = new PagoModel();
                 foreach (var e_datos in ls_datos)
                 {
+                    if (model.vc_cod_convenio == "40" && ls_datos.Count() == 1)
+                    {
+                        model.numero_documento = e_datos.documento.numero;
+                    }
+
                     if (e_datos.documento.numero == model.numero_documento)
                     {
                         TransaccionModel trx = new TransaccionModel();
@@ -573,14 +578,14 @@ namespace wa_api_incomm.Services
 
                             foreach (var item_add in e_datos.datosAdicionales)
                             {
-                                if (item_add.nombre == "NOMBRE")
+                                if (item_add.nombre.ToUpper() == "NOMBRE")
                                 {
                                     e_datos_adicionales = new PagoModel.E_datosAdicionales();
                                     e_datos_adicionales.nombre = "Nombre";
                                     e_datos_adicionales.valor = item_add.valor;
                                     e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
                                 }
-                                if (item_add.nombre == "FECHAEMISION")
+                                if (item_add.nombre.ToUpper() == "FECHAEMISION")
                                 {
                                     e_datos_adicionales = new PagoModel.E_datosAdicionales();
                                     e_datos_adicionales.nombre = "FecEmision";

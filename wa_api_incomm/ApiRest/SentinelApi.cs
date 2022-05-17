@@ -35,7 +35,7 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + ". " + response.Content.ReadAsStringAsync().Result);
+                throw new Exception(ex.Message + ". " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
         }
@@ -55,11 +55,11 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + ". " + response.Content.ReadAsStringAsync().Result);
+                throw new Exception(ex.Message + ". " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
         }
-        
+
         public async Task<ConsultaTitularRest> ConsultaTitularFacturacion(ConsultaTitularFac modelo, Serilog.ILogger logger, string id_trx_hub = "")
         {
             ConsultaTitularRest result = new ConsultaTitularRest();
@@ -85,7 +85,38 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + ". " + response.Content.ReadAsStringAsync().Result);
+                logger.Error(ex.Message + ". ConsultaTitularFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". ConsultaTitularFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return result;
+        }
+        public async Task<ConsultaTitularRest> ConsultaTitularSinFacturacion(ConsultaTitularFac modelo, Serilog.ILogger logger, string id_trx_hub = "")
+        {
+            ConsultaTitularRest result = new ConsultaTitularRest();
+            HttpResponseMessage response = new HttpResponseMessage();
+            try
+            {
+                api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
+
+                string url = ApiURL + "rest/RWS_Tda_SolConTitSinFac";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(SentinelApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                    " - Modelo enviado (ConsultaTitularSinFacturacion): " + JsonConvert.SerializeObject(modelo);
+                logger.Information(msg_request);
+
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(SentinelApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (ConsultaTitularSinFacturacion): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+                result = JsonConvert.DeserializeObject<ConsultaTitularRest>(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex.Message + ". ConsultaTitularSinFacturacionFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". ConsultaTitularSinFacturacionFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
         }

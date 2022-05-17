@@ -35,7 +35,7 @@ namespace wa_api_incomm.ApiRest
             //api.BaseAddress = new Uri(ApiURL);
 
             token = GetTokenAsync(username, password).Result;
-                        
+
         }
 
 
@@ -84,24 +84,28 @@ namespace wa_api_incomm.ApiRest
                 logger.Information(msg_request);
 
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
-           
+
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(EquifaxApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Generar_Reporte): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    throw new Exception("Generar_Reporte: " + response.Content.ReadAsStringAsync().Result);
-                }
+
+                Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
+
             }
             catch (Exception ex)
             {
-                Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
+                logger.Error(ex.Message + ". Generar_Reporte " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+
+                if (response.Content == null)
+                {
+                    throw new Exception("Generar_Reporte: " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
+                else
+                {
+                    Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
+                }
             }
             return Result;
         }

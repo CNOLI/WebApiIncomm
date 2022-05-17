@@ -44,6 +44,7 @@ namespace wa_api_incomm.Models
             public string clave { get; set; }
             public string fecha_envio { get; set; }
             public string nro_transaccion_referencia { get; set; }
+            public bool bono { get; set; } = false;
 
             //----------------------------------------
 

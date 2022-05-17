@@ -149,9 +149,18 @@ namespace wa_api_incomm.Services
                         if (response_consulta.respuesta.resultado == "200")
                         {
                             response = new ServiPagos_ResponseModel();
-                            response.respuesta.resultado = response_consulta.respuesta.datos.resultado;
-                            response.respuesta.transacid = response_consulta.respuesta.datos.transacid;
-                            response.respuesta.nro_op = response_consulta.respuesta.datos.nro_op;
+                            if (response_consulta.respuesta.datos.resultado == "")
+                            {
+                                response.respuesta.resultado = "99";
+                                response.respuesta.transacid = response_consulta.respuesta.datos.transacid;
+                                response.respuesta.nro_op = response_consulta.respuesta.datos.nro_op;
+                            }
+                            else
+                            {
+                                response.respuesta.resultado = response_consulta.respuesta.datos.resultado;
+                                response.respuesta.transacid = response_consulta.respuesta.datos.transacid;
+                                response.respuesta.nro_op = response_consulta.respuesta.datos.nro_op;
+                            }
                         }
                         else
                         {

@@ -11,6 +11,7 @@ using wa_api_incomm.Models;
 using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.RecargaModel;
 using Hub_Encrypt;
+using System.Threading;
 
 namespace wa_api_incomm.Controllers
 {
@@ -56,6 +57,25 @@ namespace wa_api_incomm.Controllers
                 {
                     return this.Ok(_IRecargaService.procesar(Configuration.GetSection("SQL").Value, model, _clientFactory));
                 }
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+            }
+        }
+        [HttpPost("test")]
+        public IActionResult test([FromBody]Recarga_Input model)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                _logger.Error(allErrors.First());
+                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+            }
+            try
+            {
+                Thread.Sleep(120000);
+                return this.Ok();
             }
             catch (Exception ex)
             {

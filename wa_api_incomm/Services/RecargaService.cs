@@ -10,6 +10,8 @@ using static wa_api_incomm.Models.Izipay_InputModel;
 using System.Net.Http;
 using static wa_api_incomm.Models.RecargaModel;
 using static wa_api_incomm.Models.ServiPagos.ServiPagos_InputModel;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace wa_api_incomm.Services
 {
@@ -33,24 +35,47 @@ namespace wa_api_incomm.Services
             SqlCommand cmd = null;
             string id_trx_hub = "";
             string id_trans_global = "";
+            GlobalService global_service = new GlobalService();
 
             dynamic obj = null;
             try
             {
                 con_sql = new SqlConnection(conexion);
 
-                GlobalService global_service = new GlobalService();
-                                
+                //1) Inserta TRX_HUB y validaciones por BD
+
+                //Obtener Distribuidor
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
+
+                con_sql.Open();
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+                con_sql.Close();
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                }
+
+                //Obtener Comercio
+                con_sql.Open();
+                ComercioModel comercio = global_service.get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
+                con_sql.Close();
+                                             
                 //Insertar Transaccion HUB
                 con_sql.Open();
 
                 TrxHubModel trx_hub = new TrxHubModel();
-                trx_hub.codigo_distribuidor = model.codigo_distribuidor;
-                trx_hub.codigo_comercio = model.codigo_comercio;
-                trx_hub.nombre_comercio = model.nombre_comercio;
-                trx_hub.nro_telefono = model.numero;
-                trx_hub.email = "";
-                trx_hub.id_producto = model.id_producto;
+                trx_hub.vc_cod_distribuidor = model.codigo_distribuidor;
+                trx_hub.vc_cod_comercio = model.codigo_comercio;
+                trx_hub.vc_nombre_comercio = model.nombre_comercio;
+                trx_hub.vc_nro_telefono = model.numero;
+                trx_hub.vc_email = "";
+                trx_hub.vc_id_producto = model.id_producto;
+                trx_hub.nu_precio_vta = model.importe.ToDecimal();
+                trx_hub.vc_numero_servicio = model.numero;
+                trx_hub.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
 
                 cmd = global_service.insTrxhub(con_sql, trx_hub);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
@@ -68,18 +93,27 @@ namespace wa_api_incomm.Services
 
                 con_sql.Close();
 
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo recibido: " + JsonConvert.SerializeObject(model));
 
-                //Obtener Distribuidor
-                DistribuidorModel distribuidor = new DistribuidorModel();
-                distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
+                // 2) Validar Campos adicionales.
 
-                con_sql.Open();
-                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
-                con_sql.Close();
-
-                if (distribuidor.nu_id_distribuidor <= 0)
+                if (!Regex.Match(model.numero, @"(^[0-9]+$)").Success)
                 {
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El número del cliente debe ser numerico.");
+                    return UtilSql.sOutPutTransaccion("40", "El número del cliente debe ser numerico.");
+                }
+
+                if (!Regex.Match(model.importe, @"^[0-9]+(\.[0-9]{1,2})?$").Success)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El importe de recarga debe ser numerico.");
+                    return UtilSql.sOutPutTransaccion("41", "El importe de recarga debe ser numerico.");
+                }
+
+                if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto debe ser numerico.");
+                    return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico.");
                 }
 
                 //Obtener Producto
@@ -93,8 +127,10 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto no existe.");
+                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
                 }
+
 
                 //Dirigir a APIS
                 if (producto.nu_id_convenio == 5)
@@ -102,13 +138,14 @@ namespace wa_api_incomm.Services
                     //IZIPAY
                     Pago_Directo_Input model_izipay = new Pago_Directo_Input();
                     model_izipay.id_trx_hub = id_trx_hub;
-                    model_izipay.codigo_distribuidor = model.codigo_distribuidor;
-                    model_izipay.codigo_comercio = model.codigo_comercio;
-                    model_izipay.nombre_comercio = model.nombre_comercio;
+                    model_izipay.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();
+                    model_izipay.id_comercio = comercio.nu_id_comercio.ToString();
                     model_izipay.id_producto = model.id_producto;
+                    model_izipay.vc_cod_producto = producto.vc_cod_producto;
                     model_izipay.numero_servicio = model.numero;
                     model_izipay.importe_recarga = model.importe;
                     model_izipay.nro_transaccion_referencia = model.nro_transaccion_referencia;
+                    model_izipay.distribuidor = distribuidor;
 
                     IzipayService Izipay_Service = new IzipayService(_logger);
 
@@ -119,10 +156,10 @@ namespace wa_api_incomm.Services
                     //SERVIPAGO
                     ServiPagos_Input model_servipago = new ServiPagos_Input();
                     model_servipago.id_trx_hub = id_trx_hub;
-                    model_servipago.codigo_distribuidor = model.codigo_distribuidor;
-                    model_servipago.codigo_comercio = model.codigo_comercio;
-                    model_servipago.nombre_comercio = model.nombre_comercio;
+                    model_servipago.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();
+                    model_servipago.id_comercio = comercio.nu_id_comercio.ToString();
                     model_servipago.id_producto = model.id_producto;
+                    model_servipago.vc_cod_producto = producto.vc_cod_producto;
                     model_servipago.numero_servicio = model.numero;
                     model_servipago.importe_recarga = model.importe;
                     model_servipago.nro_transaccion_referencia = model.nro_transaccion_referencia;
@@ -134,6 +171,7 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.");
                     return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
                 }
 

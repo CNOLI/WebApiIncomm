@@ -382,6 +382,8 @@ namespace wa_api_incomm.Services
         public object post_pago(string conexion, PagoModel.Pago_Input model)
         {
             bool ins_bd = false;
+            bool saldo_comprometido = false;
+            bool transaccion_completada = false;
             string id_trans_global = "";
 
             SqlConnection con_sql = new SqlConnection(conexion);
@@ -389,6 +391,7 @@ namespace wa_api_incomm.Services
             SqlCommand cmd = null;
 
             string mensaje_error = "";
+            GlobalService global_service = new GlobalService();
 
             //object info_prueba = new object();
 
@@ -402,9 +405,28 @@ namespace wa_api_incomm.Services
 
             try
             {
-                _logger.Information("idtrx: " + model.id_trx_hub + " / " + "Inicio de transaccion");
+                // 3) Obtener ID Transacción y comprometer saldo.
+                con_sql.Open();
+                var idtran = global_service.get_id_transaccion(con_sql);
+                var fechatran = DateTime.Now;
 
-                GlobalService global_service = new GlobalService();
+                id_trans_global = idtran.ToString();
+
+                TrxHubModel model_saldo = new TrxHubModel();
+
+                model_saldo.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
+                model_saldo.bi_extorno = false;
+
+                var cmd_saldo = global_service.updTrxhubSaldo(con_sql, model_saldo);
+
+                if (cmd_saldo.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                {
+                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    return UtilSql.sOutPutTransaccion("99", cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText());
+                }
+                saldo_comprometido = true;
+
+                con_sql.Close();
 
                 DeudaModel.Deuda_Input Deuda_Model = new DeudaModel.Deuda_Input();
 
@@ -439,10 +461,11 @@ namespace wa_api_incomm.Services
                         codigo = "ESM25";
                         mensaje = "No se puede obtener la información de pago (fuera de horario).";
                     }
-
+                    mensaje_error = mensaje;
                     return UtilSql.sOutPutTransaccion(codigo, mensaje);
                 }
-                                                                      
+
+                // 4) Enviar Solicitud al proveedor
                 PagoModel e_pago = new PagoModel();
                 foreach (var e_datos in ls_datos)
                 {
@@ -453,605 +476,632 @@ namespace wa_api_incomm.Services
 
                     if (e_datos.documento.numero == model.numero_documento)
                     {
+
+                        #region Datos de deuda
+                        e_pago.recaudador.codigo = config.GetSection("BanBifInfo:codigoRecaudador").Value;
+
+                        e_pago.convenio.codigo = model.vc_cod_convenio;
+
+                        e_pago.cliente.id = e_datos.cliente.id;
+                        e_pago.moneda = e_datos.moneda;
+                        e_pago.cantidadPagos = 1;
+                        e_pago.agrupacion = false;
+                        e_pago.montoTotalDeuda = e_datos.montoTotalDestino;
+                        e_pago.montoTotalSaldo = e_datos.montoSaldoDestino;
+
+                        //Agregar datos principales
+                        PagoModel.E_datos e_datos_pago = new PagoModel.E_datos();
+                        e_datos_pago.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
+                        e_datos_pago.cliente.id = e_datos.cliente.id;
+                        e_datos_pago.idConsulta = e_datos.idConsulta.ToString();
+
+                        foreach (var item_serv in e_datos.servicios)
+                        {
+                            PagoModel.E_servicios e_sv = new PagoModel.E_servicios();
+                            e_sv.id = item_serv.id;
+                            e_datos_pago.servicios.Add(e_sv);
+                        }
+
+                        e_datos_pago.montoSaldoDestino = e_datos.montoSaldoDestino;
+                        e_datos_pago.montoDescuentoDestino = e_datos.montoDescuentoDestino;
+                        e_datos_pago.montoMultaDestino = e_datos.montoMultaDestino;
+                        e_datos_pago.montoVencidoDestino = e_datos.montoVencidoDestino;
+                        e_datos_pago.montoInteresDestino = e_datos.montoInteresDestino;
+                        e_datos_pago.montoReajusteDestino = e_datos.montoReajusteDestino;
+                        e_datos_pago.montoTotalDestino = e_datos.montoTotalDestino;
+
+                        e_datos_pago.documento.numero = e_datos.documento.numero;
+
+                        PagoModel.E_pagos e_p = new PagoModel.E_pagos();
+
+                        e_p.tipoOperacion = "PAGO_TOTAL_CUOTA";
+                        e_p.medioPago = "EFECTIVO";
+                        e_p.cuentaCargo.numero = "";
+                        if (e_datos.montoRedondeo != e_datos.montoTotalDestino)
+                        {
+                            e_p.monto = e_datos.montoRedondeo;
+                        }
+                        else
+                        {
+                            e_p.monto = e_datos.montoTotalDestino;
+                        }
+
+                        if (e_p.monto != Convert.ToDecimal(model.importe_pago))
+                        {
+                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + "El importe de pago es diferente al importe de deuda.");
+                            mensaje_error = "El importe de pago es diferente al importe de deuda.";
+                            return UtilSql.sOutPutTransaccion("500", "El importe de pago es diferente al importe de deuda.");
+                        }
+
+                        e_p.deudaAPagar = e_datos.montoTotalDestino;
+
+                        e_datos_pago.pagos.Add(e_p);
+
+                        #region DatosAdicionales
+                        PagoModel.E_datosAdicionales e_datos_adicionales = new PagoModel.E_datosAdicionales();
+
+                        foreach (var item_add in e_datos.datosAdicionales)
+                        {
+                            if (item_add.nombre.ToUpper() == "NOMBRE")
+                            {
+                                e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                                e_datos_adicionales.nombre = "Nombre";
+                                e_datos_adicionales.valor = item_add.valor;
+                                e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+                            }
+                            if (item_add.nombre.ToUpper() == "FECHAEMISION")
+                            {
+                                e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                                e_datos_adicionales.nombre = "FecEmision";
+                                e_datos_adicionales.valor = item_add.valor;
+                                e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+                            }
+                        }
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "CODEBRANCH";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "TRNCODE";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "TELLUSERID";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Cod_RED";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Cod_TRX";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Des_TRX";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Cod_Terminal";
+                        e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_Terminal").Value;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Cod_OperaTrace";
+                        e_datos_adicionales.valor = idtran.ToString();
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Cod_Autoriza";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Ubi_Terminal";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Nro_Cuenta";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Nro_Tarjeta";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Nro_Cuotas";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "ID_Servicio";
+                        e_datos_adicionales.valor = e_datos.servicios[0].id;
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "ID_Recibo";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales.nombre = "Nom_EmpServ";
+                        e_datos_adicionales.valor = "";
+                        e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
+
+                        #endregion
+
+                        e_pago.deudas.Add(e_datos_pago);
+
+                        #endregion
+                        BanBifApi client_pago = new BanBifApi(true);
+
+                        var result_pago = client_pago.Procesar_Pago(e_pago, idtran, _logger, model.id_trx_hub).Result;
+                                                                     
+                        Response.E_meta e_meta_pago = (Response.E_meta)result_pago.meta;
+                        Response.E_datos_trx e_datos_pago_result = (Response.E_datos_trx)result_pago.datos;
+
+                        //Solo para provocar el extorno
+                        //result_pago.timeout = true;
+                        //e_meta_pago.mensajes[0].codigo = "EEG02";
+
+
                         TransaccionModel trx = new TransaccionModel();
+                        trx.nu_id_trx = idtran;
                         trx.nu_id_trx_hub = Int64.Parse(model.id_trx_hub);
                         trx.nu_id_distribuidor = int.Parse(model.id_distribuidor);
                         trx.nu_id_comercio = int.Parse(model.id_comercio);
+                        trx.dt_fecha = fechatran;
                         trx.nu_id_producto = int.Parse(model.id_servicio);
-                        trx.vc_numero_servicio = model.numero_servicio;
-                        trx.vc_nro_doc_pago = model.numero_documento;
                         trx.nu_precio = Convert.ToDecimal(model.importe_pago);
+                        trx.vc_tran_usua_regi = "API";
                         if (e_datos.moneda == "SOL")
                         {
                             trx.nu_id_tipo_moneda_vta = 1; //SOLES
                         }
                         else
                         {
-                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + "La moneda de pago no esta definida.");
-                            return UtilSql.sOutPutTransaccion("500", "La moneda de pago no esta definida.");
+                            trx.nu_id_tipo_moneda_vta = 2; //DOLARES
                         }
-                        trx.vc_tran_usua_regi = "API";
+                        trx.vc_numero_servicio = model.numero_servicio;
+                        trx.vc_nro_doc_pago = model.numero_documento;
                         trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
+                        trx.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio);
 
-
-                        con_sql.Open();
-
-                        //Variables BD
-                        var idtran = global_service.get_id_transaccion(con_sql);
-                        id_trans_global = idtran.ToString();
-                        var fechatran = DateTime.Now;
-
-                        con_sql.Close();
-
-                        //Graba BD
-                        con_sql.Open();
-                        tran_sql = con_sql.BeginTransaction();
-                        ins_bd = true;
-
-                        using (cmd = new SqlCommand("tisi_global.usp_ins_transaccion_servicios", con_sql, tran_sql))
+                        if (e_meta_pago != null &&
+                            e_datos_pago_result != null &&
+                            e_meta_pago.mensajes[0].codigo == "ESM00")
                         {
-                            cmd.CommandType = CommandType.StoredProcedure;
-                            cmd.Parameters.AddWithValue("@nu_id_trx", id_trans_global);
-                            cmd.Parameters.AddWithValue("@nu_id_trx_hub", trx.nu_id_trx_hub);
-                            cmd.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
-                            cmd.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
-                            cmd.Parameters.AddWithValue("@nu_id_producto", trx.nu_id_producto);
-                            cmd.Parameters.AddWithValue("@vc_numero_servicio", trx.vc_numero_servicio);
-                            cmd.Parameters.AddWithValue("@vc_nro_doc_pago", trx.vc_nro_doc_pago);
-                            cmd.Parameters.AddWithValue("@nu_id_tipo_moneda_vta", trx.nu_id_tipo_moneda_vta);
-                            cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
-                            cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
+                            trx.vc_id_ref_trx = e_meta.idTransaccion;
+                            trx.vc_cod_autorizacion = e_datos_pago_result.deudas[0].pagos[0].numeroPago;
 
-                            UtilSql.iIns(cmd, trx);
-                            cmd.ExecuteNonQuery();
+                            //Graba BD
+                            con_sql.Open();
+                            tran_sql = con_sql.BeginTransaction();
+                            ins_bd = true;
 
-                            if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                            using (cmd = new SqlCommand("tisi_global.usp_ins_transaccion_servicios", con_sql, tran_sql))
                             {
-                                tran_sql.Rollback();
-                                ins_bd = false;
-                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                            }
-                            trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx);
+                                cmd.Parameters.AddWithValue("@nu_id_trx_hub", trx.nu_id_trx_hub);
+                                cmd.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
+                                cmd.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
+                                cmd.Parameters.AddWithValue("@nu_id_producto", trx.nu_id_producto);
+                                cmd.Parameters.AddWithValue("@vc_numero_servicio", trx.vc_numero_servicio);
+                                cmd.Parameters.AddWithValue("@vc_nro_doc_pago", trx.vc_nro_doc_pago);
+                                cmd.Parameters.AddWithValue("@nu_id_tipo_moneda_vta", trx.nu_id_tipo_moneda_vta);
+                                cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
+                                cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
+                                cmd.Parameters.AddWithValue("@ti_respuesta_api", trx.ti_respuesta_api);
 
-                            #region Datos de deuda
-                            e_pago.recaudador.codigo = config.GetSection("BanBifInfo:codigoRecaudador").Value;
+                                UtilSql.iIns(cmd, trx);
+                                cmd.ExecuteNonQuery();
 
-                            e_pago.convenio.codigo = model.vc_cod_convenio;
-
-                            e_pago.cliente.id = e_datos.cliente.id;
-                            e_pago.moneda = e_datos.moneda;
-                            e_pago.cantidadPagos = 1;
-                            e_pago.agrupacion = false;
-                            e_pago.montoTotalDeuda = e_datos.montoTotalDestino;
-                            e_pago.montoTotalSaldo = e_datos.montoSaldoDestino;
-
-                            //Agregar datos principales
-                            PagoModel.E_datos e_datos_pago = new PagoModel.E_datos();
-                            e_datos_pago.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
-                            e_datos_pago.cliente.id = e_datos.cliente.id;
-                            e_datos_pago.idConsulta = e_datos.idConsulta.ToString();
-
-                            foreach (var item_serv in e_datos.servicios)
-                            {
-                                PagoModel.E_servicios e_sv = new PagoModel.E_servicios();
-                                e_sv.id = item_serv.id;
-                                e_datos_pago.servicios.Add(e_sv);
-                            }
-
-                            e_datos_pago.montoSaldoDestino = e_datos.montoSaldoDestino;
-                            e_datos_pago.montoDescuentoDestino = e_datos.montoDescuentoDestino;
-                            e_datos_pago.montoMultaDestino = e_datos.montoMultaDestino;
-                            e_datos_pago.montoVencidoDestino = e_datos.montoVencidoDestino;
-                            e_datos_pago.montoInteresDestino = e_datos.montoInteresDestino;
-                            e_datos_pago.montoReajusteDestino = e_datos.montoReajusteDestino;
-                            e_datos_pago.montoTotalDestino = e_datos.montoTotalDestino;
-
-                            e_datos_pago.documento.numero = e_datos.documento.numero;
-
-                            PagoModel.E_pagos e_p = new PagoModel.E_pagos();
-
-                            e_p.tipoOperacion = "PAGO_TOTAL_CUOTA";
-                            e_p.medioPago = "EFECTIVO";
-                            e_p.cuentaCargo.numero = "";
-                            if (e_datos.montoRedondeo != e_datos.montoTotalDestino)
-                            {
-                                e_p.monto = e_datos.montoRedondeo;
-                            }
-                            else
-                            {
-                                e_p.monto = e_datos.montoTotalDestino;
-                            }
-
-                            if (e_p.monto != Convert.ToDecimal(model.importe_pago))
-                            {
-                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + "El importe de pago es diferente al importe de deuda.");
-                                return UtilSql.sOutPutTransaccion("500", "El importe de pago es diferente al importe de deuda.");
-                            }
-
-                            e_p.deudaAPagar = e_datos.montoTotalDestino;
-
-                            e_datos_pago.pagos.Add(e_p);
-
-                            #region DatosAdicionales
-                            PagoModel.E_datosAdicionales e_datos_adicionales = new PagoModel.E_datosAdicionales();
-
-                            foreach (var item_add in e_datos.datosAdicionales)
-                            {
-                                if (item_add.nombre.ToUpper() == "NOMBRE")
-                                {
-                                    e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                                    e_datos_adicionales.nombre = "Nombre";
-                                    e_datos_adicionales.valor = item_add.valor;
-                                    e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-                                }
-                                if (item_add.nombre.ToUpper() == "FECHAEMISION")
-                                {
-                                    e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                                    e_datos_adicionales.nombre = "FecEmision";
-                                    e_datos_adicionales.valor = item_add.valor;
-                                    e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-                                }
-                            }
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "CODEBRANCH";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "TRNCODE";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "TELLUSERID";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Cod_RED";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Cod_TRX";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Des_TRX";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Cod_Terminal";
-                            e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_Terminal").Value;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Cod_OperaTrace";
-                            e_datos_adicionales.valor = trx.nu_id_trx_app.ToString();
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Cod_Autoriza";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Ubi_Terminal";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Nro_Cuenta";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Nro_Tarjeta";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Nro_Cuotas";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "ID_Servicio";
-                            e_datos_adicionales.valor = e_datos.servicios[0].id;
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "ID_Recibo";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            e_datos_adicionales = new PagoModel.E_datosAdicionales();
-                            e_datos_adicionales.nombre = "Nom_EmpServ";
-                            e_datos_adicionales.valor = "";
-                            e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
-
-                            #endregion
-
-                            e_pago.deudas.Add(e_datos_pago);
-
-                            #endregion
-                            BanBifApi client_pago = new BanBifApi(true);
-
-                            var result_pago = client_pago.Procesar_Pago(e_pago, trx.nu_id_trx_app, _logger, model.id_trx_hub).Result;
-
-                            Response.E_meta e_meta_pago = (Response.E_meta)result_pago.meta;
-                            Response.E_datos_trx e_datos_pago_result = (Response.E_datos_trx)result_pago.datos;
-
-                            //Solo para provocar el extorno
-                            //result_pago.timeout = true;
-                            //e_meta_pago.mensajes[0].codigo = "EEG02";
-
-                            if (e_meta_pago != null &&
-                                e_datos_pago_result != null &&
-                                e_meta_pago.mensajes[0].codigo == "ESM00")
-                            {
-
-                                trx.vc_id_ref_trx = e_meta.idTransaccion;
-                                trx.vc_cod_autorizacion = e_datos_pago_result.deudas[0].pagos[0].numeroPago;
-
-                                using (var cmd_upd = new SqlCommand("tisi_trx.usp_upd_transacciones_trx_ref", con_sql, tran_sql))
-                                {
-                                    cmd_upd.CommandType = CommandType.StoredProcedure;
-                                    cmd_upd.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx_app);
-                                    cmd_upd.Parameters.AddWithValue("@vc_id_ref_trx", trx.vc_id_ref_trx);
-                                    cmd_upd.Parameters.AddWithValue("@vc_cod_autorizacion", trx.vc_cod_autorizacion);
-                                    UtilSql.iUpd(cmd_upd, trx);
-                                    cmd_upd.ExecuteNonQuery();
-                                    if (cmd_upd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
-                                    {
-                                        tran_sql.Rollback();
-                                        ins_bd = false;
-                                        _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                                    }
-                                    cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
-                                }
-
-                                using (var cmd_upd_confirmar = new SqlCommand("tisi_trx.usp_upd_transaccion_confirmar", con_sql, tran_sql))
-                                {
-                                    cmd_upd_confirmar.CommandType = CommandType.StoredProcedure;
-                                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx_app);
-                                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
-                                    cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
-                                    cmd_upd_confirmar.Parameters.AddWithValue("@bi_confirmado", true);
-                                    UtilSql.iUpd(cmd_upd_confirmar, trx);
-                                    cmd_upd_confirmar.ExecuteNonQuery();
-                                    if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
-                                    {
-                                        tran_sql.Rollback();
-                                        ins_bd = false;
-                                        _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                                    }
-                                }
-
-                                tran_sql.Commit();
-                                _logger.Information("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-
-                                ins_bd = false;
-
-                                object info = new object();
-
-                                info = new
-                                {
-                                    codigo = "00",
-                                    mensaje = "Se realizó el pago correctamente.",
-                                    nro_transaccion = id_trans_global
-                                };
-                                con_sql.Close();
-
-                                return info;
-                            }
-                            else
-                            {
-                                //Solo para extorno Automatico guardar el registro principal
-                                if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "EEG02")
-                                {
-                                    tran_sql.Commit();
-                                    ins_bd = false;
-                                    con_sql.Close();
-                                }
-                                else
+                                if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                                 {
                                     tran_sql.Rollback();
                                     ins_bd = false;
-                                    con_sql.Close();
+                                    _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                }
+                                trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+                            }
+
+                            using (var cmd_upd = new SqlCommand("tisi_trx.usp_upd_transacciones_trx_ref", con_sql, tran_sql))
+                            {
+                                cmd_upd.CommandType = CommandType.StoredProcedure;
+                                cmd_upd.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx_app);
+                                cmd_upd.Parameters.AddWithValue("@vc_id_ref_trx", trx.vc_id_ref_trx);
+                                cmd_upd.Parameters.AddWithValue("@vc_cod_autorizacion", trx.vc_cod_autorizacion);
+                                UtilSql.iUpd(cmd_upd, trx);
+                                cmd_upd.ExecuteNonQuery();
+                                if (cmd_upd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                {
+                                    tran_sql.Rollback();
+                                    ins_bd = false;
+                                    _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    mensaje_error = cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                                }
+                                cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
+                            }
+
+                            using (var cmd_upd_confirmar = new SqlCommand("tisi_trx.usp_upd_transaccion_confirmar", con_sql, tran_sql))
+                            {
+                                cmd_upd_confirmar.CommandType = CommandType.StoredProcedure;
+                                cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx_app);
+                                cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
+                                cmd_upd_confirmar.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
+                                cmd_upd_confirmar.Parameters.AddWithValue("@bi_confirmado", true);
+                                UtilSql.iUpd(cmd_upd_confirmar, trx);
+                                cmd_upd_confirmar.ExecuteNonQuery();
+                                if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                {
+                                    tran_sql.Rollback();
+                                    ins_bd = false;
+                                    _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    mensaje_error = cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                                }
+                            }
+
+                            tran_sql.Commit();
+                            ins_bd = false;
+                            con_sql.Close();
+                            transaccion_completada = true;
+                            
+                            _logger.Information("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                            
+                            object info = new object();
+
+                            info = new
+                            {
+                                codigo = "00",
+                                mensaje = "Se realizó el pago correctamente.",
+                                nro_transaccion = id_trans_global
+                            };
+
+                            return info;
+                        }
+                        else
+                        {
+                            TransaccionModel tm = new TransaccionModel();
+                            tm.nu_id_trx = trx.nu_id_trx;
+                            tm.nu_id_trx_hub = trx.nu_id_trx_hub;
+                            tm.nu_id_distribuidor = trx.nu_id_distribuidor;
+                            tm.nu_id_comercio = trx.nu_id_comercio;
+                            tm.dt_fecha = DateTime.Now;
+                            tm.nu_id_producto = trx.nu_id_producto;
+                            tm.nu_precio = trx.nu_precio;
+                            tm.nu_id_tipo_moneda_vta = trx.nu_id_tipo_moneda_vta;
+                            tm.vc_numero_servicio = trx.vc_numero_servicio;
+                            tm.vc_tran_usua_regi = "API";
+                            tm.ti_respuesta_api = trx.ti_respuesta_api;
+
+                            //Solo para extorno Automatico guardar el registro principal
+                            if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "EEG02")
+                            {
+                                con_sql.Open();
+                                tran_sql = con_sql.BeginTransaction();
+                                ins_bd = true;
+                                using (cmd = new SqlCommand("tisi_global.usp_ins_transaccion_servicios", con_sql, tran_sql))
+                                {
+                                    cmd.CommandType = CommandType.StoredProcedure;
+                                    cmd.Parameters.AddWithValue("@nu_id_trx", trx.nu_id_trx);
+                                    cmd.Parameters.AddWithValue("@nu_id_trx_hub", trx.nu_id_trx_hub);
+                                    cmd.Parameters.AddWithValue("@nu_id_distribuidor", trx.nu_id_distribuidor);
+                                    cmd.Parameters.AddWithValue("@nu_id_comercio", trx.nu_id_comercio);
+                                    cmd.Parameters.AddWithValue("@nu_id_producto", trx.nu_id_producto);
+                                    cmd.Parameters.AddWithValue("@vc_numero_servicio", trx.vc_numero_servicio);
+                                    cmd.Parameters.AddWithValue("@vc_nro_doc_pago", trx.vc_nro_doc_pago);
+                                    cmd.Parameters.AddWithValue("@nu_id_tipo_moneda_vta", trx.nu_id_tipo_moneda_vta);
+                                    cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
+                                    cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
+                                    cmd.Parameters.AddWithValue("@ti_respuesta_api", trx.ti_respuesta_api);
+
+                                    UtilSql.iIns(cmd, trx);
+                                    cmd.ExecuteNonQuery();
+
+                                    if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                    {
+                                        tran_sql.Rollback();
+                                        ins_bd = false;
+                                        _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    }
+                                    trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+                                }
+                                tran_sql.Commit();
+                                ins_bd = false;
+                                con_sql.Close();
+                                transaccion_completada = true;
+
+
+                                //Variables BD
+                                con_sql.Open();
+                                var idtran_reverso = global_service.get_id_transaccion(con_sql);
+                                var id_trans_global_reverso = idtran_reverso.ToString();
+                                con_sql.Close();
+
+                                ReversarPagoParamModel e_reversar_pago_param = new ReversarPagoParamModel();
+                                e_reversar_pago_param.codigoConvenio = e_pago.convenio.codigo;
+                                e_reversar_pago_param.codigoMoneda = e_pago.moneda;
+                                e_reversar_pago_param.cantidadPagos = e_pago.cantidadPagos;
+                                e_reversar_pago_param.agrupacion = e_pago.agrupacion;
+                                e_reversar_pago_param.montoTotalDeuda = e_pago.montoTotalDeuda;
+                                e_reversar_pago_param.montoTotalSaldo = e_pago.montoTotalSaldo;
+
+                                ReversarPagoModel e_reversar_pago = new ReversarPagoModel();
+                                e_reversar_pago.numeroPago = "0";
+                                e_reversar_pago.tipoOperacion = e_p.tipoOperacion;
+                                e_reversar_pago.medioPago = e_p.medioPago;
+                                e_reversar_pago.monto = e_p.monto;
+
+
+                                //Agregar datos principales
+                                ReversarPagoModel.E_datos e_datos_pago_reversar = new ReversarPagoModel.E_datos();
+                                e_datos_pago_reversar.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
+                                e_datos_pago_reversar.cliente.id = e_datos.cliente.id;
+                                e_datos_pago_reversar.idConsulta = e_datos.idConsulta.ToString();
+
+                                foreach (var item_serv in e_datos.servicios)
+                                {
+                                    ReversarPagoModel.E_servicios e_sv = new ReversarPagoModel.E_servicios();
+                                    e_sv.id = item_serv.id;
+                                    e_datos_pago_reversar.servicios.Add(e_sv);
                                 }
 
-                                TransaccionModel tm = new TransaccionModel();
-                                tm.nu_id_trx = Convert.ToInt32(id_trans_global);
-                                tm.nu_id_trx_hub = trx.nu_id_trx_hub;
-                                tm.nu_id_distribuidor = trx.nu_id_distribuidor;
-                                tm.nu_id_comercio = trx.nu_id_comercio;
-                                tm.dt_fecha = DateTime.Now;
-                                tm.nu_id_producto = trx.nu_id_producto;
-                                tm.nu_precio = trx.nu_precio;
-                                tm.nu_id_tipo_moneda_vta = trx.nu_id_tipo_moneda_vta;
-                                tm.vc_numero_servicio = trx.vc_numero_servicio;
-                                tm.vc_tran_usua_regi = "API";
+                                e_datos_pago_reversar.montoSaldoOrigen = e_datos.montoSaldoDestino;
+                                e_datos_pago_reversar.montoDescuentoOrigen = e_datos.montoDescuentoDestino;
+                                e_datos_pago_reversar.montoMultaOrigen = e_datos.montoMultaDestino;
+                                e_datos_pago_reversar.montoVencidoOrigen = e_datos.montoVencidoDestino;
+                                e_datos_pago_reversar.montoInteresOrigen = e_datos.montoInteresDestino;
+                                e_datos_pago_reversar.montoReajusteOrigen = e_datos.montoReajusteDestino;
+                                e_datos_pago_reversar.montoTotalOrigen = e_datos.montoTotalDestino;
 
-                                if (e_datos_pago_result == null && e_meta_pago != null)
+                                e_datos_pago_reversar.documento.numero = e_datos.documento.numero;
+
+                                #region DatosAdicionales
+                                ReversarPagoModel.E_datosAdicionales e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "CODEBRANCH";
+                                e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "TRNCODE";
+                                e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "TELLUSERID";
+                                e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "Cod_RED";
+                                e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "Cod_TRX";
+                                e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "Des_TRX";
+                                e_datos_adicionales_reversar.valor = "";
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+
+                                foreach (var item_add in e_datos.datosAdicionales)
                                 {
-                                    foreach (var item in e_meta_pago.mensajes)
+                                    if (item_add.nombre.ToUpper() == "NOMBRE")
                                     {
-                                        tm.vc_cod_error = String.Concat(tm.vc_cod_error, item.codigo, " - ");
-                                        tm.vc_desc_error = String.Concat(tm.vc_desc_error, item.mensaje, " - ");
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "NOMBRE";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
                                     }
+                                    if (item_add.nombre.ToUpper() == "OLCAE")
+                                    {
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "OLCAE";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+                                    }
+                                }
 
-                                    if (tm.vc_cod_error.Length > 0)
-                                        tm.vc_cod_error = tm.vc_cod_error.Substring(0, tm.vc_cod_error.Length - 3);
-                                    if (tm.vc_desc_error.Length > 0)
-                                        tm.vc_desc_error = tm.vc_desc_error.Substring(0, tm.vc_desc_error.Length - 3);
+                                e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                e_datos_adicionales_reversar.nombre = "ESTADODEUDOR";
+                                e_datos_adicionales_reversar.valor = "01";
+                                e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
 
+                                foreach (var item_add in e_datos.datosAdicionales)
+                                {
+                                    if (item_add.nombre.ToUpper() == "DESCRIPCIONDOCPAGO")
+                                    {
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "DESCRIPCIONDOCPAGO";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+                                    }
+                                    if (item_add.nombre.ToUpper() == "IMPORTEORIGINALDEUDA")
+                                    {
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "IMPORTEORIGINALDEUDA";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+                                    }
+                                    if (item_add.nombre.ToUpper() == "FECHAEMISION")
+                                    {
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "FECHAEMISION";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+                                    }
+                                    if (item_add.nombre.ToUpper() == "CANAL")
+                                    {
+                                        e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
+                                        e_datos_adicionales_reversar.nombre = "CANAL";
+                                        e_datos_adicionales_reversar.valor = item_add.valor;
+                                        e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
+                                    }
+                                }
+                                #endregion
+
+                                e_reversar_pago.deudas.Add(e_datos_pago_reversar);
+
+                                TransaccionModel trx_reverso = new TransaccionModel();
+                                trx_reverso.nu_id_trx = Convert.ToInt32(id_trans_global_reverso);
+
+                                trx_reverso.nu_id_trx_hub = Convert.ToInt32(model.id_trx_hub);
+                                trx_reverso.nu_id_distribuidor = trx.nu_id_distribuidor;
+                                trx_reverso.nu_id_comercio = trx.nu_id_comercio;
+                                trx_reverso.nu_id_producto = trx.nu_id_producto;
+                                trx_reverso.dt_fecha = DateTime.Now.Date;
+                                trx_reverso.nu_id_tipo_moneda_vta = trx.nu_id_tipo_moneda_vta;
+                                trx_reverso.nu_precio = trx.nu_precio;
+
+                                trx_reverso.vc_numero_servicio = trx.vc_numero_servicio;
+                                trx_reverso.vc_nro_doc_pago = trx.vc_nro_doc_pago;
+                                trx_reverso.nu_id_trx_ref = trx.nu_id_trx;
+                                
+                                client = new BanBifApi();
+
+                                var result_reversion_pago = client.Reversar_Pago(e_reversar_pago_param, e_reversar_pago, trx.nu_id_trx, _logger, model.id_trx_hub).Result;
+
+                                trx_reverso.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio);
+
+                                Response.E_meta e_meta_pago_reversion = (Response.E_meta)result_reversion_pago.meta;
+                                Response.E_datos_trx e_datos_pago_result_reversion = (Response.E_datos_trx)result_reversion_pago.datos;
+                                if (e_meta_pago_reversion != null &&
+                                    e_meta_pago_reversion.mensajes[0].codigo == "ESM00")
+                                {
+                                    trx_reverso.vc_id_ref_trx = e_meta_pago_reversion.idTransaccion;
+                                    trx_reverso.vc_cod_autorizacion = "";
+                                    trx_reverso.bi_confirmado = true;
+                                    trx_reverso.vc_tran_usua_regi = "API";
+
+                                    con_sql.Open();
+                                    var tran_sql_rev = con_sql.BeginTransaction();
+
+                                    cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
+
+                                    if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                    {
+                                        tran_sql_rev.Rollback();
+                                        ins_bd = false;
+                                        _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    }
+                                    trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+                                    tran_sql_rev.Commit();
+                                    con_sql.Close();
+                                    ins_bd = false;
+
+                                    tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
+
+                                    tm.vc_cod_error = "99";
+                                    tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (Confirmado)";
                                 }
                                 else
                                 {
-                                    tm.vc_cod_error = "";
-                                    tm.vc_desc_error = "";
-                                }
+                                    trx_reverso.vc_id_ref_trx = "";
+                                    trx_reverso.vc_cod_autorizacion = "";
+                                    trx_reverso.bi_confirmado = false;
+                                    trx_reverso.vc_tran_usua_regi = "API";
 
-                                tm.vc_desc_tipo_error = "CONVENIO";
-
-
-                                if (result_pago.timeout == true || e_meta_pago.mensajes[0].codigo == "EEG02")
-                                {
-                                    //Variables BD
                                     con_sql.Open();
-                                    var idtran_reverso = global_service.get_id_transaccion(con_sql);
-                                    var id_trans_global_reverso = idtran_reverso.ToString();
+                                    var tran_sql_rev = con_sql.BeginTransaction();
+
+                                    cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
+
+                                    if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
+                                    {
+                                        tran_sql_rev.Rollback();
+                                        ins_bd = false;
+                                        _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    }
+                                    trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+
+                                    tran_sql_rev.Commit();
                                     con_sql.Close();
+                                    ins_bd = false;
 
-                                    ReversarPagoParamModel e_reversar_pago_param = new ReversarPagoParamModel();
-                                    e_reversar_pago_param.codigoConvenio = e_pago.convenio.codigo;
-                                    e_reversar_pago_param.codigoMoneda = e_pago.moneda;
-                                    e_reversar_pago_param.cantidadPagos = e_pago.cantidadPagos;
-                                    e_reversar_pago_param.agrupacion = e_pago.agrupacion;
-                                    e_reversar_pago_param.montoTotalDeuda = e_pago.montoTotalDeuda;
-                                    e_reversar_pago_param.montoTotalSaldo = e_pago.montoTotalSaldo;
+                                    tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
 
-                                    ReversarPagoModel e_reversar_pago = new ReversarPagoModel();
-                                    e_reversar_pago.numeroPago = "0";
-                                    e_reversar_pago.tipoOperacion = e_p.tipoOperacion;
-                                    e_reversar_pago.medioPago = e_p.medioPago;
-                                    e_reversar_pago.monto = e_p.monto;
-
-
-                                    //Agregar datos principales
-                                    ReversarPagoModel.E_datos e_datos_pago_reversar = new ReversarPagoModel.E_datos();
-                                    e_datos_pago_reversar.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
-                                    e_datos_pago_reversar.cliente.id = e_datos.cliente.id;
-                                    e_datos_pago_reversar.idConsulta = e_datos.idConsulta.ToString();
-
-                                    foreach (var item_serv in e_datos.servicios)
-                                    {
-                                        ReversarPagoModel.E_servicios e_sv = new ReversarPagoModel.E_servicios();
-                                        e_sv.id = item_serv.id;
-                                        e_datos_pago_reversar.servicios.Add(e_sv);
-                                    }
-
-                                    e_datos_pago_reversar.montoSaldoOrigen = e_datos.montoSaldoDestino;
-                                    e_datos_pago_reversar.montoDescuentoOrigen = e_datos.montoDescuentoDestino;
-                                    e_datos_pago_reversar.montoMultaOrigen = e_datos.montoMultaDestino;
-                                    e_datos_pago_reversar.montoVencidoOrigen = e_datos.montoVencidoDestino;
-                                    e_datos_pago_reversar.montoInteresOrigen = e_datos.montoInteresDestino;
-                                    e_datos_pago_reversar.montoReajusteOrigen = e_datos.montoReajusteDestino;
-                                    e_datos_pago_reversar.montoTotalOrigen = e_datos.montoTotalDestino;
-
-                                    e_datos_pago_reversar.documento.numero = e_datos.documento.numero;
-
-                                    #region DatosAdicionales
-                                    ReversarPagoModel.E_datosAdicionales e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "CODEBRANCH";
-                                    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "TRNCODE";
-                                    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "TELLUSERID";
-                                    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "Cod_RED";
-                                    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "Cod_TRX";
-                                    e_datos_adicionales_reversar.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "Des_TRX";
-                                    e_datos_adicionales_reversar.valor = "";
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    foreach (var item_add in e_datos.datosAdicionales)
-                                    {
-                                        if (item_add.nombre == "NOMBRE")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "NOMBRE";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                        if (item_add.nombre == "OLCAE")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "OLCAE";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                    }
-
-                                    e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                    e_datos_adicionales_reversar.nombre = "ESTADODEUDOR";
-                                    e_datos_adicionales_reversar.valor = "01";
-                                    e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-
-                                    foreach (var item_add in e_datos.datosAdicionales)
-                                    {
-                                        if (item_add.nombre == "DESCRIPCIONDOCPAGO")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "DESCRIPCIONDOCPAGO";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                        if (item_add.nombre == "IMPORTEORIGINALDEUDA")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "IMPORTEORIGINALDEUDA";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                        if (item_add.nombre == "FECHAEMISION")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "FECHAEMISION";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                        if (item_add.nombre == "CANAL")
-                                        {
-                                            e_datos_adicionales_reversar = new ReversarPagoModel.E_datosAdicionales();
-                                            e_datos_adicionales_reversar.nombre = "CANAL";
-                                            e_datos_adicionales_reversar.valor = item_add.valor;
-                                            e_datos_pago_reversar.datosAdicionales.Add(e_datos_adicionales_reversar);
-                                        }
-                                    }
-                                    #endregion
-
-                                    e_reversar_pago.deudas.Add(e_datos_pago_reversar);
-                                                                                                                                          
-                                    TransaccionModel trx_reverso = new TransaccionModel();
-                                    trx_reverso.nu_id_trx = Convert.ToInt32(id_trans_global_reverso);
-
-                                    trx_reverso.nu_id_trx_hub = Convert.ToInt32(model.id_trx_hub);
-                                    trx_reverso.nu_id_distribuidor = trx.nu_id_distribuidor;
-                                    trx_reverso.nu_id_comercio = trx.nu_id_comercio;
-                                    trx_reverso.nu_id_producto = trx.nu_id_producto;
-                                    trx_reverso.dt_fecha = DateTime.Now.Date;
-                                    trx_reverso.nu_id_tipo_moneda_vta = trx.nu_id_tipo_moneda_vta;
-                                    trx_reverso.nu_precio = trx.nu_precio;
-
-                                    trx_reverso.vc_numero_servicio = trx.vc_numero_servicio;
-                                    trx_reverso.vc_nro_doc_pago = trx.vc_nro_doc_pago;
-                                    trx_reverso.nu_id_trx_ref = Convert.ToInt32(id_trans_global);
-
-                                    var json = JsonConvert.SerializeObject(e_reversar_pago);
-
-                                    client = new BanBifApi();
-
-                                    var result_reversion_pago = client.Reversar_Pago(e_reversar_pago_param, e_reversar_pago, trx.nu_id_trx_app, _logger, model.id_trx_hub).Result;
-
-                                    Response.E_meta e_meta_pago_reversion = (Response.E_meta)result_reversion_pago.meta;
-                                    Response.E_datos_trx e_datos_pago_result_reversion = (Response.E_datos_trx)result_reversion_pago.datos;
-                                    if (e_meta_pago_reversion != null &&
-                                        e_meta_pago_reversion.mensajes[0].codigo == "ESM00")
-                                    {
-                                        trx_reverso.vc_id_ref_trx = e_meta_pago_reversion.idTransaccion;
-                                        trx_reverso.vc_cod_autorizacion = "";
-                                        trx_reverso.bi_confirmado = true;
-                                        trx_reverso.vc_tran_usua_regi = "API";
-
-                                        con_sql.Open();
-                                        var tran_sql_rev = con_sql.BeginTransaction();
-
-                                        cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
-
-                                        if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
-                                        {
-                                            tran_sql_rev.Rollback();
-                                            ins_bd = false;
-                                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                            return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                        }
-                                        trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
-
-                                        tran_sql_rev.Commit();
-                                        con_sql.Close();
-                                        ins_bd = false;
-
-                                        tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
-
-                                        tm.vc_cod_error = "99";
-                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (Confirmado)";
-                                    }
-                                    else
-                                    {
-                                        trx_reverso.vc_id_ref_trx = "";
-                                        trx_reverso.vc_cod_autorizacion = "";
-                                        trx_reverso.bi_confirmado = false;
-                                        trx_reverso.vc_tran_usua_regi = "API";
-
-                                        con_sql.Open();
-                                        var tran_sql_rev = con_sql.BeginTransaction();
-
-                                        cmd = global_service.insTransaccionExtorno(con_sql, tran_sql_rev, trx_reverso);
-
-                                        if (cmd.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
-                                        {
-                                            tran_sql_rev.Rollback();
-                                            ins_bd = false;
-                                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                            return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                                        }
-                                        trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
-
-                                        tran_sql_rev.Commit();
-                                        con_sql.Close();
-                                        ins_bd = false;
-
-                                        tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
-
-                                        tm.vc_cod_error = "99";
-                                        tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (No confirmado)";
-                                    }
-
+                                    tm.vc_cod_error = "99";
+                                    tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (No confirmado)";
                                 }
 
-                                SqlTransaction tran_sql_error = null;
-                                con_sql.Open();
 
-                                tran_sql_error = con_sql.BeginTransaction();
-
-                                cmd = global_service.insTransaccionError(con_sql, tran_sql_error, tm);
-
-                                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                                {
-                                    tran_sql_error.Rollback();
-                                    _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
-                                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                                }
-
-                                tran_sql_error.Commit();
-                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
-
-                                if (tm.vc_cod_error == "ESM25")
-                                {
-                                    tm.vc_cod_error = "ESM25";
-                                    tm.vc_desc_error = "El pago no puede ser procesado por realizarse fuera de horario.";
-                                }
-
-                                return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
                             }
-                        }
 
+                            
+                            if (e_datos_pago_result == null && e_meta_pago != null)
+                            {
+                                foreach (var item in e_meta_pago.mensajes)
+                                {
+                                    tm.vc_cod_error = String.Concat(tm.vc_cod_error, item.codigo, " - ");
+                                    tm.vc_desc_error = String.Concat(tm.vc_desc_error, item.mensaje, " - ");
+                                }
+
+                                if (tm.vc_cod_error.Length > 0)
+                                    tm.vc_cod_error = tm.vc_cod_error.Substring(0, tm.vc_cod_error.Length - 3);
+                                if (tm.vc_desc_error.Length > 0)
+                                    tm.vc_desc_error = tm.vc_desc_error.Substring(0, tm.vc_desc_error.Length - 3);
+
+                            }
+
+                            tm.vc_desc_tipo_error = "CONVENIO";
+
+                            SqlTransaction tran_sql_error = null;
+                            con_sql.Open();
+
+                            tran_sql_error = con_sql.BeginTransaction();
+
+                            cmd = global_service.insTransaccionError(con_sql, tran_sql_error, tm);
+
+                            if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                            {
+                                tran_sql_error.Rollback();
+                                _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
+                                mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                            }
+
+                            tran_sql_error.Commit();
+                            con_sql.Close();
+                            mensaje_error = tm.vc_desc_error;
+                            ins_bd = false;
+                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
+
+                            if (tm.vc_cod_error == "ESM25")
+                            {
+                                tm.vc_cod_error = "ESM25";
+                                tm.vc_desc_error = "El pago no puede ser procesado por realizarse fuera de horario.";
+                            }
+
+                            return UtilSql.sOutPutTransaccion("99", tm.vc_desc_error);
+                        }
                     }
 
                 }
@@ -1066,12 +1116,25 @@ namespace wa_api_incomm.Services
                 }
 
                 _logger.Error("idtrx: " + model.id_trx_hub + " / " + ex.Message);
+                mensaje_error = ex.Message;
 
                 return UtilSql.sOutPutTransaccion("500", ex.Message);
             }
             finally
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
+
+                if (saldo_comprometido == true && transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_saldo_extorno = new TrxHubModel();
+
+                    model_saldo_extorno.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
+                    model_saldo_extorno.bi_extorno = true;
+                    model_saldo_extorno.vc_mensaje_error = mensaje_error;
+                    var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
+                    con_sql.Close();
+                }
             }
 
         }

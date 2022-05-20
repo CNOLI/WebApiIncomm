@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -225,6 +226,7 @@ namespace wa_api_incomm.Services
             SqlCommand cmd = null;
             string id_trx_hub = "";
             string id_trans_global = "";
+            GlobalService global_service = new GlobalService();
 
             dynamic obj = null;
 
@@ -232,18 +234,41 @@ namespace wa_api_incomm.Services
             {
                 con_sql = new SqlConnection(conexion);
 
-                GlobalService global_service = new GlobalService();
+                //1) Inserta TRX_HUB y validaciones por BD
+                
+                //Obtener Distribuidor
+                DistribuidorModel distribuidor = new DistribuidorModel();
+                distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
+
+                con_sql.Open();
+                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+                con_sql.Close();
+
+                if (distribuidor.nu_id_distribuidor <= 0)
+                {
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                }
+
+                //Obtener Comercio
+                con_sql.Open();
+                ComercioModel comercio = global_service.get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
+                con_sql.Close();
 
                 //Insertar Transaccion HUB
                 con_sql.Open();
 
                 TrxHubModel trx_hub = new TrxHubModel();
-                trx_hub.codigo_distribuidor = input.codigo_distribuidor;
-                trx_hub.codigo_comercio = input.codigo_comercio;
-                trx_hub.nombre_comercio = input.nombre_comercio;
-                trx_hub.nro_telefono = "";
-                trx_hub.email = "";
-                trx_hub.id_producto = input.id_servicio;
+                trx_hub.vc_cod_distribuidor = input.codigo_distribuidor;
+                trx_hub.vc_cod_comercio = input.codigo_comercio;
+                trx_hub.vc_nombre_comercio = input.nombre_comercio;
+                trx_hub.vc_nro_telefono = "";
+                trx_hub.vc_email = "";
+                trx_hub.vc_id_producto = input.id_servicio;
+                trx_hub.nu_precio_vta = input.importe_pago.ToDecimal();
+                trx_hub.vc_numero_servicio = input.numero_servicio;
+                trx_hub.vc_nro_doc_pago = input.numero_documento;
+                trx_hub.vc_id_ref_trx_distribuidor = input.nro_transaccion_referencia;
 
                 cmd = global_service.insTrxhub(con_sql, trx_hub);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
@@ -261,24 +286,11 @@ namespace wa_api_incomm.Services
 
                 con_sql.Close();
 
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
 
-                //Obtener Distribuidor
-                DistribuidorModel distribuidor = new DistribuidorModel();
-                distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo recibido: " + JsonConvert.SerializeObject(input));
 
-                con_sql.Open();
-                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
-                con_sql.Close();
-
-                if (distribuidor.nu_id_distribuidor <= 0)
-                {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
-                }
-
-                con_sql.Open();
-                ComercioModel comercio = global_service.get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
-                con_sql.Close();
+                // 2) Validar Campos adicionales.
 
                 //Obtener Producto
                 ProductoModel producto = new ProductoModel();
@@ -292,14 +304,13 @@ namespace wa_api_incomm.Services
                 if (producto.nu_id_producto <= 0)
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
+                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
                 }
-
-                //Validaciones Adicionales
 
                 if (string.IsNullOrEmpty(input.numero_documento))
                 {
-                    return UtilSql.sOutPutTransaccion("500", "Debe indicar el número de documento de pago.");
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "Debe indicar el número de documento de pago.");
+                    return UtilSql.sOutPutTransaccion("20", "Debe indicar el número de documento de pago.");
                 }
 
                 //Dirigir a APIS
@@ -318,12 +329,11 @@ namespace wa_api_incomm.Services
                     model_banbif.nro_transaccion_referencia = input.nro_transaccion_referencia;
                     BanBifService Banbif_Service = new BanBifService(_logger);
                     obj = Banbif_Service.post_pago(conexion, model_banbif);
-
                 }
                 else
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.");
+                    return UtilSql.sOutPutTransaccion("80", "No se encuentra configurado convenio para el producto.");
                 }
 
                 return obj;

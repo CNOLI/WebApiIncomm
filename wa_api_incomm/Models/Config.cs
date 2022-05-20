@@ -24,9 +24,6 @@ namespace wa_api_incomm.Models
         public const string vc_url_izipay_finanzas_qa = "https://psrdes.izipay.pe:8088/";
         public const string vc_url_izipay_finanzas_prod = "https://psr.izipay.pe:8090/";
 
-        //public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.banbifapimarket.com.pe/";
-        //public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.banbifapimarket.com.pe/auth/realms/Banbif-API-External/protocol/openid-connect/token";
-
         public const string vc_url_banbif_qa = "https://api-recaudaciones.uatapps.dombif.peru/";
         public const string vc_url_banbif_token_qa = "https://rh-sso-rhsso.uatapps.dombif.peru/auth/realms/Banbif-API/protocol/openid-connect/token";
         public const string vc_url_banbif_prod = "https://api-recaudaciones.apps.dombif.peru/";

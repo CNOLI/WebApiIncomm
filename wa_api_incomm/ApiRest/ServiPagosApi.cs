@@ -12,6 +12,7 @@ using wa_api_incomm.Models;
 using wa_api_incomm.Models.Izipay;
 using wa_api_incomm.Models.ServiPagos;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace wa_api_incomm.ApiRest
 {
@@ -31,6 +32,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);
+            api.Timeout = TimeSpan.FromSeconds(150);
 
             ApiURLRespaldo2 = config.GetSection("ServiPagosInfo:IPRespaldo").Value;
             usuario = config.GetSection("ServiPagosInfo:Usuario").Value;
@@ -57,6 +59,8 @@ namespace wa_api_incomm.ApiRest
         {
             ServiPagos_ResponseModel Result = new ServiPagos_ResponseModel();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 string hash = modelo.vc_cod_producto + usuario + clave + idTransaccion + modelo.vc_numero_servicio + Convert.ToInt32(modelo.nu_precio_vta);
@@ -76,8 +80,11 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (Recargar): ''";
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
+                Thread.Sleep(TimeSpan.FromSeconds(130));
                 response = await api.GetAsync(url).ConfigureAwait(false);
-                
+                dt_fin = DateTime.Now;
+
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(ServiPagosApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Recargar): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
@@ -92,14 +99,20 @@ namespace wa_api_incomm.ApiRest
                 {
                     Result = JsonConvert.DeserializeObject<ServiPagos_ResponseModel>(await response.Content.ReadAsStringAsync());
                 }
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = dt_fin;
 
             }
             catch (OperationCanceledException e)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 Result.timeout = true;
             }
             catch (Exception ex)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". Recarga_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Recarga_ServiPagos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }

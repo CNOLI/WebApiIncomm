@@ -28,6 +28,8 @@ namespace wa_api_incomm.Models
             public string codigo_autorizacion { get; set; }
             public string id_pago { get; set; }
             public string nuevo_saldo { get; set; }
+            public DateTime dt_inicio { get; set; }
+            public DateTime dt_fin { get; set; }
         }
 
     }

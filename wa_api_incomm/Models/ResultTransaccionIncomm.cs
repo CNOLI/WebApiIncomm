@@ -18,6 +18,8 @@ namespace wa_api_incomm.Models
         public string errorMessage { get; set; }
         public string authorizationCode { get; set; }
         public string pin { get; set; }
-        
+        public DateTime dt_inicio { get; set; }
+        public DateTime dt_fin { get; set; }
+
     }
 }

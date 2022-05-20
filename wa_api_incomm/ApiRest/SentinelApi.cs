@@ -18,6 +18,7 @@ namespace wa_api_incomm.ApiRest
         public SentinelApi()
         {
             //api.BaseAddress = new Uri(ApiURL);
+            api.Timeout = TimeSpan.FromSeconds(120);
         }
 
         public async Task<EncriptaRest> Encriptacion(Encripta modelo)
@@ -64,6 +65,8 @@ namespace wa_api_incomm.ApiRest
         {
             ConsultaTitularRest result = new ConsultaTitularRest();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -75,16 +78,22 @@ namespace wa_api_incomm.ApiRest
                                     " - Modelo enviado (ConsultaTitularFacturacion): " + JsonConvert.SerializeObject(modelo);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(SentinelApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (ConsultaTitularFacturacion): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
                 result = JsonConvert.DeserializeObject<ConsultaTitularRest>(await response.Content.ReadAsStringAsync());
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
             }
             catch (Exception ex)
             {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". ConsultaTitularFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". ConsultaTitularFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
@@ -94,6 +103,8 @@ namespace wa_api_incomm.ApiRest
         {
             ConsultaTitularRest result = new ConsultaTitularRest();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -105,16 +116,22 @@ namespace wa_api_incomm.ApiRest
                                     " - Modelo enviado (ConsultaTitularSinFacturacion): " + JsonConvert.SerializeObject(modelo);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(SentinelApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (ConsultaTitularSinFacturacion): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
                 result = JsonConvert.DeserializeObject<ConsultaTitularRest>(await response.Content.ReadAsStringAsync());
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
             }
             catch (Exception ex)
             {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". ConsultaTitularSinFacturacionFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". ConsultaTitularSinFacturacionFacturacion_Sentinel " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }

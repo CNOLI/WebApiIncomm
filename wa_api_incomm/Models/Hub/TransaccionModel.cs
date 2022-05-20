@@ -73,5 +73,7 @@ namespace wa_api_incomm.Models.Hub
 
         public string vc_id_ref_trx_distribuidor { get; set; }
 
+        public TimeSpan ti_respuesta_api { get; set; }
+
     }
 }

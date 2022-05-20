@@ -17,6 +17,7 @@ namespace wa_api_incomm.Models.ServiPagos
             public string codigo_comercio { get; set; }
             public string nombre_comercio { get; set; }
             public string id_producto { get; set; }
+            public string vc_cod_producto { get; set; }
             public string numero_servicio { get; set; }
             public string importe_recarga { get; set; }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using wa_api_incomm.Models.Hub;
 
 namespace wa_api_incomm.Models
 {
@@ -23,6 +24,7 @@ namespace wa_api_incomm.Models
             public string codigo_comercio { get; set; }
             public string nombre_comercio { get; set; }
             public string id_producto { get; set; }
+            public string vc_cod_producto { get; set; }
             public string numero_servicio { get; set; }
             public string importe_recarga { get; set; }
 
@@ -38,7 +40,7 @@ namespace wa_api_incomm.Models
             public string id_trx_hub { get; set; }
             public string id_distribuidor { get; set; }
             public string id_comercio { get; set; }
-
+            public DistribuidorModel distribuidor { get; set; }
         }
 
     }

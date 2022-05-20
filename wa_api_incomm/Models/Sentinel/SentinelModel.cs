@@ -69,7 +69,6 @@ namespace wa_api_incomm.Models
         public string PDVNroDoc { get; set; }
         public string PDVRazSocNom { get; set; }
     }
-
     public class ConsultaTitularDet
     {
         public string TipoDocCPT { get; set; }
@@ -83,6 +82,8 @@ namespace wa_api_incomm.Models
         public string ID_Transaccion { get; set; }
         public string CodigoWS { get; set; }
         public List<ConsultaTitularRestDet> SDT_TitMas_Out { get; set; }
+        public DateTime dt_inicio { get; set; }
+        public DateTime dt_fin { get; set; }
 
         public ConsultaTitularRest()
         {

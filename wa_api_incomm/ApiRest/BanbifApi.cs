@@ -293,6 +293,8 @@ namespace wa_api_incomm.ApiRest
         {
             Response.E_Response_Trx Result = new Response.E_Response_Trx();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
@@ -311,7 +313,9 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (Procesar_Pago): " + JsonConvert.SerializeObject(model);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Procesar_Pago): " + response.Content.ReadAsStringAsync().Result;
@@ -320,16 +324,22 @@ namespace wa_api_incomm.ApiRest
                 //var jsonrpta = response.Content.ReadAsStringAsync().Result;
 
                 Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = dt_fin;
 
                 //Temporal
                 //Result.timeout = true;
             }
             catch (OperationCanceledException e)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 Result.timeout = true;
             }
             catch (Exception ex)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
@@ -339,6 +349,8 @@ namespace wa_api_incomm.ApiRest
         {
             Response.E_Response_Trx Result = null;
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 String codigoCanal = config.GetSection("BanBifInfo:codigoCanal").Value;
@@ -367,19 +379,24 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (Reversar_Pago): " + JsonConvert.SerializeObject(model);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PutAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(BanBifApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Reversar_Pago): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
 
                 Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = dt_fin;
 
             }
             catch (WebException e)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 if (e.Status == WebExceptionStatus.Timeout)
                 {
                     Result.timeout = true;
@@ -392,6 +409,8 @@ namespace wa_api_incomm.ApiRest
             }
             catch (Exception ex)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Reversar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }

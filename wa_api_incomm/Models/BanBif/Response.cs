@@ -25,6 +25,8 @@ namespace wa_api_incomm.Models.BanBif
             public E_meta meta { get; set; }
             public E_datos_trx datos { get; set; }
             public bool timeout { get; set; } = false;
+            public DateTime dt_inicio { get; set; }
+            public DateTime dt_fin { get; set; }
         }
         public class E_meta
         {

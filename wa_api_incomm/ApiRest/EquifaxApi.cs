@@ -67,8 +67,10 @@ namespace wa_api_incomm.ApiRest
         }
         public async Task<Generar_Reporte_Response> Generar_Reporte(Generar_Reporte_Input model, Serilog.ILogger logger, string id_trx_hub = "")
         {
-            Generar_Reporte_Response Result = null;
+            Generar_Reporte_Response Result = new Generar_Reporte_Response();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
 
@@ -83,7 +85,9 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (Generar_Reporte): " + JsonConvert.SerializeObject(model);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(EquifaxApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Generar_Reporte): " + response.Content.ReadAsStringAsync().Result;
@@ -92,10 +96,14 @@ namespace wa_api_incomm.ApiRest
                 var jsonrpta = response.Content.ReadAsStringAsync().Result;
 
                 Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = dt_fin;
 
             }
             catch (Exception ex)
             {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". Generar_Reporte " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
 
                 if (response.Content == null)

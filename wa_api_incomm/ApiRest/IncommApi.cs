@@ -46,6 +46,8 @@ namespace wa_api_incomm.ApiRest
         {
             ResultTransaccionIncomm result = new ResultTransaccionIncomm();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
             try
             {
                 string url = ApiURL + "moviired-api/digitalContent/v1/pines";
@@ -54,17 +56,23 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (Transaccion): " + JsonConvert.SerializeObject(model);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsJsonAsync(url, model);
+                dt_fin = DateTime.Now;
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IncommApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (Transaccion): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
                 result = await response.Content.ReadAsAsync<ResultTransaccionIncomm>();
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
 
             }
             catch (Exception ex)
             {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". Transaccion_Incomm " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". Transaccion_Incomm " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }

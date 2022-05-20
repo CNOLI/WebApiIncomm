@@ -192,9 +192,9 @@ namespace wa_api_incomm.Services
             }
             return _result;
         }
-        public int get_id_transaccion(SqlConnection cn)
+        public Int64 get_id_transaccion(SqlConnection cn)
         {
-            int r = 0;
+            Int64 r = 0;
             ConvenioModel model = new ConvenioModel();
             using (var cmd = new SqlCommand("tisi_global.usp_get_id_transaccion", cn))
             {
@@ -202,10 +202,9 @@ namespace wa_api_incomm.Services
                 UtilSql.iGet(cmd, model);
                 var dr = cmd.ExecuteReader();
                 if (dr.Read())
-
                 {
                     if (UtilSql.Ec(dr, "id_trans"))
-                        r = Convert.ToInt32(dr["id_trans"].ToString());
+                        r = Convert.ToInt64(dr["id_trans"].ToString());
                 }
             }
             return r;
@@ -399,6 +398,7 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@vc_desc_tipo_error", model.vc_desc_tipo_error);
                 cmd.Parameters.AddWithValue("@nu_id_tipo_moneda", model.nu_id_tipo_moneda_vta);
                 cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
+                cmd.Parameters.AddWithValue("@ti_respuesta_api", model.ti_respuesta_api);
 
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();
@@ -411,13 +411,39 @@ namespace wa_api_incomm.Services
             using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_trxhub", cn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.codigo_distribuidor);
-                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.codigo_comercio);
-                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.nombre_comercio);
-                cmd.Parameters.AddWithValue("@vc_nro_telefono", model.nro_telefono);
-                cmd.Parameters.AddWithValue("@vc_email", model.email);
-                cmd.Parameters.AddWithValue("@vc_id_producto", model.id_producto);
+                cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
+                cmd.Parameters.AddWithValue("@vc_cod_comercio", model.vc_cod_comercio);
+                cmd.Parameters.AddWithValue("@vc_nombre_comercio", model.vc_nombre_comercio);
+                cmd.Parameters.AddWithValue("@vc_nro_telefono", model.vc_nro_telefono);
+                cmd.Parameters.AddWithValue("@vc_email", model.vc_email);
+                cmd.Parameters.AddWithValue("@vc_id_producto", model.vc_id_producto);
+                cmd.Parameters.AddWithValue("@nu_precio_vta", model.nu_precio_vta);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_sol", model.nu_id_tipo_doc_sol);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_sol", model.vc_nro_doc_sol);
+                cmd.Parameters.AddWithValue("@ch_dig_ver_sol", model.ch_dig_ver_sol);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_doc_cpt", model.nu_id_tipo_doc_cpt);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_cpt", model.vc_nro_doc_cpt);
+                cmd.Parameters.AddWithValue("@nu_id_tipo_documento", model.nu_id_tipo_comprobante);
+                cmd.Parameters.AddWithValue("@vc_ruc", model.vc_ruc);
+                cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
+                cmd.Parameters.AddWithValue("@vc_nro_doc_pago", model.vc_nro_doc_pago);
+                cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", model.vc_id_ref_trx_distribuidor);
                 UtilSql.iIns(cmd, model);
+                cmd.ExecuteNonQuery();
+                return cmd;
+            }
+
+        }
+        public SqlCommand updTrxhubSaldo(SqlConnection cn, TrxHubModel model)
+        {
+
+            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_upd_trxhub_saldo", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@nu_id_trx_hub", model.nu_id_trx_hub);
+                cmd.Parameters.AddWithValue("@bi_extorno", model.bi_extorno);
+                cmd.Parameters.AddWithValue("@vc_mensaje_error", model.vc_mensaje_error);
+                UtilSql.iUpd(cmd, model);
                 cmd.ExecuteNonQuery();
                 return cmd;
             }
@@ -456,6 +482,7 @@ namespace wa_api_incomm.Services
 
                 cmd.Parameters.AddWithValue("@nu_id_trx_ref", model.nu_id_trx_ref);
                 cmd.Parameters.AddWithValue("@bi_confirmado", model.bi_confirmado);
+                cmd.Parameters.AddWithValue("@ti_respuesta_api", model.ti_respuesta_api);
 
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();

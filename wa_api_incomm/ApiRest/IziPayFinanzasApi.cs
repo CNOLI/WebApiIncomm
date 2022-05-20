@@ -96,6 +96,8 @@ namespace wa_api_incomm.ApiRest
         {
             ResultPagoDirecto result = new ResultPagoDirecto();
             HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
 
             try
             {
@@ -107,21 +109,24 @@ namespace wa_api_incomm.ApiRest
                                      " - Modelo enviado (PagoDirecto): " + JsonConvert.SerializeObject(modelo);
                 logger.Information(msg_request);
 
+                dt_inicio = DateTime.Now;
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
+
 
                 string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                       " - Modelo recibido (PagoDirecto): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
-                
-                result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
 
-                //else
-                //{
-                //    result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
-                //}
+                result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
+
             }
             catch (Exception ex)
             {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
                 logger.Error(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
                 throw new Exception(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }

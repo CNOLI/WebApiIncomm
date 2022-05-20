@@ -11,6 +11,8 @@ namespace wa_api_incomm.Models.ServiPagos
         public Solicitud solicitud { get; set; }
         public Respuesta respuesta { get; set; }
         public bool timeout { get; set; } = false;
+        public DateTime dt_inicio { get; set; }
+        public DateTime dt_fin { get; set; }
         public ServiPagos_ResponseModel()
         {
             this.solicitud = new Solicitud();

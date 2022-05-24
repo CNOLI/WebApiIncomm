@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.IzipayFinazas;
@@ -32,6 +33,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("IzipayFinanzasInfo:TimeOut").Value));
 
             izikey = config.GetSection("IzipayFinanzasInfo:izikey").Value;
             model.bin_acq = config.GetSection("IzipayFinanzasInfo:bin_acq").Value;
@@ -110,6 +112,7 @@ namespace wa_api_incomm.ApiRest
                 logger.Information(msg_request);
 
                 dt_inicio = DateTime.Now;
+                //Thread.Sleep(TimeSpan.FromSeconds(160));
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
                 dt_fin = DateTime.Now;
 

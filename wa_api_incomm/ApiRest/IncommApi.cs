@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace wa_api_incomm.ApiRest
         private const string ApiURL = Config.vc_url_incomm;
 
         private HttpClient api = new HttpClient();
+        IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
         public IncommApi(string merchantId, string auth, string posid, string source)
         {
             //api.BaseAddress = new Uri(ApiURL);
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("IncommInfo:TimeOut").Value));
             api.DefaultRequestHeaders.Accept.Clear();
             api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 

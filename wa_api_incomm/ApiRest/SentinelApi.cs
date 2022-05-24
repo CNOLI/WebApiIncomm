@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,11 @@ namespace wa_api_incomm.ApiRest
     {
         private const string ApiURL = Config.vc_url_sentinel;
         private HttpClient api = new HttpClient();
+        IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
         public SentinelApi()
         {
-            //api.BaseAddress = new Uri(ApiURL);
-            api.Timeout = TimeSpan.FromSeconds(120);
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("SentinelInfo:TimeOut").Value));
         }
 
         public async Task<EncriptaRest> Encriptacion(Encripta modelo)

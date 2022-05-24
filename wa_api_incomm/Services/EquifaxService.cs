@@ -252,7 +252,8 @@ namespace wa_api_incomm.Services
                 trx.nu_id_tipo_doc_cpt = tipodocidentidad_consultado.nu_id_tipo_doc_identidad;
                 trx.vc_nro_doc_cpt = model.numero_documento_consultado;
                 trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
-                trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio);
+                try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
+                
 
                 if (response.code == "201")
                 {

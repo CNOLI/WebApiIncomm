@@ -674,7 +674,7 @@ namespace wa_api_incomm.Services
                         trx.vc_numero_servicio = model.numero_servicio;
                         trx.vc_nro_doc_pago = model.numero_documento;
                         trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
-                        trx.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio);
+                        try { trx.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio); } catch (Exception ti) { }
 
                         if (e_meta_pago != null &&
                             e_datos_pago_result != null &&

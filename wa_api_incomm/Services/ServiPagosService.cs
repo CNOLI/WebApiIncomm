@@ -115,8 +115,8 @@ namespace wa_api_incomm.Services
                 trx.nu_id_tipo_moneda_vta = 1; // SOLES
                 trx.vc_tran_usua_regi = "API";
                 trx.vc_numero_servicio = model.numero_servicio;
-                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
-                trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio);
+                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;                
+                try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
 
                 if (response.respuesta.resultado == "200")
                 {

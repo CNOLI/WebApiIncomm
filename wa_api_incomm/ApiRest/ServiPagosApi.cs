@@ -32,7 +32,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);
-            api.Timeout = TimeSpan.FromSeconds(150);
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("ServiPagosInfo:TimeOut").Value));
 
             ApiURLRespaldo2 = config.GetSection("ServiPagosInfo:IPRespaldo").Value;
             usuario = config.GetSection("ServiPagosInfo:Usuario").Value;
@@ -81,7 +81,7 @@ namespace wa_api_incomm.ApiRest
                 logger.Information(msg_request);
 
                 dt_inicio = DateTime.Now;
-                Thread.Sleep(TimeSpan.FromSeconds(130));
+                //Thread.Sleep(TimeSpan.FromSeconds(180));
                 response = await api.GetAsync(url).ConfigureAwait(false);
                 dt_fin = DateTime.Now;
 

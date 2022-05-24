@@ -216,8 +216,8 @@ namespace wa_api_incomm.Services
                 tm.vc_tran_usua_regi = "API";
                 tm.nu_id_tipo_moneda_vta = 1;
                 tm.vc_numero_servicio = "";
-                tm.vc_id_ref_trx_distribuidor = input.nro_transaccion_referencia;
-                tm.ti_respuesta_api = (result.dt_fin - result.dt_inicio);
+                tm.vc_id_ref_trx_distribuidor = input.nro_transaccion_referencia;                
+                try { tm.ti_respuesta_api = (result.dt_fin - result.dt_inicio); } catch (Exception ti) { }
 
                 if (result.errorCode == "00")
                 {

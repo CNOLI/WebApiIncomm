@@ -491,8 +491,8 @@ namespace wa_api_incomm.Services
                 trx.PDVNroDoc = model.numero_documento_PDV;
                 trx.PDVRazSocNom = model.razon_social_PDV;
                 trx.vc_tran_usua_regi = "API";
-                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
-                trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio);
+                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;                
+                try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
 
                 if (response.CodigoWS == "0")
                 {

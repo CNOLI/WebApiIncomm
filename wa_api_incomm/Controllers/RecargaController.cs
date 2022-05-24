@@ -63,24 +63,5 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
-        [HttpPost("test")]
-        public IActionResult test([FromBody]Recarga_Input model)
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
-            }
-            try
-            {
-                Thread.Sleep(120000);
-                return this.Ok();
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
     }
 }

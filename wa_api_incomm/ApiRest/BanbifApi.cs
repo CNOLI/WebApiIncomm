@@ -33,6 +33,7 @@ namespace wa_api_incomm.ApiRest
             api = new HttpClient(clientHandler);
             if (bi_pago)
             {
+                api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("BanBifInfo:TimeOut").Value));
                 //api.Timeout = TimeSpan.FromMilliseconds(1200);
                 //api.Timeout = TimeSpan.FromMilliseconds(1000);
             }

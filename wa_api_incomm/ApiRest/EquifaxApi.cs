@@ -31,6 +31,7 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("EquifaxInfo:TimeOut").Value));
 
             //api.BaseAddress = new Uri(ApiURL);
 

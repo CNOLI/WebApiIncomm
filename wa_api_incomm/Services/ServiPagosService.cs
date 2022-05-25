@@ -75,6 +75,20 @@ namespace wa_api_incomm.Services
 
                 var response = api.Recargar(model_api, idtran, _logger, model.id_trx_hub).Result;
 
+                TransaccionModel trx = new TransaccionModel();
+                trx.nu_id_trx = idtran;
+                trx.nu_id_trx_hub = Int64.Parse(model.id_trx_hub);
+                trx.nu_id_distribuidor = int.Parse(model.id_distribuidor);
+                trx.nu_id_comercio = int.Parse(model.id_comercio);
+                trx.dt_fecha = fechatran;
+                trx.nu_id_producto = int.Parse(model.id_producto);
+                trx.nu_precio = Convert.ToDecimal(model.importe_recarga);
+                trx.nu_id_tipo_moneda_vta = 1; // SOLES
+                trx.vc_tran_usua_regi = "API";
+                trx.vc_numero_servicio = model.numero_servicio;
+                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;                
+                try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
+                
                 //Validar Timeout
                 if (response.timeout == true)
                 {
@@ -104,19 +118,6 @@ namespace wa_api_incomm.Services
                     }
                 }
 
-                TransaccionModel trx = new TransaccionModel();
-                trx.nu_id_trx = idtran;
-                trx.nu_id_trx_hub = Int64.Parse(model.id_trx_hub);
-                trx.nu_id_distribuidor = int.Parse(model.id_distribuidor);
-                trx.nu_id_comercio = int.Parse(model.id_comercio);
-                trx.dt_fecha = fechatran;
-                trx.nu_id_producto = int.Parse(model.id_producto);
-                trx.nu_precio = Convert.ToDecimal(model.importe_recarga);
-                trx.nu_id_tipo_moneda_vta = 1; // SOLES
-                trx.vc_tran_usua_regi = "API";
-                trx.vc_numero_servicio = model.numero_servicio;
-                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;                
-                try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
 
                 if (response.respuesta.resultado == "200")
                 {

@@ -455,15 +455,14 @@ namespace wa_api_incomm.Services
                     {
                         modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
                     }
-                    //if (model.bono)
-                    //{
-                    //    response = api.ConsultaTitularSinFacturacion(modelo, _logger, id_trx_hub).Result;
-                    //}
-                    //else
-                    //{
-                    //    response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
-                    //}
-                    response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
+                    if (model.bono == true && info.EnvioAPIBono == "1")
+                    {
+                        response = api.ConsultaTitularSinFacturacion(modelo, _logger, id_trx_hub).Result;
+                    }
+                    else
+                    {
+                        response = api.ConsultaTitularFacturacion(modelo, _logger, id_trx_hub).Result;
+                    }
                 }
                 
                 TransaccionModel trx = new TransaccionModel();

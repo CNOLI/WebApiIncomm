@@ -14,6 +14,7 @@ namespace wa_api_incomm.Models
         public string Usuario { get; set; }
         public string Contrasena { get; set; }
         public string EnvioSentinelQA { get; set; }
+        public string EnvioAPIBono { get; set; }
     }
 
     public class Encripta

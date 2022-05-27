@@ -8,7 +8,8 @@ namespace wa_api_incomm.Models
 {
     public class IncommModel :EntidadBase
     {
-        public decimal nu_id_trx { get; set; }
+        public long nu_id_trx { get; set; }
+        public long nu_id_trx_hub { get; set; }
         public int nu_id_distribuidor { get; set; }
         public int nu_id_comercio { get; set; }
 
@@ -38,6 +39,7 @@ namespace wa_api_incomm.Models
         public string vc_url_web_terminos { get; set; }
         public bool? bi_valor_pin { get; set; }
         public bool? bi_confirmado { get; set; }
+        public bool? bi_informado { get; set; }
 
     }
 }

@@ -30,6 +30,8 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<IRecargaService, RecargaService>();
 
             services.AddSingleton<IConsultaService, ConsultaService>();
+
+            services.AddSingleton<ITransaccionService, TransaccionService>();
             return services;
         }
     }

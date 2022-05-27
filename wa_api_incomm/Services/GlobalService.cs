@@ -45,6 +45,8 @@ namespace wa_api_incomm.Services
                         model.vc_celular_contacto = dr["vc_celular_contacto"].ToString();
                     if (UtilSql.Ec(dr, "nu_id_comercio"))
                         model.nu_id_comercio = dr["nu_id_comercio"].ToInt();
+                    if (UtilSql.Ec(dr, "nu_seg_encolamiento"))
+                        model.nu_seg_encolamiento = dr["nu_seg_encolamiento"].ToInt();
                 }
             }
             return model;
@@ -133,6 +135,10 @@ namespace wa_api_incomm.Services
                         _result.nu_precio = dr["nu_precio"].ToDecimal();
                     if (UtilSql.Ec(dr, "nu_id_convenio"))
                         _result.nu_id_convenio = dr["nu_id_convenio"].ToInt();
+                    if (UtilSql.Ec(dr, "bi_envio_sms"))
+                        _result.bi_envio_sms = dr["bi_envio_sms"].ToBool();
+                    if (UtilSql.Ec(dr, "bi_envio_email"))
+                        _result.bi_envio_email = dr["bi_envio_email"].ToBool();
 
                 }
             }
@@ -504,6 +510,8 @@ namespace wa_api_incomm.Services
                 {
                     if (UtilSql.Ec(dr, "nu_id_trx"))
                         model.nu_id_trx = Convert.ToInt32(dr["nu_id_trx"].ToString());
+                    if (UtilSql.Ec(dr, "nu_id_trx_hub"))
+                        model.nu_id_trx_hub = Convert.ToInt64(dr["nu_id_trx_hub"].ToString());
                     if (UtilSql.Ec(dr, "vc_cod_distribuidor"))
                         model.vc_cod_distribuidor = dr["vc_cod_distribuidor"].ToString();
                     if (UtilSql.Ec(dr, "vc_desc_distribuidor"))
@@ -514,6 +522,8 @@ namespace wa_api_incomm.Services
                         model.vc_nombre_comercio = dr["vc_nombre_comercio"].ToString();
                     if (UtilSql.Ec(dr, "dt_fecha"))
                         model.dt_fecha = dr["dt_fecha"].ToDateTime();
+                    if (UtilSql.Ec(dr, "nu_id_producto"))
+                        model.nu_id_producto = dr["nu_id_producto"].ToInt();
                     if (UtilSql.Ec(dr, "vc_desc_producto"))
                         model.vc_desc_producto = dr["vc_desc_producto"].ToString();
                     if (UtilSql.Ec(dr, "nu_precio_vta"))
@@ -550,6 +560,19 @@ namespace wa_api_incomm.Services
                         model.vc_fecha_reg = dr["vc_fecha_reg"].ToString();
                     if (UtilSql.Ec(dr, "bi_confirmado"))
                         model.bi_confirmado = dr["bi_confirmado"].ToBool();
+                    if (UtilSql.Ec(dr, "bi_informado"))
+                        model.bi_informado = dr["bi_informado"].ToBool();
+                    
+                    if (UtilSql.Ec(dr, "nu_id_convenio"))
+                        model.nu_id_convenio = Convert.ToDecimal(dr["nu_id_convenio"].ToString());
+                    
+                    if (UtilSql.Ec(dr, "vc_desc_categoria"))
+                        model.vc_desc_categoria = dr["vc_desc_categoria"].ToString();
+                    
+
+                    if (UtilSql.Ec(dr, "vc_nro_pin"))
+                        model.vc_nro_pin = dr["vc_nro_pin"].ToString();
+
                 }
             }
             return model;
@@ -638,6 +661,118 @@ namespace wa_api_incomm.Services
                 }
             }
             return model_result;
+        }
+        public SqlCommand upd_confirmar(SqlConnection cn, TransaccionModel model)
+        {
+            using (var cmd = new SqlCommand("tisi_trx.usp_upd_transaccion_confirmar", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                cmd.Parameters.AddWithValue("@bi_confirmado", true);
+                UtilSql.iUpd(cmd, model);
+                cmd.ExecuteNonQuery();
+                return cmd;
+            }
+
+        }
+        public SqlCommand upd_informar(SqlConnection cn, TransaccionModel model)
+        {
+            using (var cmd = new SqlCommand("tisi_trx.usp_upd_transaccion_informar", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
+                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
+                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
+                cmd.Parameters.AddWithValue("@bi_informado", true);
+                UtilSql.iUpd(cmd, model);
+                cmd.ExecuteNonQuery();
+                return cmd;
+            }
+
+        }
+
+
+        public ConvenioModel get_convenio(SqlConnection cn, decimal? nu_id_convenio)
+        {
+            ConvenioModel _result = new ConvenioModel();
+            ConvenioModel model = new ConvenioModel();
+            using (var cmd = new SqlCommand("tisi_global.usp_get_convenio", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                model.nu_id_convenio = nu_id_convenio;
+                cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
+                UtilSql.iGet(cmd, model);
+                var dr = cmd.ExecuteReader();
+                if (dr.Read())
+                {
+                    if (UtilSql.Ec(dr, "nu_id_convenio"))
+                        _result.nu_id_convenio = dr["nu_id_convenio"].ToDecimal();
+                    if (UtilSql.Ec(dr, "vc_cod_convenio"))
+                        _result.vc_cod_convenio = dr["vc_cod_convenio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_desc_convenio"))
+                        _result.vc_desc_convenio = dr["vc_desc_convenio"].ToString();
+                    if (UtilSql.Ec(dr, "nu_id_tipo_moneda_def"))
+                        _result.nu_id_tipo_moneda_def = dr["nu_id_tipo_moneda_def"].ToInt();
+                    if (UtilSql.Ec(dr, "vc_nro_celular_aut"))
+                        _result.vc_nro_celular_aut = dr["vc_nro_celular_aut"].ToString();
+                    if (UtilSql.Ec(dr, "vc_clave_aut"))
+                        _result.vc_clave_aut = dr["vc_clave_aut"].ToString();
+
+                    if (UtilSql.Ec(dr, "vc_clave_encrip_aut"))
+                        _result.vc_clave_encrip_aut = dr["vc_clave_encrip_aut"].ToString();
+                    if (UtilSql.Ec(dr, "vc_merchant_id"))
+                        _result.vc_merchant_id = dr["vc_merchant_id"].ToString();
+                    if (UtilSql.Ec(dr, "vc_pos_id"))
+                        _result.vc_pos_id = dr["vc_pos_id"].ToString();
+                    if (UtilSql.Ec(dr, "vc_source_header"))
+                        _result.vc_source_header = dr["vc_source_header"].ToString();
+                    if (UtilSql.Ec(dr, "vc_source_body"))
+                        _result.vc_source_body = dr["vc_source_body"].ToString();
+                    if (UtilSql.Ec(dr, "vc_aws_access_key_id"))
+                        _result.vc_aws_access_key_id = dr["vc_aws_access_key_id"].ToString();
+                    if (UtilSql.Ec(dr, "vc_aws_secrect_access_key"))
+                        _result.vc_aws_secrect_access_key = dr["vc_aws_secrect_access_key"].ToString();
+                    if (UtilSql.Ec(dr, "vc_url_web_terminos"))
+                        _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
+
+                    if (UtilSql.Ec(dr, "vc_desc_empresa"))
+                        _result.vc_desc_empresa = dr["vc_desc_empresa"].ToString();
+                    if (UtilSql.Ec(dr, "vc_color_header_email"))
+                        _result.vc_color_header_email = dr["vc_color_header_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_color_body_email"))
+                        _result.vc_color_body_email = dr["vc_color_body_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_envio"))
+                        _result.vc_email_envio = dr["vc_email_envio"].ToString();
+                    if (UtilSql.Ec(dr, "vc_password_email"))
+                        _result.vc_password_email = dr["vc_password_email"].ToString();
+                    if (UtilSql.Ec(dr, "vc_smtp_email"))
+                        _result.vc_smtp_email = dr["vc_smtp_email"].ToString();
+                    if (UtilSql.Ec(dr, "nu_puerto_smtp_email"))
+                        _result.nu_puerto_smtp_email = Convert.ToInt32(dr["nu_puerto_smtp_email"].ToString());
+                    if (UtilSql.Ec(dr, "bi_ssl_email"))
+                        _result.bi_ssl_email = Convert.ToBoolean(dr["bi_ssl_email"].ToString());
+                    if (UtilSql.Ec(dr, "vc_url_api_aes"))
+                        _result.vc_url_api_aes = dr["vc_url_api_aes"].ToString();
+                    if (UtilSql.Ec(dr, "vc_clave_aes"))
+                        _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_ip"))
+                        _result.vc_nro_ip = dr["vc_nro_ip"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_telefono_tran_incomm"))
+                        _result.vc_nro_telefono_tran_incomm = dr["vc_nro_telefono_tran_incomm"].ToString();
+                    if (UtilSql.Ec(dr, "vc_nro_complete_incomm"))
+                        _result.vc_nro_complete_incomm = dr["vc_nro_complete_incomm"].ToString();
+
+
+                    if (UtilSql.Ec(dr, "vc_celular_def"))
+                        _result.vc_celular_def = dr["vc_celular_def"].ToString();
+                    if (UtilSql.Ec(dr, "vc_email_def"))
+                        _result.vc_email_def = dr["vc_email_def"].ToString();
+
+                }
+            }
+            return _result;
         }
     }
 }

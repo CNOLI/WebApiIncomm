@@ -12,6 +12,8 @@ using wa_api_incomm.Models.Hub;
 using MimeKit;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 
 namespace wa_api_incomm.Smtp
 {
@@ -61,7 +63,48 @@ namespace wa_api_incomm.Smtp
         //    }
 
         //}
-        public void Email(string id_trx, string email, string titulo, string body, string email_envio, string contraseña_email, string smtp_email, int puerto, bool ssl, string empresa, SqlConnection cn)
+        public void SendMessage(string from, string mensaje, string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, string id_trx_hub, SqlConnection cn, ref bool bi_informado)
+        {
+            try
+            {
+                AmazonSimpleNotificationServiceClient client =
+                       new AmazonSimpleNotificationServiceClient(vc_aws_access_key_id,
+                                                                   vc_aws_secrect_access_key,
+                                                                   Amazon.RegionEndpoint.USEast1);
+
+                var request = new PublishRequest
+                {
+                    Message = mensaje,
+                    PhoneNumber = numero
+
+                };
+
+                if (from.Length > 11)
+                {
+                    from = from.Substring(0, 11);
+                }
+
+                Dictionary<string, MessageAttributeValue> MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                  {
+                    {
+                      "AWS.SNS.SMS.SenderID", new MessageAttributeValue
+                        { DataType = "String", StringValue = from.Replace(" ","-")}
+                    }
+                  };
+                request.MessageAttributes = MessageAttributes;
+
+                client.PublishAsync(request);
+
+                bi_informado = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "idtrx: " + id_trx_hub + " / " + "Envio SMS - " + ex.Message);
+
+                bi_informado = false;
+            }
+        }
+        public void Email(string id_trx, string id_trx_hub, string email, string titulo, string body, string email_envio, string contraseña_email, string smtp_email, int puerto, bool ssl, string empresa, SqlConnection cn, ref  bool bi_informado)
         {
             try
             {
@@ -92,15 +135,19 @@ namespace wa_api_incomm.Smtp
                     client.Disconnect(true);
                 }
 
+                bi_informado = true;
+
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "id_trx: " + id_trx + ex.Message);
+                _logger.Error(ex, "idtrx: " + id_trx_hub + " / " + "Envio correo - " + ex.Message);
 
-                ReenvioMensajeModel rm = new ReenvioMensajeModel();
-                rm.nu_id_trx = id_trx;
-                rm.ch_tipo_mensaje = "M";
-                var cmd = insSendInfoError(cn, rm);
+                bi_informado = false;
+
+                //ReenvioMensajeModel rm = new ReenvioMensajeModel();
+                //rm.nu_id_trx = id_trx;
+                //rm.ch_tipo_mensaje = "M";
+                //var cmd = insSendInfoError(cn, rm);
             }
 
         }
@@ -116,6 +163,13 @@ namespace wa_api_incomm.Smtp
                 cmd.ExecuteNonQuery();
                 return cmd;
             }
+        }
+
+        public string GetBodyIncommSMS(string pin, string url_terminos, string email)
+        {
+            string bodyRegistrer = "Gracias por tu compra.  Tu PIN es: " + pin + ", enviado también a " + email + ". Términos y condiciones en " + url_terminos;
+
+            return bodyRegistrer;
         }
 
         public string GetBody(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
@@ -351,7 +405,7 @@ namespace wa_api_incomm.Smtp
         }
 
 
-        public string GetBodyIncomm(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor)
+        public string GetBodyIncomm(string empresa, string categoria, string producto, string color1, string color2, string pin, string codcomercio, string fecha, string nrotransaccion, string nroaprobacion, string total, string urlweb, bool bi_valor, string telefono)
         {
             string bodyRegistrer = "";
 
@@ -438,9 +492,10 @@ namespace wa_api_incomm.Smtp
 
 
             bodyRegistrer += @" <td colspan=""3"" rowspan=""2"" width=""204"" height=""236"" style=""vertical-align: top;"">";
-            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11_1.png"" width=""204"" height=""150"" alt="""" />";
-            bodyRegistrer += @" <a href=""" + urlweb + @""" target = ""_blank"" style = ""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 30px; color: #777777; font-size: 15px;"">Ver términos y condiciones</a></td>";
-                       
+            bodyRegistrer += @" <img src=""https://movilred.sis360.com.pe/Recursos/Img/Email/POSA/index_11_2.png"" width=""204"" height=""122"" alt="""" />";
+            bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 20px; color: #ffffff; font-size: 13px;"">PIN enviado también por mensaje de texto al teléfono " + telefono + " </p>";
+            bodyRegistrer += @" <a href=""" + urlweb + @""" target = ""_blank"" style = ""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 40px; color: #777777; font-size: 15px;"">Ver términos y condiciones</a></td>";
+
             bodyRegistrer += @" <td colspan=""2"" align=""bottom"" >";
             bodyRegistrer += @" <p style=""margin: 0; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif; line-height: 24px; color: #ffffff; font-size: 21px;""># PIN :<b> " + pin + "</b></p>";
             bodyRegistrer += @" </td>";

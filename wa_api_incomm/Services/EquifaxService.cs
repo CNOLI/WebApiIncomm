@@ -27,6 +27,7 @@ namespace wa_api_incomm.Services
 
         private readonly Serilog.ILogger _logger;
 
+        Models.Hub.ConvenioModel hub_convenio;
         public EquifaxService(Serilog.ILogger logger)
         {
             _logger = logger;
@@ -93,6 +94,11 @@ namespace wa_api_incomm.Services
             {
                 con_sql = new SqlConnection(conexion);
 
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+
                 //1) Inserta TRX_HUB y validaciones por BD
 
                 DistribuidorModel distribuidor = new DistribuidorModel();
@@ -152,8 +158,9 @@ namespace wa_api_incomm.Services
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -167,19 +174,22 @@ namespace wa_api_incomm.Services
                 // 2) Validar Campos adicionales.
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El email " + model.email_consultante + " es incorrecto");
-                    return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
+                    mensaje_error = "El email " + model.email_consultante + " es incorrecto";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto " + model.id_producto + " debe ser numerico");
-                    return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico");
+                    mensaje_error = "El id del producto " + model.id_producto + " debe ser numerico";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
                 if (string.IsNullOrEmpty(model.digito_verificador_consultante))
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + " El digito verificador es obligatorio");
-                    return UtilSql.sOutPutTransaccion("22", "El digito verificador es obligatorio");
+                    mensaje_error = "El digito verificador es obligatorio";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + " " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("22", mensaje_error);
                 }
 
                 //Obtener Producto
@@ -194,8 +204,9 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto " + model.id_producto + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
+                    mensaje_error = "El producto " + model.id_producto + " no existe";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
 
                 // 3) Obtener ID Transacción y comprometer saldo.
@@ -208,14 +219,14 @@ namespace wa_api_incomm.Services
                 TrxHubModel model_saldo = new TrxHubModel();
 
                 model_saldo.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
-                model_saldo.bi_extorno = false;
 
                 var cmd_saldo = global_service.updTrxhubSaldo(con_sql, model_saldo);
 
                 if (cmd_saldo.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
                 saldo_comprometido = true;
 
@@ -231,7 +242,7 @@ namespace wa_api_incomm.Services
                 e_input.documentTypeThird = Convert.ToInt32(tipodocidentidad_consultado.vc_cod_tipo_doc_identidad);
                 e_input.documentNumberThird = model.numero_documento_consultado;
                 
-                EquifaxApi client = new EquifaxApi();
+                EquifaxApi client = new EquifaxApi(hub_convenio);
                 Generar_Reporte_Response response = client.Generar_Reporte(e_input, _logger, id_trx_hub).Result;
 
                 TransaccionModel trx = new TransaccionModel();
@@ -432,6 +443,7 @@ namespace wa_api_incomm.Services
 
                     model_saldo_extorno.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
                     model_saldo_extorno.bi_extorno = true;
+                    model_saldo_extorno.bi_error = true;
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();

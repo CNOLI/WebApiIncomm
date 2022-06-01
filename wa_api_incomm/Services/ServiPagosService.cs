@@ -22,6 +22,8 @@ namespace wa_api_incomm.Services
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
         private readonly Serilog.ILogger _logger;
+
+        Models.Hub.ConvenioModel hub_convenio;
         public ServiPagosService(Serilog.ILogger logger)
         {
             _logger = logger;
@@ -29,19 +31,22 @@ namespace wa_api_incomm.Services
         public object RealizarRecarga(string conexion, ServiPagos_Input model)
         {
             bool ins_bd = false;
+            SqlConnection con_sql = null;
             bool saldo_comprometido = false;
             bool transaccion_completada = false;
             string id_trans_global = "";
-            SqlConnection con_sql = new SqlConnection(conexion);
             SqlTransaction tran_sql = null;
             SqlCommand cmd = null;
             string codigo_error = "";
             string mensaje_error = "";
-
             GlobalService global_service = new GlobalService();
-
             try
             {
+                con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
                 // 3) Obtener ID Transacción y comprometer saldo.
                 con_sql.Open();
                 var idtran = global_service.get_id_transaccion(con_sql);
@@ -52,21 +57,21 @@ namespace wa_api_incomm.Services
                 TrxHubModel model_saldo = new TrxHubModel();
 
                 model_saldo.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
-                model_saldo.bi_extorno = false;
 
                 var cmd_saldo = global_service.updTrxhubSaldo(con_sql, model_saldo);
 
                 if (cmd_saldo.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
                 saldo_comprometido = true;
 
                 con_sql.Close();
 
                 // 4) Enviar Solicitud al proveedor
-                ServiPagosApi api = new ServiPagosApi();
+                ServiPagosApi api = new ServiPagosApi(hub_convenio);
 
                 ServiPagos_InputModel model_api = new ServiPagos_InputModel();
                 model_api.vc_cod_producto = model.vc_cod_producto;
@@ -286,6 +291,7 @@ namespace wa_api_incomm.Services
 
                     model_saldo_extorno.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
                     model_saldo_extorno.bi_extorno = true;
+                    model_saldo_extorno.bi_error = true;
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();

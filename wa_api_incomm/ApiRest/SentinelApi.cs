@@ -13,13 +13,14 @@ namespace wa_api_incomm.ApiRest
 {
     public class SentinelApi
     {
-        private const string ApiURL = Config.vc_url_sentinel;
+        private string ApiURL = "";// Config.vc_url_sentinel;
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-        public SentinelApi()
+        public SentinelApi(Models.Hub.ConvenioModel hub_convenio)
         {
-            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("SentinelInfo:TimeOut").Value));
+            ApiURL = hub_convenio.vc_url_api_1;
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
         }
 
         public async Task<EncriptaRest> Encriptacion(Encripta modelo)

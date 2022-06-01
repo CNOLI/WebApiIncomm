@@ -18,7 +18,7 @@ namespace wa_api_incomm.ApiRest
     public class IzipayApi
     {
         private Token token = null;
-        private const string ApiURL = Config.vc_url_izipay;
+        private string ApiURL = "";// Config.vc_url_izipay;
 
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
@@ -27,8 +27,10 @@ namespace wa_api_incomm.ApiRest
         String id_distrib;
         String secreto;
 
-        public IzipayApi()
+        public IzipayApi(Models.Hub.ConvenioModel hub_convenio)
         {
+            ApiURL = hub_convenio.vc_url_api_2;
+
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);

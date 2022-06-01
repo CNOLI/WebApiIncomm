@@ -13,6 +13,10 @@ namespace wa_api_incomm.Models.Hub
 		public string	vc_desc_convenio			{ get; set; }
 		public int?		nu_id_tipo_moneda_def		{ get; set; }
 
+		public string	vc_url_api_token			{ get; set; }
+		public string	vc_url_api_1				{ get; set; }
+		public string	vc_url_api_2				{ get; set; }
+		public int?		nu_seg_timeout				{ get; set; }
 
 		public string	vc_nro_celular_aut			{ get; set; }
 		public string	vc_clave_aut				{ get; set; }

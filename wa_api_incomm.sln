@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wa_api_incomm", "wa_api_inc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hub_Encrypt", "Hub_Encrypt\Hub_Encrypt.csproj", "{BF44100E-D75C-4106-A5E6-98A5522D0188}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hub_InformarCliente", "Hub_InformarCliente\Hub_InformarCliente.csproj", "{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BF44100E-D75C-4106-A5E6-98A5522D0188}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF44100E-D75C-4106-A5E6-98A5522D0188}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF44100E-D75C-4106-A5E6-98A5522D0188}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

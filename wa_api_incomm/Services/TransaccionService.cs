@@ -18,6 +18,7 @@ namespace wa_api_incomm.Services
     {
         private readonly Serilog.ILogger _logger;
         private readonly Send _send;
+        Models.Hub.ConvenioModel hub_convenio;
         public TransaccionService(Serilog.ILogger logger, Send send)
         {
             _send = send;
@@ -30,11 +31,12 @@ namespace wa_api_incomm.Services
             SqlTransaction tran_sql = null;
             SqlTransaction tran_sql_error = null;
             SqlCommand cmd = null;
-            con_sql = new SqlConnection(conexion);
+            GlobalService global_service = new GlobalService();
+
             try
             {
-                GlobalService global_service = new GlobalService();
-
+                con_sql = new SqlConnection(conexion);
+                               
                 con_sql.Open();
 
                 DistribuidorModel distribuidor = new DistribuidorModel();
@@ -70,7 +72,6 @@ namespace wa_api_incomm.Services
 
                 if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                 {
-                    tran_sql.Rollback();
                     _logger.Information("idtrx: " + model_sql.nu_id_trx_hub.ToString() + " / " + cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToString());
                     return UtilSql.sOutPutTransaccion("99", cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToString());
                 }
@@ -80,12 +81,12 @@ namespace wa_api_incomm.Services
                 producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
 
                 producto = global_service.get_producto(con_sql, producto);
+                
+                hub_convenio = global_service.get_convenio(con_sql, producto.nu_id_convenio);
 
-                ConvenioModel convenio = global_service.get_convenio(con_sql, model_sql.nu_id_convenio);
-
-                AESApi _aesapi = new AESApi(convenio.vc_url_api_aes);
+                AESApi _aesapi = new AESApi(hub_convenio.vc_url_api_aes);
                 DatosPinModel dpm = new DatosPinModel();
-                dpm.key = convenio.vc_clave_aes;
+                dpm.key = hub_convenio.vc_clave_aes;
                 dpm.pin = model_sql.vc_nro_pin;
                 model_sql.vc_nro_pin_desencriptado = _aesapi.GetPin(dpm).Result.pin;
 
@@ -93,12 +94,12 @@ namespace wa_api_incomm.Services
                 {
                     bool bi_informado = false;
 
-                    if (convenio.nu_id_convenio == 1)
+                    if (hub_convenio.nu_id_convenio == 1)
                     {
                         //envio de mensaje
                         var mensajefrom = "POSA";
-                        var mensajetxt = _send.GetBodyIncommSMS(model_sql.vc_nro_pin_desencriptado, convenio.vc_url_web_terminos, model_sql.vc_email_sol);
-                        _send.SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), con_sql, ref bi_informado);
+                        var mensajetxt = _send.GetBodyIncommSMS(model_sql.vc_nro_pin_desencriptado, hub_convenio.vc_url_web_terminos, model_sql.vc_email_sol);
+                        _send.SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, hub_convenio.vc_aws_access_key_id, hub_convenio.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), con_sql, ref bi_informado);
                     }
 
                     if (bi_informado)
@@ -112,11 +113,11 @@ namespace wa_api_incomm.Services
                     bool bi_informado = false;
                     //envio de correo
 
-                    if (convenio.nu_id_convenio == 1)
+                    if (hub_convenio.nu_id_convenio == 1)
                     {
-                        var body = _send.GetBodyIncomm(convenio.vc_desc_empresa, model_sql.vc_desc_categoria, model_sql.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, model_sql.vc_nro_pin_desencriptado, model_sql.vc_cod_comercio, model_sql.vc_fecha_reg, model_sql.vc_id_ref_trx, model_sql.vc_cod_autorizacion, (model_sql.nu_precio_vta ?? 0).ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin ?? false, model_sql.vc_telefono_sol);
+                        var body = _send.GetBodyIncomm(hub_convenio.vc_desc_empresa, model_sql.vc_desc_categoria, model_sql.vc_desc_producto, hub_convenio.vc_color_header_email, hub_convenio.vc_color_body_email, model_sql.vc_nro_pin_desencriptado, model_sql.vc_cod_comercio, model_sql.vc_fecha_reg, model_sql.vc_id_ref_trx, model_sql.vc_cod_autorizacion, (model_sql.nu_precio_vta ?? 0).ToString("0.000"), hub_convenio.vc_url_web_terminos, distribuidor.bi_valor_pin ?? false, model_sql.vc_telefono_sol);
                         var titulo = "Confirmación de transacción #" + model_sql.vc_id_ref_trx;
-                        _send.Email(model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), model_sql.vc_email_sol, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email ?? 587, convenio.bi_ssl_email ?? true, convenio.vc_desc_empresa, con_sql, ref bi_informado);
+                        _send.Email(model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), model_sql.vc_email_sol, titulo, body, hub_convenio.vc_email_envio, hub_convenio.vc_password_email, hub_convenio.vc_smtp_email, hub_convenio.nu_puerto_smtp_email ?? 587, hub_convenio.bi_ssl_email ?? true, hub_convenio.vc_desc_empresa, con_sql, ref bi_informado);
                     }
                     if (bi_informado)
                     {
@@ -201,13 +202,13 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("99", "No se encontró transacción con los datos enviados.");
                 }
 
-                ConvenioModel convenio = global_service.get_convenio(con_sql, model_sql.nu_id_convenio);
-
-                if (convenio.nu_id_convenio == 1)
+                hub_convenio = global_service.get_convenio(con_sql, model_sql.nu_id_convenio);
+                
+                if (hub_convenio.nu_id_convenio == 1)
                 {
-                    AESApi _aesapi = new AESApi(convenio.vc_url_api_aes);
+                    AESApi _aesapi = new AESApi(hub_convenio.vc_url_api_aes);
                     DatosPinModel dpm = new DatosPinModel();
-                    dpm.key = convenio.vc_clave_aes;
+                    dpm.key = hub_convenio.vc_clave_aes;
                     dpm.pin = model_sql.vc_nro_pin;
                     model_sql.vc_nro_pin_desencriptado = _aesapi.GetPin(dpm).Result.pin;
                 }
@@ -216,12 +217,12 @@ namespace wa_api_incomm.Services
 
                 if (model.envio_sms)
                 {
-                    if (convenio.nu_id_convenio == 1)
+                    if (hub_convenio.nu_id_convenio == 1)
                     {
                         //envio de mensaje
                         var mensajefrom = "POSA";
-                        var mensajetxt = _send.GetBodyIncommSMS(model_sql.vc_nro_pin_desencriptado, convenio.vc_url_web_terminos, model_sql.vc_email_sol);
-                        _send.SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, convenio.vc_aws_access_key_id, convenio.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), con_sql, ref bi_informado);
+                        var mensajetxt = _send.GetBodyIncommSMS(model_sql.vc_nro_pin_desencriptado, hub_convenio.vc_url_web_terminos, model_sql.vc_email_sol);
+                        _send.SendMessage(mensajefrom, mensajetxt, model_sql.vc_telefono_sol, hub_convenio.vc_aws_access_key_id, hub_convenio.vc_aws_secrect_access_key, model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), con_sql, ref bi_informado);
                     }
 
                     if (bi_informado)
@@ -234,11 +235,11 @@ namespace wa_api_incomm.Services
 
                 if (model.envio_email)
                 {
-                    if (convenio.nu_id_convenio == 1)
+                    if (hub_convenio.nu_id_convenio == 1)
                     {
-                        var body = _send.GetBodyIncomm(convenio.vc_desc_empresa, model_sql.vc_desc_categoria, model_sql.vc_desc_producto, convenio.vc_color_header_email, convenio.vc_color_body_email, model_sql.vc_nro_pin_desencriptado, model_sql.vc_cod_comercio, model_sql.vc_fecha_reg, model_sql.vc_id_ref_trx, model_sql.vc_cod_autorizacion, (model_sql.nu_precio_vta ?? 0).ToString("0.000"), convenio.vc_url_web_terminos, distribuidor.bi_valor_pin ?? false, model_sql.vc_telefono_sol);
+                        var body = _send.GetBodyIncomm(hub_convenio.vc_desc_empresa, model_sql.vc_desc_categoria, model_sql.vc_desc_producto, hub_convenio.vc_color_header_email, hub_convenio.vc_color_body_email, model_sql.vc_nro_pin_desencriptado, model_sql.vc_cod_comercio, model_sql.vc_fecha_reg, model_sql.vc_id_ref_trx, model_sql.vc_cod_autorizacion, (model_sql.nu_precio_vta ?? 0).ToString("0.000"), hub_convenio.vc_url_web_terminos, distribuidor.bi_valor_pin ?? false, model_sql.vc_telefono_sol);
                         var titulo = "Confirmación de transacción #" + model_sql.vc_id_ref_trx;
-                        _send.Email(model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), model_sql.vc_email_sol, titulo, body, convenio.vc_email_envio, convenio.vc_password_email, convenio.vc_smtp_email, convenio.nu_puerto_smtp_email ?? 587, convenio.bi_ssl_email ?? true, convenio.vc_desc_empresa, con_sql, ref bi_informado);
+                        _send.Email(model_sql.nu_id_trx.ToString(), model_sql.nu_id_trx_hub.ToString(), model_sql.vc_email_sol, titulo, body, hub_convenio.vc_email_envio, hub_convenio.vc_password_email, hub_convenio.vc_smtp_email, hub_convenio.nu_puerto_smtp_email ?? 587, hub_convenio.bi_ssl_email ?? true, hub_convenio.vc_desc_empresa, con_sql, ref bi_informado);
                     }
                     if (bi_informado)
                     {

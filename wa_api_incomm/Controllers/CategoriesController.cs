@@ -26,17 +26,17 @@ namespace wa_api_incomm.Controllers
             Configuration = builder.Build();
         }
 
-        [HttpPost("upd")]
-        public IActionResult upd()
-        {
-            try
-            {
-                return this.Ok(_ICategoriesService.sel(Configuration.GetSection("SQL").Value));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
+        //[HttpPost("upd")]
+        //public IActionResult upd()
+        //{
+        //    try
+        //    {
+        //        return this.Ok(_ICategoriesService.sel(Configuration.GetSection("SQL").Value));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
     }
 }

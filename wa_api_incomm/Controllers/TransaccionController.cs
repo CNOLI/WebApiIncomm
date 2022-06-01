@@ -51,7 +51,7 @@ namespace wa_api_incomm.Controllers
             }
         }
         [HttpPost("informar")]
-        public IActionResult Estado([FromBody]TransaccionModel.Transaccion_Input_Confirmar model)
+        public IActionResult Informar([FromBody]TransaccionModel.Transaccion_Input_Confirmar model)
         {
             try
             {

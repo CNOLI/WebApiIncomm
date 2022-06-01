@@ -17,13 +17,14 @@ namespace wa_api_incomm.ApiRest
     public class EquifaxApi
     {
         private Token token = null;
-        private const string ApiURL = Config.vc_url_equifax;
+        private string ApiURL = "";// Config.vc_url_equifax;
 
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-        public EquifaxApi()
+        public EquifaxApi(Models.Hub.ConvenioModel hub_convenio)
         {
+            ApiURL = hub_convenio.vc_url_api_1;
 
             String username = config.GetSection("EquifaxInfo:username").Value;
             String password = config.GetSection("EquifaxInfo:password").Value;
@@ -31,10 +32,8 @@ namespace wa_api_incomm.ApiRest
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             api = new HttpClient(clientHandler);
-            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("EquifaxInfo:TimeOut").Value));
-
-            //api.BaseAddress = new Uri(ApiURL);
-
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
+            
             token = GetTokenAsync(username, password).Result;
 
         }
@@ -49,7 +48,7 @@ namespace wa_api_incomm.ApiRest
                 api.DefaultRequestHeaders.Add("username", username);
                 api.DefaultRequestHeaders.Add("password", password);
 
-                response = await api.PostAsync(ApiURL + "api/v1/auth", null);
+                response = await api.PostAsync(ApiURL + "salespartner/api/v1/auth", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -80,7 +79,7 @@ namespace wa_api_incomm.ApiRest
                 var json = JsonConvert.SerializeObject(model);
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
-                string url = ApiURL + "api/v1/sales";
+                string url = ApiURL + "salespartner/api/v1/sales";
 
                 string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(EquifaxApi).ToString().Split(".")[2] + " - " + "URL: " + url +
                                      " - Modelo enviado (Generar_Reporte): " + JsonConvert.SerializeObject(model);

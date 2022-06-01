@@ -16,14 +16,16 @@ namespace wa_api_incomm.ApiRest
     public class BanBifApi
     {
         private Token token = null;
-        private const string ApiURLToken = Config.vc_url_banbif_token;
-        private const string ApiURL = Config.vc_url_banbif;
+        private string ApiURLToken = "";// = Config.vc_url_banbif_token;
+        private string ApiURL = "";// = Config.vc_url_banbif;
 
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-        public BanBifApi(bool bi_pago = false)
+        public BanBifApi(Models.Hub.ConvenioModel hub_convenio, bool bi_pago = false)
         {
+            ApiURLToken = hub_convenio.vc_url_api_token;
+            ApiURL = hub_convenio.vc_url_api_1;
 
             String client_id = config.GetSection("BanBifInfo:client_id").Value;
             String client_secret = config.GetSection("BanBifInfo:client_secret").Value;
@@ -33,9 +35,7 @@ namespace wa_api_incomm.ApiRest
             api = new HttpClient(clientHandler);
             if (bi_pago)
             {
-                api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("BanBifInfo:TimeOut").Value));
-                //api.Timeout = TimeSpan.FromMilliseconds(1200);
-                //api.Timeout = TimeSpan.FromMilliseconds(1000);
+                api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
             }
 
             token = GetTokenAsync(client_id, client_secret).Result;
@@ -58,7 +58,7 @@ namespace wa_api_incomm.ApiRest
                 values.Add("client_secret", client_secret);
                 var content = new FormUrlEncodedContent(values);
 
-                response = await api.PostAsync(ApiURLToken, content);
+                response = await api.PostAsync(ApiURLToken + "auth/realms/Banbif-API/protocol/openid-connect/token", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -266,9 +266,7 @@ namespace wa_api_incomm.ApiRest
                                           " - Modelo recibido (Consultar_Deuda): " + response.Content.ReadAsStringAsync().Result;
                     logger.Information(msg_response);
                 }
-
-                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
-
+                
                 Result = JsonConvert.DeserializeObject<Response.Ls_Response_Trx>(await response.Content.ReadAsStringAsync());
 
             }
@@ -322,14 +320,11 @@ namespace wa_api_incomm.ApiRest
                                       " - Modelo recibido (Procesar_Pago): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                //var jsonrpta = response.Content.ReadAsStringAsync().Result;
 
                 Result = JsonConvert.DeserializeObject<Response.E_Response_Trx>(await response.Content.ReadAsStringAsync());
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = dt_fin;
 
-                //Temporal
-                //Result.timeout = true;
             }
             catch (OperationCanceledException e)
             {

@@ -20,26 +20,26 @@ namespace wa_api_incomm.ApiRest
     public class IziPayFinanzasApi
     {
         private Token token = null;
-        private const string ApiURL = Config.vc_url_izipay_finanzas;
+        private string ApiURL = ""; // Config.vc_url_izipay_finanzas;
 
         private HttpClient api;
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
         String izikey;
-        public IziPayFinanzasApi(IHttpClientFactory client_factory, Token model)
+        public IziPayFinanzasApi(Models.Hub.ConvenioModel hub_convenio, IHttpClientFactory client_factory, Token model)
         {
+            ApiURL = hub_convenio.vc_url_api_1;
+
             api = client_factory.CreateClient("HttpClientWithSSLUntrusted");
 
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);
-            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("IzipayFinanzasInfo:TimeOut").Value));
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
 
             izikey = config.GetSection("IzipayFinanzasInfo:izikey").Value;
             model.bin_acq = config.GetSection("IzipayFinanzasInfo:bin_acq").Value;
-
-
-            //api.BaseAddress = new Uri(ApiURL);
+            
             api.DefaultRequestHeaders.Accept.Clear();
             api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -75,8 +75,7 @@ namespace wa_api_incomm.ApiRest
 
                 model.mac = izikey + model.bin_acq + model.id_estab + model.id_term + model.secreto;
                 model.mac = GetSHA256(model.mac).ToUpper();
-
-                //ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };                
+          
                 var httpContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
                 response = await api.PostAsync(ApiURL + "psr-fin-fe/t-auth", httpContent).ConfigureAwait(false);
 
@@ -112,7 +111,6 @@ namespace wa_api_incomm.ApiRest
                 logger.Information(msg_request);
 
                 dt_inicio = DateTime.Now;
-                //Thread.Sleep(TimeSpan.FromSeconds(160));
                 response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
                 dt_fin = DateTime.Now;
 

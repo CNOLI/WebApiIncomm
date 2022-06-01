@@ -8,6 +8,9 @@
 	<ServerGarbageCollection>false</ServerGarbageCollection>  
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Models\Config.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="5.3.0" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.0.1" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.2" />

@@ -13,19 +13,19 @@ namespace wa_api_incomm.ApiRest
 {
     public class IncommApi
     {
-        private const string ApiURL = Config.vc_url_incomm;
+        private string ApiURL = "";// Config.vc_url_incomm;
 
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-        public IncommApi(string merchantId, string auth, string posid, string source)
+        public IncommApi(Models.Hub.ConvenioModel hub_convenio, string merchantId, string auth, string posid, string source)
         {
-            //api.BaseAddress = new Uri(ApiURL);
-            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("IncommInfo:TimeOut").Value));
+            ApiURL = hub_convenio.vc_url_api_1;
+
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
             api.DefaultRequestHeaders.Accept.Clear();
             api.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            //var authenticationHeaderValue = new AuthenticationHeaderValue("0MzrKwCsAlFWowGqWt/Q2Q==", "");
+            
             api.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", auth);
 
             api.DefaultRequestHeaders.Add("merchantId", merchantId);

@@ -9,6 +9,7 @@ namespace wa_api_incomm.Models.Hub
     {
         public Int64 nu_id_trx_hub { get; set; }
         public bool bi_extorno { get; set; } = false;
+        public bool bi_error { get; set; } = false;
         public string vc_mensaje_error { get; set; }
 
         public string vc_cod_distribuidor { get; set; }

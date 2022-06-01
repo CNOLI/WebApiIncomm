@@ -434,6 +434,7 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@vc_numero_servicio", model.vc_numero_servicio);
                 cmd.Parameters.AddWithValue("@vc_nro_doc_pago", model.vc_nro_doc_pago);
                 cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", model.vc_id_ref_trx_distribuidor);
+                cmd.Parameters.AddWithValue("@bi_extorno", model.bi_extorno);
                 UtilSql.iIns(cmd, model);
                 cmd.ExecuteNonQuery();
                 return cmd;
@@ -449,6 +450,7 @@ namespace wa_api_incomm.Services
                 cmd.Parameters.AddWithValue("@nu_id_trx_hub", model.nu_id_trx_hub);
                 cmd.Parameters.AddWithValue("@bi_extorno", model.bi_extorno);
                 cmd.Parameters.AddWithValue("@vc_mensaje_error", model.vc_mensaje_error);
+                cmd.Parameters.AddWithValue("@bi_error", model.bi_error);
                 UtilSql.iUpd(cmd, model);
                 cmd.ExecuteNonQuery();
                 return cmd;
@@ -715,6 +717,17 @@ namespace wa_api_incomm.Services
                         _result.vc_desc_convenio = dr["vc_desc_convenio"].ToString();
                     if (UtilSql.Ec(dr, "nu_id_tipo_moneda_def"))
                         _result.nu_id_tipo_moneda_def = dr["nu_id_tipo_moneda_def"].ToInt();
+
+                    if (UtilSql.Ec(dr, "vc_url_api_token"))
+                        _result.vc_url_api_token = dr["vc_url_api_token"].ToString();
+                    if (UtilSql.Ec(dr, "vc_url_api_1"))
+                        _result.vc_url_api_1 = dr["vc_url_api_1"].ToString();
+                    if (UtilSql.Ec(dr, "vc_url_api_2"))
+                        _result.vc_url_api_2 = dr["vc_url_api_2"].ToString();
+                    if (UtilSql.Ec(dr, "nu_seg_timeout"))
+                        _result.nu_seg_timeout = dr["nu_seg_timeout"].ToInt();
+
+
                     if (UtilSql.Ec(dr, "vc_nro_celular_aut"))
                         _result.vc_nro_celular_aut = dr["vc_nro_celular_aut"].ToString();
                     if (UtilSql.Ec(dr, "vc_clave_aut"))
@@ -750,9 +763,9 @@ namespace wa_api_incomm.Services
                     if (UtilSql.Ec(dr, "vc_smtp_email"))
                         _result.vc_smtp_email = dr["vc_smtp_email"].ToString();
                     if (UtilSql.Ec(dr, "nu_puerto_smtp_email"))
-                        _result.nu_puerto_smtp_email = Convert.ToInt32(dr["nu_puerto_smtp_email"].ToString());
+                        _result.nu_puerto_smtp_email = dr["nu_puerto_smtp_email"].ToInt();
                     if (UtilSql.Ec(dr, "bi_ssl_email"))
-                        _result.bi_ssl_email = Convert.ToBoolean(dr["bi_ssl_email"].ToString());
+                        _result.bi_ssl_email = dr["bi_ssl_email"].ToBool();
                     if (UtilSql.Ec(dr, "vc_url_api_aes"))
                         _result.vc_url_api_aes = dr["vc_url_api_aes"].ToString();
                     if (UtilSql.Ec(dr, "vc_clave_aes"))

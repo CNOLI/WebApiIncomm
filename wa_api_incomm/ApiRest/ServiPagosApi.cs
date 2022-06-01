@@ -19,7 +19,7 @@ namespace wa_api_incomm.ApiRest
     public class ServiPagosApi
     {
         private Token token = null;
-        private const string ApiURL = Config.vc_url_servipagos;
+        private string ApiURL = ""; //Config.vc_url_servipagos;
 
         private HttpClient api = new HttpClient();
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
@@ -27,12 +27,13 @@ namespace wa_api_incomm.ApiRest
         string ApiURLRespaldo2;
         string usuario;
         string clave;
-        public ServiPagosApi()
+        public ServiPagosApi(Models.Hub.ConvenioModel hub_convenio)
         {
+            ApiURL = hub_convenio.vc_url_api_1;
             HttpClientHandler clientHandler = new HttpClientHandler();
             clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             api = new HttpClient(clientHandler);
-            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(config.GetSection("ServiPagosInfo:TimeOut").Value));
+            api.Timeout = TimeSpan.FromSeconds(Convert.ToDouble(hub_convenio.nu_seg_timeout));
 
             ApiURLRespaldo2 = config.GetSection("ServiPagosInfo:IPRespaldo").Value;
             usuario = config.GetSection("ServiPagosInfo:Usuario").Value;

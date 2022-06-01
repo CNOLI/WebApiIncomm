@@ -8,6 +8,6 @@ namespace wa_api_incomm.Services.Contracts
 {
     public interface ICategoriesService
     {
-        object sel(string conexion);
+        //object sel(string conexion);
     }
 }

@@ -25,6 +25,7 @@ namespace wa_api_incomm.Services
 
         private readonly Serilog.ILogger _logger;
 
+        Models.Hub.ConvenioModel hub_convenio;
         public BanBifService(Serilog.ILogger logger)
         {
             _logger = logger;
@@ -52,7 +53,7 @@ namespace wa_api_incomm.Services
                     RubroModel.Rubro_Input e_rubro_input = new RubroModel.Rubro_Input();
                     e_rubro_input.vc_cod_rubro = e_rubro.vc_cod_rubro;
 
-                    List<EmpresaModel> ls_empresa = sel_banbif_empresa_rubros(e_rubro_input);
+                    List<EmpresaModel> ls_empresa = sel_banbif_empresa_rubros(e_rubro_input, conexion);
 
                     foreach (var empresa in ls_empresa)
                     {
@@ -92,12 +93,18 @@ namespace wa_api_incomm.Services
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
             }
         }
-        public List<RubroModel> sel_banbif_rubro_recaudador()
+        public List<RubroModel> sel_banbif_rubro_recaudador(string conexion)
         {
+            GlobalService global_service = new GlobalService();
             List<RubroModel> ls_rubro = new List<RubroModel>();
             try
             {
-                BanBifApi client = new BanBifApi();
+                SqlConnection con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.get_rubros_recaudador().Result;
 
@@ -141,12 +148,18 @@ namespace wa_api_incomm.Services
             }
             return ls;
         }
-        public List<EmpresaModel> sel_banbif_empresa_rubros(RubroModel.Rubro_Input model)
+        public List<EmpresaModel> sel_banbif_empresa_rubros(RubroModel.Rubro_Input model, string conexion)
         {
+            GlobalService global_service = new GlobalService();
             List<EmpresaModel> ls_empresa = new List<EmpresaModel>();
             try
             {
-                BanBifApi client = new BanBifApi();
+                SqlConnection con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.get_empresa_rubros(model).Result;
 
@@ -168,10 +181,16 @@ namespace wa_api_incomm.Services
         }
         public object sel_banbif_convenio(string conexion, EmpresaModel.Empresa_Input model)
         {
+            GlobalService global_service = new GlobalService();
             List<ConvenioModel> ls_convenio = new List<ConvenioModel>();
             try
             {
-                BanBifApi client = new BanBifApi();
+                SqlConnection con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.get_lista_convenio(model).Result;
 
@@ -198,10 +217,16 @@ namespace wa_api_incomm.Services
         }
         public object get_banbif_convenio(string conexion, ConvenioModel.Convenio_Input model)
         {
+            GlobalService global_service = new GlobalService();
             ConvenioModel e_convenio = new ConvenioModel();
             try
             {
-                BanBifApi client = new BanBifApi();
+                SqlConnection con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.get_convenio(model).Result;
 
@@ -225,10 +250,16 @@ namespace wa_api_incomm.Services
         }
         public object get_deuda(string conexion, DeudaModel.Deuda_Input model)
         {
+            GlobalService global_service = new GlobalService();
             List<DeudaModel> ls_deuda = new List<DeudaModel>();
             try
             {
-                BanBifApi client = new BanBifApi();
+                SqlConnection con_sql = new SqlConnection(conexion);
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.Consultar_Deuda(model, null).Result;
 
@@ -405,6 +436,10 @@ namespace wa_api_incomm.Services
 
             try
             {
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
                 // 3) Obtener ID Transacción y comprometer saldo.
                 con_sql.Open();
                 var idtran = global_service.get_id_transaccion(con_sql);
@@ -415,14 +450,14 @@ namespace wa_api_incomm.Services
                 TrxHubModel model_saldo = new TrxHubModel();
 
                 model_saldo.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
-                model_saldo.bi_extorno = false;
 
                 var cmd_saldo = global_service.updTrxhubSaldo(con_sql, model_saldo);
 
                 if (cmd_saldo.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
                 saldo_comprometido = true;
 
@@ -433,7 +468,7 @@ namespace wa_api_incomm.Services
                 Deuda_Model.numero_servicio = model.numero_servicio;
                 Deuda_Model.vc_cod_convenio = model.vc_cod_convenio;
 
-                BanBifApi client = new BanBifApi();
+                BanBifApi client = new BanBifApi(hub_convenio);
 
                 var result = client.Consultar_Deuda(Deuda_Model, _logger, model.id_trx_hub).Result;
 
@@ -642,7 +677,7 @@ namespace wa_api_incomm.Services
                         e_pago.deudas.Add(e_datos_pago);
 
                         #endregion
-                        BanBifApi client_pago = new BanBifApi(true);
+                        BanBifApi client_pago = new BanBifApi(hub_convenio, true);
 
                         var result_pago = client_pago.Procesar_Pago(e_pago, idtran, _logger, model.id_trx_hub).Result;
                                                                      
@@ -827,8 +862,6 @@ namespace wa_api_incomm.Services
                                 tran_sql.Commit();
                                 ins_bd = false;
                                 con_sql.Close();
-                                transaccion_completada = true;
-
 
                                 //Variables BD
                                 con_sql.Open();
@@ -980,11 +1013,11 @@ namespace wa_api_incomm.Services
                                 trx_reverso.vc_nro_doc_pago = trx.vc_nro_doc_pago;
                                 trx_reverso.nu_id_trx_ref = trx.nu_id_trx;
                                 
-                                client = new BanBifApi();
+                                client = new BanBifApi(hub_convenio);
 
                                 var result_reversion_pago = client.Reversar_Pago(e_reversar_pago_param, e_reversar_pago, trx.nu_id_trx, _logger, model.id_trx_hub).Result;
 
-                                trx_reverso.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio);
+                                trx_reverso.ti_respuesta_api = (result_reversion_pago.dt_fin - result_reversion_pago.dt_inicio);
 
                                 Response.E_meta e_meta_pago_reversion = (Response.E_meta)result_reversion_pago.meta;
                                 Response.E_datos_trx e_datos_pago_result_reversion = (Response.E_datos_trx)result_reversion_pago.datos;
@@ -1131,6 +1164,7 @@ namespace wa_api_incomm.Services
 
                     model_saldo_extorno.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
                     model_saldo_extorno.bi_extorno = true;
+                    model_saldo_extorno.bi_error = true;
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();

@@ -20,6 +20,7 @@ namespace wa_api_incomm.Services
 
         private readonly Serilog.ILogger _logger;
 
+        Models.Hub.ConvenioModel hub_convenio;
         public SentinelService(Serilog.ILogger logger)
         {
             _logger = logger;
@@ -69,7 +70,6 @@ namespace wa_api_incomm.Services
             try
             {
                 GlobalService global_service = new GlobalService();
-                SentinelApi api = new SentinelApi();
                 Encripta encripta = null;
                 EncriptaRest encripta_rest = null;
                 ConsultaPersona modelo = new ConsultaPersona();
@@ -80,6 +80,13 @@ namespace wa_api_incomm.Services
 
                 SqlConnection con_sql = null;
                 con_sql = new SqlConnection(conexion);
+
+
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                SentinelApi api = new SentinelApi(hub_convenio);
 
                 con_sql.Open();
                 TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
@@ -189,7 +196,6 @@ namespace wa_api_incomm.Services
             string codigo_error = "";
 
 
-            SentinelApi api = new SentinelApi();
             Encripta encripta = null;
             EncriptaRest encripta_rest = null;
             ConsultaTitularFac modelo = new ConsultaTitularFac();
@@ -200,6 +206,11 @@ namespace wa_api_incomm.Services
             {
                 con_sql = new SqlConnection(conexion);
 
+                con_sql.Open();
+                hub_convenio = global_service.get_convenio(con_sql, nu_id_convenio);
+                con_sql.Close();
+
+                SentinelApi api = new SentinelApi(hub_convenio);
                 //1) Inserta TRX_HUB y validaciones por BD
 
                 DistribuidorModel distribuidor = new DistribuidorModel();
@@ -297,14 +308,16 @@ namespace wa_api_incomm.Services
 
                 if (!new EmailAddressAttribute().IsValid(model.email_consultante))
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El email " + model.email_consultante + " es incorrecto");
-                    return UtilSql.sOutPutTransaccion("03", "El email es incorrecto");
+                    mensaje_error = "El email " + model.email_consultante + " es incorrecto";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El id del producto " + model.id_producto.ToString() + " debe ser numerico");
-                    return UtilSql.sOutPutTransaccion("04", "El id del producto debe ser numerico");
+                    mensaje_error = "El id del producto " + model.id_producto.ToString() + " debe ser numerico";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
 
 
@@ -321,9 +334,9 @@ namespace wa_api_incomm.Services
 
                 if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe");
-
-                    return UtilSql.sOutPutTransaccion("32", "El tipo de documento del PDV no existe.");
+                    mensaje_error = "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("32", mensaje_error);
                 }
                 con_sql.Close();
 
@@ -339,8 +352,9 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
+                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no existe";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
 
 
@@ -354,14 +368,14 @@ namespace wa_api_incomm.Services
                 TrxHubModel model_saldo = new TrxHubModel();
 
                 model_saldo.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
-                model_saldo.bi_extorno = false;
 
                 var cmd_saldo = global_service.updTrxhubSaldo(con_sql, model_saldo);
 
                 if (cmd_saldo.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
                 saldo_comprometido = true;
 
@@ -439,7 +453,7 @@ namespace wa_api_incomm.Services
                 ConsultaTitularRest response = new ConsultaTitularRest();
 
                 //QA
-                if (Config.bi_produccion == false)
+                if (hub_convenio.vc_url_api_1.Contains("wsrestqa") == true)
                 {
                     modelo.ReferenceCode = "QA" + modelo.ReferenceCode;
 
@@ -449,9 +463,9 @@ namespace wa_api_incomm.Services
                 }
 
                 //PRODUCCION
-                if (Config.bi_produccion == true || info.EnvioSentinelQA == "1")
+                if (hub_convenio.vc_url_api_1.Contains("wsrestqa") == false || info.EnvioSentinelQA == "1")
                 {
-                    if (Config.bi_produccion)
+                    if (hub_convenio.vc_url_api_1.Contains("wsrestqa") == false)
                     {
                         modelo.ReferenceCode = "HUB" + modelo.ReferenceCode;
                     }
@@ -680,6 +694,7 @@ namespace wa_api_incomm.Services
 
                     model_saldo_extorno.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
                     model_saldo_extorno.bi_extorno = true;
+                    model_saldo_extorno.bi_error = true;
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();

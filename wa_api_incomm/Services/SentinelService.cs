@@ -387,7 +387,7 @@ namespace wa_api_incomm.Services
                 encripta = new Encripta();
                 encripta.keysentinel = (model.bono ? info.keysentinel_bonos : info.keysentinel);
                 //encripta.keysentinel = info.keysentinel;
-                encripta.parametro = info.Usuario;
+                encripta.parametro = (model.bono ? info.Usuario_bonos : info.Usuario);
                 encripta_rest = api.Encriptacion(encripta).Result;
                 if (encripta_rest.coderror != 0)
                 {
@@ -408,7 +408,7 @@ namespace wa_api_incomm.Services
                 encripta = new Encripta();
                 encripta.keysentinel = (model.bono ? info.keysentinel_bonos : info.keysentinel);
                 //encripta.keysentinel = info.keysentinel;
-                encripta.parametro = info.Contrasena;
+                encripta.parametro = (model.bono ? info.Contrasena_bonos : info.Contrasena);
                 encripta_rest = api.Encriptacion(encripta).Result;
                 if (encripta_rest.coderror != 0)
                 {

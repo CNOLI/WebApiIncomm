@@ -9,10 +9,12 @@ namespace wa_api_incomm.Models
     {
         public string keysentinel { get; set; }
         public string Gx_Key { get; set; }
-        public string keysentinel_bonos { get; set; }
-        public string Gx_Key_bonos { get; set; }
         public string Usuario { get; set; }
         public string Contrasena { get; set; }
+        public string keysentinel_bonos { get; set; }
+        public string Gx_Key_bonos { get; set; }
+        public string Usuario_bonos { get; set; }
+        public string Contrasena_bonos { get; set; }
         public string EnvioSentinelQA { get; set; }
         public string EnvioAPIBono { get; set; }
     }

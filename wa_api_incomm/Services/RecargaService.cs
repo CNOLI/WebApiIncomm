@@ -10,6 +10,7 @@ using static wa_api_incomm.Models.Izipay_InputModel;
 using System.Net.Http;
 using static wa_api_incomm.Models.RecargaModel;
 using static wa_api_incomm.Models.ServiPagos.ServiPagos_InputModel;
+using static wa_api_incomm.Models.Megapunto_InputModel;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
@@ -169,6 +170,25 @@ namespace wa_api_incomm.Services
                     obj = ServiPagos_Service.RealizarRecarga(conexion, model_servipago);
 
                 }
+                else if (producto.nu_id_convenio == 7)
+                {
+                    //MEGAPUNTO
+                    Megapunto_Input model_megapunto = new Megapunto_Input();
+                    model_megapunto.id_trx_hub = id_trx_hub;
+                    model_megapunto.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();
+                    model_megapunto.id_comercio = comercio.nu_id_comercio.ToString();
+                    model_megapunto.id_producto = model.id_producto;
+                    model_megapunto.vc_cod_producto = producto.vc_cod_producto;
+                    model_megapunto.codigo_comercio = model.codigo_comercio;
+                    model_megapunto.numero_servicio = model.numero;
+                    model_megapunto.importe_recarga = model.importe;
+                    model_megapunto.nro_transaccion_referencia = model.nro_transaccion_referencia;
+
+                    MegapuntoService Megapunto_Service = new MegapuntoService(_logger);
+
+                    obj = Megapunto_Service.RealizarRecarga(conexion, model_megapunto);
+
+                }
                 else
                 {
                     _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.");
@@ -180,7 +200,6 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-
                 return UtilSql.sOutPutTransaccion("500", ex.Message);
             }
 

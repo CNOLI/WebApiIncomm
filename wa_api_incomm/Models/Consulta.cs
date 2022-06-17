@@ -21,7 +21,11 @@ namespace wa_api_incomm.Models
         {
             public string codigo_distribuidor { get; set; }
             public string codigo_comercio { get; set; }
-            public string nro_transaccion { get; set; }
+            public string nro_transaccion_referencia { get; set; }
+        }
+        public class Distribuidor_Saldo_Input
+        {
+            public string codigo_distribuidor { get; set; }
         }
         public class Transaccion_Result
         {

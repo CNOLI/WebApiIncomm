@@ -334,9 +334,9 @@ namespace wa_api_incomm.Services
 
                 Token token = new Token()
                 {
-                    id_estab = model.distribuidor.nu_id_comercio.ToString(),
-                    id_term = model.distribuidor.vc_celular_contacto,
-                    secreto = "IZI" + model.distribuidor.vc_cod_distribuidor
+                    id_estab = config.GetSection("IzipayFinanzasInfo:id_estab").Value.ToString(),
+                    id_term = config.GetSection("IzipayFinanzasInfo:id_term").Value.ToString(),
+                    secreto = config.GetSection("IzipayFinanzasInfo:secreto").Value.ToString()
                 };
                 IziPayFinanzasApi api = new IziPayFinanzasApi(hub_convenio, client_factory, token);
 
@@ -355,8 +355,8 @@ namespace wa_api_incomm.Services
                         tipo_cargo = "B",
                         merchant_type = config.GetSection("IzipayFinanzasInfo:merchant_type").Value.ToString(),
                         ubicacion = model.direccion + model.nombre_ciudad + model.codigo_provincia + model.codigo_pais,
-                        id_term = model.distribuidor.vc_celular_contacto,
-                        id_estab = model.distribuidor.nu_id_comercio.ToString(),
+                        id_term = config.GetSection("IzipayFinanzasInfo:id_term").Value.ToString(),
+                        id_estab = config.GetSection("IzipayFinanzasInfo:id_estab").Value.ToString(),
                         bin_acq = config.GetSection("IzipayFinanzasInfo:bin_acq").Value.ToString(),
                         tipo_medio_pago = "EF"
                     }

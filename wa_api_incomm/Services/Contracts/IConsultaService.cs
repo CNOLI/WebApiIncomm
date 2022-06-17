@@ -10,5 +10,6 @@ namespace wa_api_incomm.Services.Contracts
     {
         object Transaccion(string conexion, Consulta.Transaccion_Input model);
         object Estado(string conexion, Consulta.Transaccion_Input_Estado model);
+        object Saldo(string conexion, Consulta.Distribuidor_Saldo_Input model);
     }
 }

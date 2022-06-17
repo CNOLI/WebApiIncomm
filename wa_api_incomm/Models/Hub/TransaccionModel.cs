@@ -90,5 +90,9 @@ namespace wa_api_incomm.Models.Hub
 
         public string vc_desc_categoria { get; set; }
 
+
+        public decimal? nu_id_estado { get; set; }
+        public string vc_error { get; set; }
+
     }
 }

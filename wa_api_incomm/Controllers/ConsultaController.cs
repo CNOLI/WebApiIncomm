@@ -71,5 +71,18 @@ namespace wa_api_incomm.Controllers
                 return this.BadRequest(Utilitarios.JsonErrorSel(ex));
             }
         }
+        [HttpPost("saldo")]
+        public IActionResult Saldo([FromBody] Consulta.Distribuidor_Saldo_Input model)
+        {
+            try
+            {
+                return this.Ok(_IConsultaService.Saldo(Configuration.GetSection("SQL").Value, model));
+
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+            }
+        }
     }
 }

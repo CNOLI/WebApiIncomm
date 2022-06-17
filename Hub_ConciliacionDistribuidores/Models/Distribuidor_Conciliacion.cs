@@ -6,6 +6,8 @@ namespace Hub_ConciliacionDistribuidores
 {
     public class Distribuidor_Conciliacion : Models.EntidadBase
     {
+        public decimal? nu_id_distribuidor { get; set; }
+        public decimal? nu_id_conciliacion { get; set; }
         public string vc_cod_distribuidor { get; set; }
         public string vc_nom_archivo { get; set; }
         public string vc_archivo { get; set; }

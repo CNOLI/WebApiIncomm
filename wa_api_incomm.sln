@@ -15,7 +15,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01. Encriptador", "01. Encr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02. API", "02. API", "{E40F1FED-3D33-4F64-8925-185AB4B95BC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hub_ConciliacionDistribuidores", "Hub_ConciliacionDistribuidores\Hub_ConciliacionDistribuidores.csproj", "{AF03AE34-0ED3-468F-929F-4D793B99FC05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hub_ConciliacionDistribuidores", "Hub_ConciliacionDistribuidores\Hub_ConciliacionDistribuidores.csproj", "{AF03AE34-0ED3-468F-929F-4D793B99FC05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hub_Encrypt_NetCore", "Hub_Encrypt_NetCore\Hub_Encrypt_NetCore.csproj", "{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{AF03AE34-0ED3-468F-929F-4D793B99FC05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF03AE34-0ED3-468F-929F-4D793B99FC05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF03AE34-0ED3-468F-929F-4D793B99FC05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +54,7 @@ Global
 		{BF44100E-D75C-4106-A5E6-98A5522D0188} = {960EF59F-BE19-4E08-8F64-FF21327AAA3A}
 		{6EB552DD-BB1E-427F-B5F9-725E4A6ED22E} = {3C51DA76-B8EE-4437-9FD5-7A1B3E471FC7}
 		{AF03AE34-0ED3-468F-929F-4D793B99FC05} = {3C51DA76-B8EE-4437-9FD5-7A1B3E471FC7}
+		{71B2B5F7-9717-48E4-86EF-8C3F8610B2AE} = {960EF59F-BE19-4E08-8F64-FF21327AAA3A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EBA2812E-19C1-423B-A389-BEF7373857D6}

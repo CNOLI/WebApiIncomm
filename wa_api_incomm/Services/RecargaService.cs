@@ -154,7 +154,7 @@ namespace wa_api_incomm.Services
                 }
                 else if (producto.nu_id_convenio == 6)
                 {
-                    //SERVIPAGO
+                    //SERVIPAGOS
                     ServiPagos_Input model_servipago = new ServiPagos_Input();
                     model_servipago.id_trx_hub = id_trx_hub;
                     model_servipago.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();

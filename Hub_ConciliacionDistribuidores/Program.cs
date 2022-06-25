@@ -50,262 +50,293 @@ namespace Hub_ConciliacionDistribuidores
                 foreach (var dist in ls_dist)
                 {
 
-                    string rutaArchivoInput = config.GetSection("HubTISIInfo:rutaArchivoInput").Value;
-                    string rutaArchivoOutputConciliados = config.GetSection("HubTISIInfo:rutaArchivoOutputConciliados").Value;
-                    string rutaArchivoOutputNoConciliados = config.GetSection("HubTISIInfo:rutaArchivoOutputNoConciliados").Value;
-                    string rutaBackup = config.GetSection("HubTISIInfo:rutaBackup").Value;
+                    string rutaArchivoInput_principal = config.GetSection("HubTISIInfo:rutaArchivoInput").Value;
+                    string rutaArchivoOutputConciliados_principal = config.GetSection("HubTISIInfo:rutaArchivoOutputConciliados").Value;
+                    string rutaArchivoOutputNoConciliados_principal = config.GetSection("HubTISIInfo:rutaArchivoOutputNoConciliados").Value;
+                    string rutaBackup_principal = config.GetSection("HubTISIInfo:rutaBackup").Value;
 
-                    string nombreArchivoInput;
-                    string nombreArchivoConciliados;
-                    string nombreArchivoNoConciliados;
 
                     // Renombrar rutas.
                     vc_etapa = dist.vc_desc_distribuidor + " - " + "Renombrar rutas.";
                     Console.WriteLine(vc_etapa);
+                    DateTime startDate = DateTime.Now.Date;
+                    DateTime stopDate = DateTime.Now.Date;
                     DateTime fecha;
                     try
                     {
-                        if (diaProceso.Contains("/"))
+                        if (diaProceso == "*")
+                        {
+                            fecha = Convert.ToDateTime("01/01/0001");
+                            string rutaCarpeta = RenombrarRutaArchivo(rutaArchivoInput_principal.Replace(rutaArchivoInput_principal.Split(@"\"[0])[rutaArchivoInput_principal.Split(@"\"[0]).Length - 1], ""), dist, fecha);
+                            DirectoryInfo di = new DirectoryInfo(rutaCarpeta);
+
+                            FileInfo[] files = di.GetFiles("*");
+                            if (files.Length > 0)
+                            {
+                                var orderedFiles = files.OrderBy(f => f.Name);
+
+                                string primero = orderedFiles.First().Name;
+                                startDate = Convert.ToDateTime(primero.Substring(6, 2) + "/" + primero.Substring(4, 2) + "/" + primero.Substring(0, 4));
+                                stopDate = Convert.ToDateTime(DateTime.Now.Day.ToString("D2") + "/" + DateTime.Now.Month.ToString("D2") + "/" + DateTime.Now.Year.ToString()).AddDays(1);
+
+                            }
+                        }
+                        else if(diaProceso.Contains("/"))
                         {
                             fecha = Convert.ToDateTime(diaProceso);
+                            startDate = fecha;
+                            stopDate = fecha.AddDays(1);
                         }
                         else
                         {
                             fecha = DateTime.Now.AddDays(Convert.ToDouble(diaProceso));
+                            startDate = fecha;
+                            stopDate = fecha.AddDays(1);
                         }
                     }
                     catch (Exception ex)
                     {
                         fecha = DateTime.Now.AddDays(-1);
+                        startDate = fecha;
+                        stopDate = fecha.AddDays(1);
                     }
 
-                    rutaBackup = RenombrarRutaArchivo(rutaBackup, dist, fecha);
-                    rutaArchivoInput = RenombrarRutaArchivo(rutaArchivoInput, dist, fecha);
-                    rutaArchivoOutputConciliados = RenombrarRutaArchivo(rutaArchivoOutputConciliados, dist, fecha);
-                    rutaArchivoOutputNoConciliados = RenombrarRutaArchivo(rutaArchivoOutputNoConciliados, dist, fecha);
-                    dist.vc_ruta_archivo = RenombrarRutaArchivo(dist.vc_ruta_archivo, dist, fecha);
+                    string vc_ruta_archivo_principal = dist.vc_ruta_archivo;
 
-                    //Obtener nombre archivo
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Obtener nombre de archivo.";
-                    Console.WriteLine(vc_etapa);
-                    nombreArchivoInput = rutaArchivoInput.Split(@"\"[0])[rutaArchivoInput.Split(@"\"[0]).Length - 1];
-                    nombreArchivoConciliados = rutaArchivoOutputConciliados.Split(@"\"[0])[rutaArchivoOutputConciliados.Split(@"\"[0]).Length - 1];
-                    nombreArchivoNoConciliados = rutaArchivoOutputNoConciliados.Split(@"\"[0])[rutaArchivoOutputNoConciliados.Split(@"\"[0]).Length - 1];
+                    int interval = 1;
 
-                    //Verificar Carpetas de salida
-
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Verificar carpetas de salida.";
-                    Console.WriteLine(vc_etapa);
-                    if (!Directory.Exists(rutaBackup))
-                        Directory.CreateDirectory(rutaBackup);
-
-                    if (!Directory.Exists(rutaArchivoOutputConciliados.Replace(@"\" + nombreArchivoConciliados, "")))
-                        Directory.CreateDirectory(rutaArchivoOutputConciliados.Replace(@"\" + nombreArchivoConciliados, ""));
-
-                    if (!Directory.Exists(rutaArchivoOutputNoConciliados.Replace(@"\" + nombreArchivoNoConciliados, "")))
-                        Directory.CreateDirectory(rutaArchivoOutputNoConciliados.Replace(@"\" + nombreArchivoNoConciliados, ""));
-
-
-                    //1) Obtener archivo conciliacion desde el Distribuidor SFTP
-                    if (dist.bi_obtener_archivo)
+                    for (DateTime dateTime = startDate; dateTime < stopDate; dateTime += TimeSpan.FromDays(interval))
                     {
-                        //FTP
-                        if (dist.nu_id_metodo == 1)
-                        {
-                            vc_etapa = dist.vc_desc_distribuidor + " - " + "Descargar archivo de FTP Distribuidor.";
-                            Console.WriteLine(vc_etapa);
-                            respuesta = Descargar_Archivo_FTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
+                        fecha = dateTime;
 
-                            if (!respuesta.bi_estado)
-                            {
-                                EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                                continue;
-                            }
+                        string rutaBackup = RenombrarRutaArchivo(rutaBackup_principal, dist, fecha);
+                        string rutaArchivoInput = RenombrarRutaArchivo(rutaArchivoInput_principal, dist, fecha);
+                        string rutaArchivoOutputConciliados = RenombrarRutaArchivo(rutaArchivoOutputConciliados_principal, dist, fecha);
+                        string rutaArchivoOutputNoConciliados = RenombrarRutaArchivo(rutaArchivoOutputNoConciliados_principal, dist, fecha);
+                        dist.vc_ruta_archivo = RenombrarRutaArchivo(vc_ruta_archivo_principal, dist, fecha);
 
-                        }
-
-                        // SFTP
-                        if (dist.nu_id_metodo == 2)
-                        {
-                            vc_etapa = dist.vc_desc_distribuidor + " - " + "Descargar archivo de SFTP Distribuidor.";
-                            Console.WriteLine(vc_etapa);
-                            respuesta = Descargar_Archivo_SFTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
-
-                            if (!respuesta.bi_estado)
-                            {
-                                EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                                continue;
-                            }
-                        }
-                    }
-
-
-                    //2) Leer el archivo de conciliación y realizar el proceso de conciliación.
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Leer archivo de conciliación.";
-                    Console.WriteLine(vc_etapa);
-
-                    DataTable datos = LeerArchivoTXT(rutaArchivoInput, "|", ref respuesta);
-
-                    if (!respuesta.bi_estado)
-                    {
-                        EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                        continue;
-                    }
-
-                    Decimal? nu_id_conciliacion = null;
-
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Guardar datos del archivo de conciliación.";
-                    Console.WriteLine(vc_etapa);
-                    SqlCommand cmd_cab = null;
-                    SqlCommand cmd_det = null;
-                    foreach (DataRow item in datos.Rows)
-                    {
-                        if (item[0].ToString() == "C")
-                        {
-                            Distribuidor_Conciliacion dc = new Distribuidor_Conciliacion();
-                            dc.vc_cod_distribuidor = item[1].ToString();
-                            dc.nu_total_trx = item[2].ToDecimal();
-                            dc.nu_imp_trx = item[3].ToDecimal();
-
-                            dc.vc_nom_archivo = nombreArchivoInput;
-                            dc.vc_archivo = File.ReadAllText(rutaArchivoInput);
-                            dc.dt_fecha = nombreArchivoInput.Substring(0, 8);
-
-                            cmd_cab = ins_distribuidor_conciliacion(conexion, dc);
-
-                            if (cmd_cab.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
-                            {
-                                respuesta.bi_estado = true;
-                                respuesta.vc_mensaje = "";
-                            }
-                            else
-                            {
-                                respuesta.bi_estado = false;
-                                respuesta.vc_mensaje = cmd_cab.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            }
-
-                            if (!respuesta.bi_estado)
-                            {
-                                throw new InvalidOperationException(vc_etapa + " - " + respuesta.vc_mensaje);
-                            }
-                            nu_id_conciliacion = cmd_cab.Parameters["@nu_tran_pkey"].Value.ToDecimal();
-                        }
-                        if (item[0].ToString() == "D")
-                        {
-                            Distribuidor_Conciliacion_Det dcd = new Distribuidor_Conciliacion_Det();
-                            dcd.nu_id_conciliacion = nu_id_conciliacion;
-                            dcd.vc_cod_comercio = item[1].ToString().Replace("\r", "");
-                            dcd.nu_id_trx = item[2].ToDecimal();
-                            dcd.vc_id_ref_trx_distribuidor = item[3].ToString().Replace("\r", "");
-                            dcd.dt_fecha = item[4].ToString().Replace("\r", "");
-                            dcd.ti_hora = item[5].ToString().Substring(0, 2) + ":" + item[5].ToString().Substring(2, 2) + ":" + item[5].ToString().Substring(4, 2) + "." + item[5].ToString().Substring(6, 2);
-                            dcd.nu_id_producto = item[6].ToDecimal();
-                            dcd.nu_precio = item[7].ToDecimal();
-                            dcd.vc_numero_servicio = item[8].ToString().Replace("\r", "");
-                            dcd.vc_nro_doc_pago = item[9].ToString().Replace("\r", "");
-
-                            cmd_det = ins_distribuidor_conciliacion_det(conexion, dcd);
-
-                            if (cmd_det.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
-                            {
-                                respuesta.bi_estado = true;
-                                respuesta.vc_mensaje = "";
-                            }
-                            else
-                            {
-                                respuesta.bi_estado = false;
-                                respuesta.vc_mensaje = cmd_det.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            }
-
-                            if (!respuesta.bi_estado)
-                            {
-                                EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                                continue;
-                            }
-                        }
-                    }
-
-                    //Proceso de conciliacion
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Proceso de conciliación.";
-                    Console.WriteLine(vc_etapa);
-                    SqlCommand cmd_proc = new SqlCommand();
-
-                    Distribuidor_Conciliacion dc_p = new Distribuidor_Conciliacion();
-                    dc_p.nu_id_distribuidor = dist.nu_id_distribuidor;
-                    dc_p.nu_id_conciliacion = nu_id_conciliacion;
-                    dc_p.dt_fecha = fecha.ToString("yyyyMMdd");
-                    cmd_proc = proc_conciliacion_hub(conexion, dc_p);
-
-                    if (cmd_proc.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
-                    {
-                        respuesta.bi_estado = true;
-                        respuesta.vc_mensaje = "";
-                    }
-                    else
-                    {
-                        respuesta.bi_estado = false;
-                        respuesta.vc_mensaje = cmd_proc.Parameters["@tx_tran_mnsg"].Value.ToText();
-                    }
-
-                    if (!respuesta.bi_estado)
-                    {
-                        EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                        continue;
-                    }
-
-                    //Mover archivo conciliación y generar archivos de resultado
-
-                    DataSet ds = new DataSet();
-                    string Nombre_SP = "TISI_GLOBAL.USP_GET_DISTRIBUIDOR_CONCILIACION_ARCHIVO";
-                    string Parametros = "NU_ID_CONCILIACION|Int|" + nu_id_conciliacion + "|NU_ID_DISTRIBUIDOR|Int|" + dist.nu_id_distribuidor;
-                    int Ruta = 1;
-
-                    ds = ObtenerDataSetConsulta(conexion, Nombre_SP, Parametros, Ruta);
-
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Generar archivo de conciliados.";
-                    Console.WriteLine(vc_etapa);
-                    respuesta = GenerarArchivoTXT(ds, rutaArchivoOutputConciliados, "|");
-
-                    if (!respuesta.bi_estado)
-                    {
-                        EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                        continue;
-                    }
-
-                    Ruta = 2;
-
-                    ds = ObtenerDataSetConsulta(conexion, Nombre_SP, Parametros, Ruta);
-
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Generar archivo de no conciliados.";
-                    Console.WriteLine(vc_etapa);
-                    respuesta = GenerarArchivoTXT(ds, rutaArchivoOutputNoConciliados, "|");
-
-                    if (!respuesta.bi_estado)
-                    {
-                        EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                        continue;
-                    }
-
-                    vc_etapa = dist.vc_desc_distribuidor + " - " + "Organizar archivo de conciliación.";
-                    Console.WriteLine(vc_etapa);
-                    respuesta = Organizar_Archivos(rutaArchivoInput, rutaBackup);
-
-                    if (!respuesta.bi_estado)
-                    {
-                        EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
-                        continue;
-                    }
-
-                    //3) Informar los archivos de resultado por Email.
-                    if (dist.bi_resultado_email)
-                    {
-                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Enviar correo.";
+                        //Obtener nombre archivo
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Obtener nombre de archivo.";
                         Console.WriteLine(vc_etapa);
-                        string vc_empresa = "Notificaciones HUB";
-                        string vc_titulo = "Proceso de conciliación:  " + dist.vc_desc_distribuidor.ToUpper() + " - " + fecha.ToShortDateString();
-                        string vc_body = "Estimados, se adjunta el resultado de la conciliación.";
-                        string archivos = rutaArchivoOutputConciliados + "|" + rutaArchivoOutputNoConciliados;
-                        EnviarCorreo(dist.vc_email, "", "", vc_titulo, vc_body, emailDestinatario, emailContrasena, emailServidor, Convert.ToInt32(emailPuerto), vc_empresa, archivos);
+                        string nombreArchivoInput = rutaArchivoInput.Split(@"\"[0])[rutaArchivoInput.Split(@"\"[0]).Length - 1];
+                        string nombreArchivoConciliados = rutaArchivoOutputConciliados.Split(@"\"[0])[rutaArchivoOutputConciliados.Split(@"\"[0]).Length - 1];
+                        string nombreArchivoNoConciliados = rutaArchivoOutputNoConciliados.Split(@"\"[0])[rutaArchivoOutputNoConciliados.Split(@"\"[0]).Length - 1];
+
+                        //Verificar Carpetas de salida
+
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Verificar carpetas de salida.";
+                        Console.WriteLine(vc_etapa);
+                        if (!Directory.Exists(rutaBackup))
+                            Directory.CreateDirectory(rutaBackup);
+
+                        if (!Directory.Exists(rutaArchivoOutputConciliados.Replace(@"\" + nombreArchivoConciliados, "")))
+                            Directory.CreateDirectory(rutaArchivoOutputConciliados.Replace(@"\" + nombreArchivoConciliados, ""));
+
+                        if (!Directory.Exists(rutaArchivoOutputNoConciliados.Replace(@"\" + nombreArchivoNoConciliados, "")))
+                            Directory.CreateDirectory(rutaArchivoOutputNoConciliados.Replace(@"\" + nombreArchivoNoConciliados, ""));
+
+
+                        //1) Obtener archivo conciliacion desde el Distribuidor SFTP
+                        if (dist.bi_obtener_archivo)
+                        {
+                            //FTP
+                            if (dist.nu_id_metodo == 1)
+                            {
+                                vc_etapa = dist.vc_desc_distribuidor + " - " + "Descargar archivo de FTP Distribuidor.";
+                                Console.WriteLine(vc_etapa);
+                                respuesta = Descargar_Archivo_FTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
+
+                                if (!respuesta.bi_estado)
+                                {
+                                    EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                                    continue;
+                                }
+
+                            }
+
+                            // SFTP
+                            if (dist.nu_id_metodo == 2)
+                            {
+                                vc_etapa = dist.vc_desc_distribuidor + " - " + "Descargar archivo de SFTP Distribuidor.";
+                                Console.WriteLine(vc_etapa);
+                                respuesta = Descargar_Archivo_SFTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
+
+                                if (!respuesta.bi_estado)
+                                {
+                                    EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                                    continue;
+                                }
+                            }
+                        }
+
+
+                        //2) Leer el archivo de conciliación y realizar el proceso de conciliación.
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Leer archivo de conciliación.";
+                        Console.WriteLine(vc_etapa);
+
+                        DataTable datos = LeerArchivoTXT(rutaArchivoInput, "|", ref respuesta);
+
+                        if (!respuesta.bi_estado)
+                        {
+                            EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                            continue;
+                        }
+
+                        Decimal? nu_id_conciliacion = null;
+
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Guardar datos del archivo de conciliación.";
+                        Console.WriteLine(vc_etapa);
+                        SqlCommand cmd_cab = null;
+                        SqlCommand cmd_det = null;
+                        foreach (DataRow item in datos.Rows)
+                        {
+                            if (item[0].ToString() == "C")
+                            {
+                                Distribuidor_Conciliacion dc = new Distribuidor_Conciliacion();
+                                dc.vc_cod_distribuidor = item[1].ToString();
+                                dc.nu_total_trx = item[2].ToDecimal();
+                                dc.nu_imp_trx = item[3].ToDecimal();
+
+                                dc.vc_nom_archivo = nombreArchivoInput;
+                                dc.vc_archivo = File.ReadAllText(rutaArchivoInput);
+                                dc.dt_fecha = nombreArchivoInput.Substring(0, 8);
+
+                                cmd_cab = ins_distribuidor_conciliacion(conexion, dc);
+
+                                if (cmd_cab.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
+                                {
+                                    respuesta.bi_estado = true;
+                                    respuesta.vc_mensaje = "";
+                                }
+                                else
+                                {
+                                    respuesta.bi_estado = false;
+                                    respuesta.vc_mensaje = cmd_cab.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                }
+
+                                if (!respuesta.bi_estado)
+                                {
+                                    throw new InvalidOperationException(vc_etapa + " - " + respuesta.vc_mensaje);
+                                }
+                                nu_id_conciliacion = cmd_cab.Parameters["@nu_tran_pkey"].Value.ToDecimal();
+                            }
+                            if (item[0].ToString() == "D")
+                            {
+                                Distribuidor_Conciliacion_Det dcd = new Distribuidor_Conciliacion_Det();
+                                dcd.nu_id_conciliacion = nu_id_conciliacion;
+                                dcd.vc_cod_comercio = item[1].ToString().Replace("\r", "");
+                                dcd.nu_id_trx = item[2].ToDecimal();
+                                dcd.vc_id_ref_trx_distribuidor = item[3].ToString().Replace("\r", "");
+                                dcd.dt_fecha = item[4].ToString().Replace("\r", "");
+                                dcd.ti_hora = item[5].ToString().Substring(0, 2) + ":" + item[5].ToString().Substring(2, 2) + ":" + item[5].ToString().Substring(4, 2) + "." + item[5].ToString().Substring(6, 2);
+                                dcd.nu_id_producto = item[6].ToDecimal();
+                                dcd.nu_precio = item[7].ToDecimal();
+                                dcd.vc_numero_servicio = item[8].ToString().Replace("\r", "");
+                                dcd.vc_nro_doc_pago = item[9].ToString().Replace("\r", "");
+
+                                cmd_det = ins_distribuidor_conciliacion_det(conexion, dcd);
+
+                                if (cmd_det.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
+                                {
+                                    respuesta.bi_estado = true;
+                                    respuesta.vc_mensaje = "";
+                                }
+                                else
+                                {
+                                    respuesta.bi_estado = false;
+                                    respuesta.vc_mensaje = cmd_det.Parameters["@tx_tran_mnsg"].Value.ToText();
+                                }
+
+                                if (!respuesta.bi_estado)
+                                {
+                                    EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                                    continue;
+                                }
+                            }
+                        }
+
+                        //Proceso de conciliacion
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Proceso de conciliación.";
+                        Console.WriteLine(vc_etapa);
+                        SqlCommand cmd_proc = new SqlCommand();
+
+                        Distribuidor_Conciliacion dc_p = new Distribuidor_Conciliacion();
+                        dc_p.nu_id_distribuidor = dist.nu_id_distribuidor;
+                        dc_p.nu_id_conciliacion = nu_id_conciliacion;
+                        dc_p.dt_fecha = fecha.ToString("yyyyMMdd");
+                        cmd_proc = proc_conciliacion_hub(conexion, dc_p);
+
+                        if (cmd_proc.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 1)
+                        {
+                            respuesta.bi_estado = true;
+                            respuesta.vc_mensaje = "";
+                        }
+                        else
+                        {
+                            respuesta.bi_estado = false;
+                            respuesta.vc_mensaje = cmd_proc.Parameters["@tx_tran_mnsg"].Value.ToText();
+                        }
+
+                        if (!respuesta.bi_estado)
+                        {
+                            EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                            continue;
+                        }
+
+                        //Mover archivo conciliación y generar archivos de resultado
+
+                        DataSet ds = new DataSet();
+                        string Nombre_SP = "TISI_GLOBAL.USP_GET_DISTRIBUIDOR_CONCILIACION_ARCHIVO";
+                        string Parametros = "NU_ID_CONCILIACION|Int|" + nu_id_conciliacion + "|NU_ID_DISTRIBUIDOR|Int|" + dist.nu_id_distribuidor;
+                        int Ruta = 1;
+
+                        ds = ObtenerDataSetConsulta(conexion, Nombre_SP, Parametros, Ruta);
+
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Generar archivo de conciliados.";
+                        Console.WriteLine(vc_etapa);
+                        respuesta = GenerarArchivoTXT(ds, rutaArchivoOutputConciliados, "|");
+
+                        if (!respuesta.bi_estado)
+                        {
+                            EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                            continue;
+                        }
+
+                        Ruta = 2;
+
+                        ds = ObtenerDataSetConsulta(conexion, Nombre_SP, Parametros, Ruta);
+
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Generar archivo de no conciliados.";
+                        Console.WriteLine(vc_etapa);
+                        respuesta = GenerarArchivoTXT(ds, rutaArchivoOutputNoConciliados, "|");
+
+                        if (!respuesta.bi_estado)
+                        {
+                            EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                            continue;
+                        }
+
+                        vc_etapa = dist.vc_desc_distribuidor + " - " + "Organizar archivo de conciliación.";
+                        Console.WriteLine(vc_etapa);
+                        respuesta = Organizar_Archivos(rutaArchivoInput, rutaBackup);
+
+                        if (!respuesta.bi_estado)
+                        {
+                            EnvioEmailError(vc_etapa + " - " + respuesta.vc_mensaje, emailCorreoSoporte, emailDestinatario, emailContrasena, emailServidor, emailPuerto);
+                            continue;
+                        }
+
+                        //3) Informar los archivos de resultado por Email.
+                        if (dist.bi_resultado_email)
+                        {
+                            vc_etapa = dist.vc_desc_distribuidor + " - " + "Enviar correo.";
+                            Console.WriteLine(vc_etapa);
+                            string vc_empresa = "Notificaciones HUB";
+                            string vc_titulo = "Proceso de conciliación:  " + dist.vc_desc_distribuidor.ToUpper() + " - " + fecha.ToShortDateString();
+                            string vc_body = "Estimados, se adjunta el resultado de la conciliación.";
+                            string archivos = rutaArchivoOutputConciliados + "|" + rutaArchivoOutputNoConciliados;
+                            EnviarCorreo(dist.vc_email, "", "", vc_titulo, vc_body, emailDestinatario, emailContrasena, emailServidor, Convert.ToInt32(emailPuerto), vc_empresa, archivos);
+                        }
                     }
 
                 }

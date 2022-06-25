@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace wa_api_incomm.Models.BanBif
 {
-    public class PagoModel
+    public class Banbif_PagoModel
     {
         public E_recaudador recaudador { get; set; }
         public E_convenio convenio { get; set; }
@@ -17,7 +17,7 @@ namespace wa_api_incomm.Models.BanBif
         public decimal? montoTotalDeuda { get; set; }
         public decimal? montoTotalSaldo { get; set; }
         public List<E_datos> deudas { get; set; }
-        public PagoModel()
+        public Banbif_PagoModel()
         {
             this.recaudador = new E_recaudador();
             this.convenio = new E_convenio();
@@ -86,26 +86,6 @@ namespace wa_api_incomm.Models.BanBif
             {
                 this.cuentaCargo = new E_documento();
             }
-        }
-        public class Pago_Input
-        {
-            public string codigo_distribuidor { get; set; }
-            public string codigo_comercio { get; set; }
-            public string nombre_comercio { get; set; }
-            public string id_servicio { get; set; }
-            public string numero_servicio { get; set; }
-            public string numero_documento { get; set; }
-            public string importe_pago { get; set; }
-            public string clave { get; set; }
-            public string fecha_envio { get; set; }
-            public string nro_transaccion_referencia { get; set; }
-
-
-            public string vc_cod_convenio { get; set; }
-            public string id_trx_hub { get; set; }
-            public string id_distribuidor { get; set; }
-            public string id_comercio { get; set; }
-
         }
     }
 }

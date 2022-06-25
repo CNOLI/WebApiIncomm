@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace wa_api_incomm.Models.BanBif
+namespace wa_api_incomm.Models.Servicios
 {
     public class DeudaModel
     {
@@ -26,6 +26,11 @@ namespace wa_api_incomm.Models.BanBif
             public string numero_servicio { get; set; }
             public string clave { get; set; }
             public string fecha_envio { get; set; }
+
+            public string direccion { get; set; } = "LAS GARZAS 344         ";
+            public string nombre_ciudad { get; set; } = "PUEBLO LIBRE ";
+            public string codigo_provincia { get; set; } = "SF";
+            public string codigo_pais { get; set; } = "PE";
 
             public string vc_cod_convenio { get; set; }
         }

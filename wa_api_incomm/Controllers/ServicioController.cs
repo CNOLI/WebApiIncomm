@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Hub_Encrypt;
 using Microsoft.AspNetCore.Hosting;
@@ -21,10 +22,12 @@ namespace wa_api_incomm.Controllers
         private readonly IServicioService _IServicioService;
         public IConfigurationRoot Configuration { get; }
         private readonly Serilog.ILogger _logger;
-        public ServicioController(Serilog.ILogger logger, IHostingEnvironment env, IServicioService IServicioService)
+        private readonly IHttpClientFactory _clientFactory;
+        public ServicioController(Serilog.ILogger logger, IHostingEnvironment env, IServicioService IServicioService, IHttpClientFactory clientFactory)
         {
             _IServicioService = IServicioService;
             _logger = logger;
+            _clientFactory = clientFactory;
 
             var builder = new ConfigurationBuilder()
                        .SetBasePath(env.ContentRootPath)
@@ -105,7 +108,7 @@ namespace wa_api_incomm.Controllers
                 }
                 else
                 {
-                    return this.Ok(_IServicioService.obtenerDeuda(Configuration.GetSection("SQL").Value, model));
+                    return this.Ok(_IServicioService.obtenerDeuda(Configuration.GetSection("SQL").Value, model, _clientFactory));
                 }
             }
             catch (Exception ex)
@@ -132,7 +135,7 @@ namespace wa_api_incomm.Controllers
                 }
                 else
                 {
-                    return this.Ok(_IServicioService.procesarPago(Configuration.GetSection("SQL").Value, model));
+                    return this.Ok(_IServicioService.procesarPago(Configuration.GetSection("SQL").Value, model, _clientFactory));
                 }
             }
             catch (Exception ex)

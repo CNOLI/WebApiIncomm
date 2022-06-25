@@ -11,6 +11,7 @@ using wa_api_incomm.ApiRest;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.BanBif;
 using wa_api_incomm.Models.Hub;
+using wa_api_incomm.Models.Servicios;
 using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.BanBif.Response;
 using ConvenioModel = wa_api_incomm.Models.BanBif.ConvenioModel;
@@ -501,7 +502,7 @@ namespace wa_api_incomm.Services
                 }
 
                 // 4) Enviar Solicitud al proveedor
-                PagoModel e_pago = new PagoModel();
+                Banbif_PagoModel e_pago = new Banbif_PagoModel();
                 foreach (var e_datos in ls_datos)
                 {
                     if (model.vc_cod_convenio == "40" && ls_datos.Count() == 1)
@@ -525,14 +526,14 @@ namespace wa_api_incomm.Services
                         e_pago.montoTotalSaldo = e_datos.montoSaldoDestino;
 
                         //Agregar datos principales
-                        PagoModel.E_datos e_datos_pago = new PagoModel.E_datos();
+                        Banbif_PagoModel.E_datos e_datos_pago = new Banbif_PagoModel.E_datos();
                         e_datos_pago.fechaVencimiento = e_datos.fechaVencimiento.ToString("yyyy-MM-dd");
                         e_datos_pago.cliente.id = e_datos.cliente.id;
                         e_datos_pago.idConsulta = e_datos.idConsulta.ToString();
 
                         foreach (var item_serv in e_datos.servicios)
                         {
-                            PagoModel.E_servicios e_sv = new PagoModel.E_servicios();
+                            Banbif_PagoModel.E_servicios e_sv = new Banbif_PagoModel.E_servicios();
                             e_sv.id = item_serv.id;
                             e_datos_pago.servicios.Add(e_sv);
                         }
@@ -547,7 +548,7 @@ namespace wa_api_incomm.Services
 
                         e_datos_pago.documento.numero = e_datos.documento.numero;
 
-                        PagoModel.E_pagos e_p = new PagoModel.E_pagos();
+                        Banbif_PagoModel.E_pagos e_p = new Banbif_PagoModel.E_pagos();
 
                         e_p.tipoOperacion = "PAGO_TOTAL_CUOTA";
                         e_p.medioPago = "EFECTIVO";
@@ -573,101 +574,101 @@ namespace wa_api_incomm.Services
                         e_datos_pago.pagos.Add(e_p);
 
                         #region DatosAdicionales
-                        PagoModel.E_datosAdicionales e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        Banbif_PagoModel.E_datosAdicionales e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
 
                         foreach (var item_add in e_datos.datosAdicionales)
                         {
                             if (item_add.nombre.ToUpper() == "NOMBRE")
                             {
-                                e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                                e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                                 e_datos_adicionales.nombre = "Nombre";
                                 e_datos_adicionales.valor = item_add.valor;
                                 e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
                             }
                             if (item_add.nombre.ToUpper() == "FECHAEMISION")
                             {
-                                e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                                e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                                 e_datos_adicionales.nombre = "FecEmision";
                                 e_datos_adicionales.valor = item_add.valor;
                                 e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
                             }
                         }
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "CODEBRANCH";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:CODEBRANCH").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "TRNCODE";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:TRNCODE").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "TELLUSERID";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:TELLUSERID").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Cod_RED";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_RED").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Cod_TRX";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_TRX").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Des_TRX";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Cod_Terminal";
                         e_datos_adicionales.valor = config.GetSection("BanBifInfo:Cod_Terminal").Value;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Cod_OperaTrace";
                         e_datos_adicionales.valor = idtran.ToString();
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Cod_Autoriza";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Ubi_Terminal";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Nro_Cuenta";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Nro_Tarjeta";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Nro_Cuotas";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "ID_Servicio";
                         e_datos_adicionales.valor = e_datos.servicios[0].id;
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "ID_Recibo";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);
 
-                        e_datos_adicionales = new PagoModel.E_datosAdicionales();
+                        e_datos_adicionales = new Banbif_PagoModel.E_datosAdicionales();
                         e_datos_adicionales.nombre = "Nom_EmpServ";
                         e_datos_adicionales.valor = "";
                         e_datos_pago.datosAdicionales.Add(e_datos_adicionales);

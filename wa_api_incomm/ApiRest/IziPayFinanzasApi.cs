@@ -93,9 +93,9 @@ namespace wa_api_incomm.ApiRest
             }
         }
 
-        public async Task<ResultPagoDirecto> PagoDirecto(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
+        public async Task<ResultPago> PagoDirecto(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
         {
-            ResultPagoDirecto result = new ResultPagoDirecto();
+            ResultPago result = new ResultPago();
             HttpResponseMessage response = new HttpResponseMessage();
             var dt_inicio = DateTime.Now;
             var dt_fin = DateTime.Now;
@@ -119,7 +119,7 @@ namespace wa_api_incomm.ApiRest
                                       " - Modelo recibido (PagoDirecto): " + response.Content.ReadAsStringAsync().Result;
                 logger.Information(msg_response);
 
-                result = JsonConvert.DeserializeObject<ResultPagoDirecto>(await response.Content.ReadAsStringAsync());
+                result = JsonConvert.DeserializeObject<ResultPago>(await response.Content.ReadAsStringAsync());
                 result.dt_inicio = dt_inicio;
                 result.dt_fin = dt_fin;
 
@@ -132,6 +132,161 @@ namespace wa_api_incomm.ApiRest
                 throw new Exception(ex.Message + ". PagoDirecto " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
             }
             return result;
+        }
+        public async Task<ResultConsultarRecibos> ConsultarRecibos(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
+        {
+            ResultConsultarRecibos result = new ResultConsultarRecibos();
+            HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
+
+            try
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
+
+                string url = ApiURL + "psr-fin-fe/consultarRecibos";
+
+                if (logger != null)
+                {
+                    string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (ConsultarRecibos): " + JsonConvert.SerializeObject(modelo);
+                    logger.Information(msg_request);
+                }
+
+                dt_inicio = DateTime.Now;
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
+
+
+                if (logger != null)
+                {
+                    string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (ConsultarRecibos): " + response.Content.ReadAsStringAsync().Result;
+                    logger.Information(msg_response);
+                }
+
+                result = JsonConvert.DeserializeObject<ResultConsultarRecibos>(await response.Content.ReadAsStringAsync());
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
+
+            }
+            catch (Exception ex)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                logger.Error(ex.Message + ". ConsultarRecibos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". ConsultarRecibos " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return result;
+        }
+        public async Task<ResultPago> PagoRecibo(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
+        {
+            ResultPago result = new ResultPago();
+            HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
+
+            try
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.UTF8, "application/json");
+
+                string url = ApiURL + "psr-fin-fe/pagoRecibo";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (PagoRecibo): " + JsonConvert.SerializeObject(modelo);
+                logger.Information(msg_request);
+
+                dt_inicio = DateTime.Now;
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
+
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (PagoRecibo): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+                result = JsonConvert.DeserializeObject<ResultPago>(await response.Content.ReadAsStringAsync());
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = dt_fin;
+
+            }
+            catch (WebException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    result.timeout = true;
+                }
+                else
+                {
+                    logger.Error(e.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                    throw new Exception(e.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
+            }
+            catch (Exception ex)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                logger.Error(ex.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return result;
+        }
+
+        public async Task<ResultPago> AnulaPagoRecibo(object modelo, Serilog.ILogger logger, string id_trx_hub = "")
+        {
+            ResultPago Result = null;
+            HttpResponseMessage response = new HttpResponseMessage();
+            var dt_inicio = DateTime.Now;
+            var dt_fin = DateTime.Now;
+            try
+            {
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(modelo), Encoding.Default, "application/json");
+
+                string url = ApiURL + "psr-fin-fe/anularPagoRecibo";
+
+                string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                     " - Modelo enviado (AnulaPagoRecibo): " + JsonConvert.SerializeObject(modelo);
+                logger.Information(msg_request);
+
+                dt_inicio = DateTime.Now;
+                response = await api.PostAsync(url, httpContent).ConfigureAwait(false);
+                dt_fin = DateTime.Now;
+
+                string msg_response = "idtrx: " + id_trx_hub + " / " + typeof(IziPayFinanzasApi).ToString().Split(".")[2] + " - " + "URL: " + url +
+                                      " - Modelo recibido (AnulaPagoRecibo): " + response.Content.ReadAsStringAsync().Result;
+                logger.Information(msg_response);
+
+
+                Result = JsonConvert.DeserializeObject<ResultPago>(await response.Content.ReadAsStringAsync());
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = dt_fin;
+
+            }
+            catch (WebException e)
+            {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
+                if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    Result.timeout = true;
+                }
+                else
+                {
+                    logger.Error(e.Message + ". AnulaPagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                    throw new Exception(e.Message + ". AnulaPagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
+            }
+            catch (Exception ex)
+            {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
+                logger.Error(ex.Message + ". AnulaPagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". AnulaPagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+            }
+            return Result;
         }
     }
 }

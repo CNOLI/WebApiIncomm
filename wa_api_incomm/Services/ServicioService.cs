@@ -5,14 +5,17 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.BanBif;
 using wa_api_incomm.Models.Hub;
+using wa_api_incomm.Models.Servicios;
 using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.Hub.EmpresaClientModel;
 using static wa_api_incomm.Models.Hub.RubroClientModel;
 using static wa_api_incomm.Models.Hub.ServicioModel;
+using static wa_api_incomm.Models.Izipay_InputModel;
 
 namespace wa_api_incomm.Services
 {
@@ -147,8 +150,8 @@ namespace wa_api_incomm.Services
 
             }
         }
-
-        public object obtenerDeuda(string conexion, ServicioObtenerDeudaPagoModelInput input)
+        
+        public object obtenerDeuda(string conexion, ServicioObtenerDeudaPagoModelInput input, IHttpClientFactory client_factory)
         {
             SqlConnection con_sql = null;
 
@@ -201,6 +204,19 @@ namespace wa_api_incomm.Services
                     obj = Banbif_Service.get_deuda(conexion, model_banbif);
 
                 }
+                else if(producto.nu_id_convenio == 5)
+                {
+                    //IZIPAY
+                    DeudaModel.Deuda_Input model_izipay = new DeudaModel.Deuda_Input();
+                    model_izipay.codigo_distribuidor = input.codigo_distribuidor;
+                    model_izipay.codigo_comercio = input.codigo_comercio;
+                    model_izipay.nombre_comercio = input.nombre_comercio;
+                    model_izipay.vc_cod_convenio = producto.vc_cod_producto;
+                    model_izipay.numero_servicio = input.numero_servicio;
+                    IzipayService Izipay_Service = new IzipayService(_logger);
+                    obj = Izipay_Service.ConsultaRecibos(conexion, model_izipay, client_factory);
+
+                }
                 else
                 {
                     return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
@@ -219,7 +235,7 @@ namespace wa_api_incomm.Services
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
             }
         }
-        public object procesarPago(string conexion, ServicioProcesarPagoModelInput input)
+        public object procesarPago(string conexion, ServicioProcesarPagoModelInput input, IHttpClientFactory client_factory)
         {
             SqlConnection con_sql = null;
             SqlTransaction tran_sql = null;
@@ -329,6 +345,22 @@ namespace wa_api_incomm.Services
                     model_banbif.nro_transaccion_referencia = input.nro_transaccion_referencia;
                     BanBifService Banbif_Service = new BanBifService(_logger);
                     obj = Banbif_Service.post_pago(conexion, model_banbif);
+                }
+                else if (producto.nu_id_convenio == 5)
+                {
+                    //IZIPAY
+                    PagoModel.Pago_Input model_izipay = new PagoModel.Pago_Input();
+                    model_izipay.id_trx_hub = id_trx_hub;
+                    model_izipay.id_distribuidor = distribuidor.nu_id_distribuidor.ToString();
+                    model_izipay.id_comercio = comercio.nu_id_comercio.ToString();
+                    model_izipay.id_servicio = input.id_servicio;
+                    model_izipay.vc_cod_convenio = producto.vc_cod_producto;
+                    model_izipay.numero_servicio = input.numero_servicio;
+                    model_izipay.numero_documento = input.numero_documento;
+                    model_izipay.importe_pago = input.importe_pago;
+                    model_izipay.nro_transaccion_referencia = input.nro_transaccion_referencia;
+                    IzipayService Banbif_Service = new IzipayService(_logger);
+                    obj = Banbif_Service.RealizarPago(conexion, model_izipay, client_factory);
                 }
                 else
                 {

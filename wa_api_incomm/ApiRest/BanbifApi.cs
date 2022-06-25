@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.BanBif;
+using wa_api_incomm.Models.Servicios;
 
 namespace wa_api_incomm.ApiRest
 {
@@ -288,7 +289,7 @@ namespace wa_api_incomm.ApiRest
             }
             return Result;
         }
-        public async Task<Response.E_Response_Trx> Procesar_Pago(PagoModel model, decimal? idTransaccionOrigen, Serilog.ILogger logger, string id_trx_hub = "")
+        public async Task<Response.E_Response_Trx> Procesar_Pago(Banbif_PagoModel model, decimal? idTransaccionOrigen, Serilog.ILogger logger, string id_trx_hub = "")
         {
             Response.E_Response_Trx Result = new Response.E_Response_Trx();
             HttpResponseMessage response = new HttpResponseMessage();
@@ -326,11 +327,19 @@ namespace wa_api_incomm.ApiRest
                 Result.dt_fin = dt_fin;
 
             }
-            catch (OperationCanceledException e)
+            catch (WebException e)
             {
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = DateTime.Now;
-                Result.timeout = true;
+                if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    Result.timeout = true;
+                }
+                else
+                {
+                    logger.Error(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                }
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Hub_Encrypt;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -76,6 +77,12 @@ namespace wa_api_incomm.Services
                 model_api.codigo_comercio = model.codigo_comercio;
                 model_api.nro_dispositivo_recarga = model.numero_servicio;
                 model_api.importe_recarga = model.importe_recarga.ToString();
+
+                model_api.fecha_envio = DateTime.Now.ToString("yyyyMMddHHmmssmss");
+
+                EncrypDecrypt enc = new EncrypDecrypt();
+                var a = enc.ENCRYPT(model_api.fecha_envio, model_api.codigo_comercio, model_api.nro_dispositivo_recarga, model_api.importe_recarga);
+                model_api.clave = a;
 
                 var response = api.Recargar_Dispositivo(model_api, idtran, _logger, model.id_trx_hub).Result;
 

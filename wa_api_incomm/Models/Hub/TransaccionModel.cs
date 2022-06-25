@@ -88,6 +88,8 @@ namespace wa_api_incomm.Models.Hub
 
         public TimeSpan ti_respuesta_api { get; set; }
 
+        public string vc_datos_adicionales { get; set; }
+
         public string vc_desc_categoria { get; set; }
 
 

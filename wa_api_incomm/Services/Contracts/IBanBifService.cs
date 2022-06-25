@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using wa_api_incomm.Models;
 using wa_api_incomm.Models.BanBif;
+using wa_api_incomm.Models.Servicios;
 
 namespace wa_api_incomm.Services.Contracts
 {

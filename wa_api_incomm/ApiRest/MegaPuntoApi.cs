@@ -85,7 +85,7 @@ namespace wa_api_incomm.ApiRest
                 string url = ApiURL + "Comercio/recargar_dispositivo";
 
                 string msg_request = "idtrx: " + id_trx_hub + " / " + typeof(MegaPuntoApi).ToString().Split(".")[2] + " - " + "URL: " + url +
-                                     " - Modelo enviado (Recargar_Dispositivo): ''";
+                                     " - Modelo enviado (Recargar_Dispositivo): " + JsonConvert.SerializeObject(modelo);
                 logger.Information(msg_request);
 
                 dt_inicio = DateTime.Now;

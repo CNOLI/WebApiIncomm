@@ -273,6 +273,17 @@ namespace wa_api_incomm.Services
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
                 }
+                if (transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
+                }
             }
 
         }

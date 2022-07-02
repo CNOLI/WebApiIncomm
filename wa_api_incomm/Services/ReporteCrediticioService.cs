@@ -16,7 +16,7 @@ using Newtonsoft.Json;
 
 namespace wa_api_incomm.Services
 {
-    public class RecargaService : IRecargaService
+    public class ReporteCrediticioService : IReporteCrediticioService
     {
 
         IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
@@ -24,11 +24,11 @@ namespace wa_api_incomm.Services
 
         private readonly Serilog.ILogger _logger;
 
-        public RecargaService(Serilog.ILogger logger)
+        public ReporteCrediticioService(Serilog.ILogger logger)
         {
             _logger = logger;
         }
-        public object procesar(string conexion, Recarga_Input model, IHttpClientFactory client_factory)
+        public object generar(string conexion, Recarga_Input model, IHttpClientFactory client_factory)
         {
 
             SqlConnection con_sql = null;
@@ -216,16 +216,13 @@ namespace wa_api_incomm.Services
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (mensaje_error != "")
-                {
-                    con_sql.Open();
-                    TrxHubModel model_hub_error = new TrxHubModel();
+                con_sql.Open();
+                TrxHubModel model_hub_error = new TrxHubModel();
 
-                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
-                    model_hub_error.vc_mensaje_error = mensaje_error;
-                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
-                    con_sql.Close();
-                }
+                model_hub_error.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
+                model_hub_error.vc_mensaje_error = mensaje_error;
+                var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                con_sql.Close();
 
             }
 

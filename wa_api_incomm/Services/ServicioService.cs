@@ -150,7 +150,7 @@ namespace wa_api_incomm.Services
 
             }
         }
-        
+
         public object obtenerDeuda(string conexion, ServicioObtenerDeudaPagoModelInput input, IHttpClientFactory client_factory)
         {
             SqlConnection con_sql = null;
@@ -161,8 +161,8 @@ namespace wa_api_incomm.Services
             {
                 con_sql = new SqlConnection(conexion);
 
-                GlobalService global_service = new GlobalService();             
-                
+                GlobalService global_service = new GlobalService();
+
                 //Obtener Distribuidor
                 DistribuidorModel distribuidor = new DistribuidorModel();
                 distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
@@ -184,7 +184,7 @@ namespace wa_api_incomm.Services
                 con_sql.Open();
                 producto = global_service.get_producto(con_sql, producto);
                 con_sql.Close();
-                
+
                 if (producto.nu_id_producto <= 0)
                 {
                     return UtilSql.sOutPutTransaccion("06", "El producto no existe");
@@ -204,7 +204,7 @@ namespace wa_api_incomm.Services
                     obj = Banbif_Service.get_deuda(conexion, model_banbif);
 
                 }
-                else if(producto.nu_id_convenio == 5)
+                else if (producto.nu_id_convenio == 5)
                 {
                     //IZIPAY
                     DeudaModel.Deuda_Input model_izipay = new DeudaModel.Deuda_Input();
@@ -245,13 +245,13 @@ namespace wa_api_incomm.Services
             GlobalService global_service = new GlobalService();
 
             dynamic obj = null;
-
+            string mensaje_error = "";
             try
             {
                 con_sql = new SqlConnection(conexion);
 
                 //1) Inserta TRX_HUB y validaciones por BD
-                
+
                 //Obtener Distribuidor
                 DistribuidorModel distribuidor = new DistribuidorModel();
                 distribuidor.vc_cod_distribuidor = input.codigo_distribuidor;
@@ -262,8 +262,9 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    mensaje_error = "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("01", mensaje_error);
                 }
 
                 //Obtener Comercio
@@ -289,13 +290,15 @@ namespace wa_api_incomm.Services
                 cmd = global_service.insTrxhub(con_sql, trx_hub);
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
                     return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -319,14 +322,16 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El producto no existe");
+                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no existe";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
 
                 if (string.IsNullOrEmpty(input.numero_documento))
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "Debe indicar el número de documento de pago.");
-                    return UtilSql.sOutPutTransaccion("20", "Debe indicar el número de documento de pago.");
+                    mensaje_error = "Debe indicar el número de documento de pago.";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("20", mensaje_error);
                 }
 
                 //Dirigir a APIS
@@ -364,8 +369,9 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.");
-                    return UtilSql.sOutPutTransaccion("80", "No se encuentra configurado convenio para el producto.");
+                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.";
+                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                    return UtilSql.sOutPutTransaccion("80", mensaje_error);
                 }
 
                 return obj;
@@ -374,11 +380,25 @@ namespace wa_api_incomm.Services
             catch (Exception ex)
             {
 
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                mensaje_error = ex.Message;
+                return UtilSql.sOutPutTransaccion("500", mensaje_error);
             }
             finally
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
+
+                if (mensaje_error != "")
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
+                }
+
             }
 
         }

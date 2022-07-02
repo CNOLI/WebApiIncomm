@@ -457,6 +457,20 @@ namespace wa_api_incomm.Services
             }
 
         }
+        public SqlCommand updTrxhubError(SqlConnection cn, TrxHubModel model)
+        {
+
+            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_upd_trxhub_error", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@nu_id_trx_hub", model.nu_id_trx_hub);
+                cmd.Parameters.AddWithValue("@vc_mensaje_error", model.vc_mensaje_error);
+                UtilSql.iUpd(cmd, model);
+                cmd.ExecuteNonQuery();
+                return cmd;
+            }
+
+        }
         public SqlCommand insTransaccionExtorno(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
         {
             using (SqlCommand cmd = new SqlCommand("tisi_trx.usp_ins_transaccion_extorno", cn, tran))

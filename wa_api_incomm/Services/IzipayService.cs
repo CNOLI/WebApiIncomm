@@ -562,6 +562,17 @@ namespace wa_api_incomm.Services
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
                 }
+                if (transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
+                }
             }
 
         }
@@ -623,7 +634,7 @@ namespace wa_api_incomm.Services
                     DeudaModel e_deuda = new DeudaModel();
 
                     e_deuda.fecha_vencimento = e_datos.fecha_recibo.Substring(0, 4) + "-" + e_datos.fecha_recibo.Substring(4, 2) + "-" + e_datos.fecha_recibo.Substring(6, 2);
-                    e_deuda.cliente = result.nombre_cliente;
+                    e_deuda.cliente = result.nombre_cliente  == "NO DISPONIBLE" ? "" : result.nombre_cliente;
 
                     e_deuda.monto_documento = Decimal.Round(Convert.ToDecimal((e_datos.saldo_recibo ?? 0).ToString("N")), 2);
                     e_deuda.comision_cliente = Decimal.Round(Convert.ToDecimal((e_datos.importe_com_cli ?? 0).ToString("N")), 2);
@@ -1197,6 +1208,17 @@ namespace wa_api_incomm.Services
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
+                }
+                if (transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(model.id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
                 }
             }
 

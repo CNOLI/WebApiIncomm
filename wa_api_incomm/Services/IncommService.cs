@@ -69,6 +69,12 @@ namespace wa_api_incomm.Services
 
                 ComercioModel comercio = get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
 
+                //Completar 51 para Perú
+                if (input.nro_telefono.Length == 9)
+                {
+                    input.nro_telefono = "51" + input.nro_telefono;
+                }
+
                 TrxHubModel trx_hub = new TrxHubModel();
                 trx_hub.vc_cod_distribuidor = input.codigo_distribuidor;
                 trx_hub.vc_cod_comercio = input.codigo_comercio;
@@ -112,6 +118,8 @@ namespace wa_api_incomm.Services
                 {
                     bi_envio_email_firts = false;
                 }
+
+
 
 
                 if (bi_envio_sms_firts)
@@ -364,6 +372,18 @@ namespace wa_api_incomm.Services
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
+                }
+
+                if (transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
                 }
             }
         }
@@ -651,6 +671,18 @@ namespace wa_api_incomm.Services
                     model_saldo_extorno.vc_mensaje_error = mensaje_error;
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
+                }
+
+                if (transaccion_completada == false)
+                {
+                    con_sql.Open();
+                    TrxHubModel model_hub_error = new TrxHubModel();
+
+                    model_hub_error.nu_id_trx_hub = Convert.ToInt64(id_trx_hub);
+                    model_hub_error.vc_mensaje_error = mensaje_error;
+                    var cmd_trxhub_error = global_service.updTrxhubError(con_sql, model_hub_error);
+                    con_sql.Close();
+
                 }
             }
         }

@@ -81,7 +81,7 @@ namespace Hub_ConciliacionDistribuidores
 
                             }
                         }
-                        else if(diaProceso.Contains("/"))
+                        else if (diaProceso.Contains("/"))
                         {
                             fecha = Convert.ToDateTime(diaProceso);
                             startDate = fecha;
@@ -159,7 +159,11 @@ namespace Hub_ConciliacionDistribuidores
                             {
                                 vc_etapa = dist.vc_desc_distribuidor + " - " + "Descargar archivo de SFTP Distribuidor.";
                                 Console.WriteLine(vc_etapa);
-                                respuesta = Descargar_Archivo_SFTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
+                                if (dist.vc_contrasena_archivo == "[PPK_FILE]")
+                                    respuesta = Descargar_Archivo_SFTP_PPK(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput, Directory.GetCurrentDirectory() + @"\PPK\" + dist.vc_cod_distribuidor + ".ppk");
+                                else
+                                    respuesta = Descargar_Archivo_SFTP(dist.vc_ip_archivo, dist.nu_puerto_archivo, dist.vc_usuario_archivo, dist.vc_contrasena_archivo, dist.vc_ruta_archivo, rutaArchivoInput);
+
 
                                 if (!respuesta.bi_estado)
                                 {
@@ -228,11 +232,24 @@ namespace Hub_ConciliacionDistribuidores
                                 dcd.nu_id_trx = item[2].ToDecimal();
                                 dcd.vc_id_ref_trx_distribuidor = item[3].ToString().Replace("\r", "");
                                 dcd.dt_fecha = item[4].ToString().Replace("\r", "");
-                                dcd.ti_hora = item[5].ToString().Substring(0, 2) + ":" + item[5].ToString().Substring(2, 2) + ":" + item[5].ToString().Substring(4, 2) + "." + item[5].ToString().Substring(6, 2);
+
+                                try
+                                {
+                                    dcd.ti_hora = item[5].ToString().Substring(0, 2) + ":" + item[5].ToString().Substring(2, 2) + ":" + item[5].ToString().Substring(4, 2) + "." + item[5].ToString().Substring(6, 2);
+                                }
+                                catch (Exception)
+                                {
+                                    dcd.ti_hora = item[5].ToString().Substring(0, 2) + ":" + item[5].ToString().Substring(2, 2) + ":" + item[5].ToString().Substring(4, 2) + ".00";
+                                }
+
                                 dcd.nu_id_producto = item[6].ToDecimal();
                                 dcd.nu_precio = item[7].ToDecimal();
-                                dcd.vc_numero_servicio = item[8].ToString().Replace("\r", "");
-                                dcd.vc_nro_doc_pago = item[9].ToString().Replace("\r", "");
+                                dcd.vc_numero_servicio = item[8].ToString().Replace("\r", "").Trim();
+
+                                if (item.ItemArray.Length > 9)
+                                    dcd.vc_nro_doc_pago = item[9].ToString().Replace("\r", "").Trim();
+                                else
+                                    dcd.vc_nro_doc_pago = "";
 
                                 cmd_det = ins_distribuidor_conciliacion_det(conexion, dcd);
 
@@ -504,6 +521,81 @@ namespace Hub_ConciliacionDistribuidores
                 rp.vc_mensaje = "No se logró establecer el socket con el servidor SFTP del distribuidor.";
             }
             catch (Renci.SshNet.Common.SshAuthenticationException)
+            {
+                rp.bi_estado = false;
+                rp.vc_mensaje = "No se logró autenticar el servidor SFTP del distribuidor.";
+            }
+            catch (Exception ex)
+            {
+                rp.bi_estado = false;
+                switch (ex.Message)
+                {
+                    case "No such file":
+                        rp.vc_mensaje = "No se encontró el archivo en la ruta SFTP del distribuidor";
+                        break;
+                    default:
+                        rp.vc_mensaje = ex.Message;
+                        break;
+                }
+            }
+            finally
+            {
+                if (rp.bi_estado == false)
+                {
+                    FileInfo toDownload = new FileInfo(rutaHub);
+
+                    if (toDownload.Exists)
+                    {
+                        File.Delete(rutaHub);
+                    }
+                }
+
+            }
+            return rp;
+        }
+        private static RespuestaProceso Descargar_Archivo_SFTP_PPK(string servidor, int? puerto, string usuario, string contrasena, string rutaDistribuidor, string rutaHub, string rutaPpk)
+        {
+            RespuestaProceso rp = new RespuestaProceso();
+            try
+            {
+                PrivateKeyFile ppkFile = new PrivateKeyFile(rutaPpk);
+                using (SftpClient sftp = new SftpClient(servidor, puerto ?? 22, usuario, new PrivateKeyFile[] { ppkFile }))
+                {
+                    sftp.Connect();
+
+                    try
+                    {
+                        FileInfo toDownload = new FileInfo(rutaHub);
+
+                        if (toDownload.Exists)
+                        {
+                            File.Delete(rutaHub);
+                        }
+                    }
+                    catch (Exception ex) { }
+
+                    using (Stream fileStream = File.OpenWrite(rutaHub))
+                    {
+                        sftp.DownloadFile(rutaDistribuidor, fileStream);
+                    }
+
+                    sftp.Disconnect();
+
+                    rp.bi_estado = true;
+                    rp.vc_mensaje = "El proceso de descarga del archivo desde el SFTP fue realizado correctamente.";
+                }
+            }
+            catch (Renci.SshNet.Common.SshConnectionException ex)
+            {
+                rp.bi_estado = false;
+                rp.vc_mensaje = "No se logró conectar con el servidor SFTP del distribuidor.";
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                rp.bi_estado = false;
+                rp.vc_mensaje = "No se logró establecer el socket con el servidor SFTP del distribuidor.";
+            }
+            catch (Renci.SshNet.Common.SshAuthenticationException ex)
             {
                 rp.bi_estado = false;
                 rp.vc_mensaje = "No se logró autenticar el servidor SFTP del distribuidor.";

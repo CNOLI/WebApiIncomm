@@ -41,10 +41,10 @@ namespace wa_api_incomm.Models
             public string importe { get; set; }
             public string nro_referencia { get; set; }
             public string nro_autorizacion { get; set; }
-            public string tipo_documento_consultante { get; set; }
-            public string nro_documento_consultante { get; set; }
-            public string telefono_consultante { get; set; }
-            public string email_consultante { get; set; }
+            public string tipo_documento_solicitante { get; set; }
+            public string nro_documento_solicitante { get; set; }
+            public string telefono_solicitante { get; set; }
+            public string email_solicitante { get; set; }
             public string tipo_documento_consultado { get; set; }
             public string nro_documento_consultado { get; set; }
             public string tipo_documento_facturacion { get; set; }

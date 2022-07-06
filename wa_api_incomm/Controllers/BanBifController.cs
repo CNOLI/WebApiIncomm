@@ -33,24 +33,24 @@ namespace wa_api_incomm.Controllers
             Configuration = builder.Build();
         }
 
-        [HttpPost("get_datos_banbif")]
-        public IActionResult sel_rubro_recaudador()
-        {
-            if (!this.ModelState.IsValid)
-            {
-                var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
-            }
-            try
-            {
-                return this.Ok(_IBanBifService.get_datos_banbif(Configuration.GetSection("SQL").Value));
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
-            }
-        }
+        //[HttpPost("get_datos_banbif")]
+        //public IActionResult sel_rubro_recaudador()
+        //{
+        //    if (!this.ModelState.IsValid)
+        //    {
+        //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+        //        _logger.Error(allErrors.First());
+        //        return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+        //    }
+        //    try
+        //    {
+        //        return this.Ok(_IBanBifService.get_datos_banbif(Configuration.GetSection("SQL").Value));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+        //    }
+        //}
         //[HttpPost("sel_rubro_recaudador")]
         //public IActionResult sel_rubro_recaudador()
         //{

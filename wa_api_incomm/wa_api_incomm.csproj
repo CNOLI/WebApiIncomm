@@ -8,6 +8,8 @@
 	<ServerGarbageCollection>false</ServerGarbageCollection>  
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Controllers\EquifaxController.cs" />
+    <Compile Remove="Controllers\SentinelController.cs" />
     <Compile Remove="Models\Config.cs" />
   </ItemGroup>
   <ItemGroup>

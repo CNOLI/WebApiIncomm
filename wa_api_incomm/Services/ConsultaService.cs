@@ -69,10 +69,10 @@ namespace wa_api_incomm.Services
                     trx_result.nro_referencia = trx.vc_id_ref_trx.ToString();
                     trx_result.nro_autorizacion = trx.vc_cod_autorizacion.ToString();
 
-                    trx_result.tipo_documento_consultante = trx.vc_tipo_doc_sol.ToString();
-                    trx_result.nro_documento_consultante = trx.vc_nro_doc_sol.ToString();
-                    trx_result.telefono_consultante = trx.vc_telefono_sol.ToString();
-                    trx_result.email_consultante = trx.vc_email_sol.ToString();
+                    trx_result.tipo_documento_solicitante = trx.vc_tipo_doc_sol.ToString();
+                    trx_result.nro_documento_solicitante = trx.vc_nro_doc_sol.ToString();
+                    trx_result.telefono_solicitante = trx.vc_telefono_sol.ToString();
+                    trx_result.email_solicitante = trx.vc_email_sol.ToString();
 
                     trx_result.tipo_documento_consultado = trx.vc_tipo_doc_cpt.ToString();
                     trx_result.nro_documento_consultado = trx.vc_nro_doc_cpt.ToString();

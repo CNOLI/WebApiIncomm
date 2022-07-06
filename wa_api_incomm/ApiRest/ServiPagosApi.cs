@@ -64,7 +64,7 @@ namespace wa_api_incomm.ApiRest
             var dt_fin = DateTime.Now;
             try
             {
-                string hash = modelo.vc_cod_producto + usuario + clave + idTransaccion + modelo.vc_numero_servicio + Convert.ToInt32(modelo.nu_precio_vta);
+                string hash = modelo.vc_cod_producto + usuario + clave + idTransaccion + modelo.vc_numero_servicio + Convert.ToInt32(modelo.nu_precio_vta) + modelo.ubigeo;
                 hash = GetSHA1(hash);
 
                 string parametros = "";
@@ -73,6 +73,7 @@ namespace wa_api_incomm.ApiRest
                 parametros += "&msgid=" + idTransaccion;
                 parametros += "&numero=" + modelo.vc_numero_servicio;
                 parametros += "&monto=" + Convert.ToInt32(modelo.nu_precio_vta);
+                parametros += "&ubigeo=" + modelo.ubigeo;
                 parametros += "&firma=" + hash;
 
                 string url = ApiURL + "venta/" + parametros;

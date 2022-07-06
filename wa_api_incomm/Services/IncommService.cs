@@ -303,6 +303,8 @@ namespace wa_api_incomm.Services
                         nro_transaccion = id_trans_global
                     };
 
+                    _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(info, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
+
                     return info;
 
                 }

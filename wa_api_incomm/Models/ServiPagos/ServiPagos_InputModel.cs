@@ -11,6 +11,7 @@ namespace wa_api_incomm.Models.ServiPagos
         public string vc_cod_producto { get; set; }
         public string vc_numero_servicio { get; set; }
         public string nu_precio_vta { get; set; }
+        public string ubigeo { get; set; } = "150101";
         public class ServiPagos_Input
         {
             public string codigo_distribuidor { get; set; }
@@ -29,6 +30,7 @@ namespace wa_api_incomm.Models.ServiPagos
             public string id_trx_hub { get; set; }
             public string id_distribuidor { get; set; }
             public string id_comercio { get; set; }
+            public string ubigeo { get; set; } = "150101";
         }
     }
 }

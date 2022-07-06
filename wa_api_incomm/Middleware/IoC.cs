@@ -19,12 +19,12 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<Send, Send>();
             services.AddSingleton<IProductoService, ProductoService>();
 
-            services.AddSingleton<ISentinelService, SentinelService>();
+            //services.AddSingleton<ISentinelService, SentinelService>();
 
             services.AddSingleton<IBanBifService, BanBifService>();
             services.AddSingleton<IServicioService, ServicioService>();
 
-            services.AddSingleton<IEquifaxService, EquifaxService>();
+            //services.AddSingleton<IEquifaxService, EquifaxService>();
 
             services.AddSingleton<IIzipayService, IzipayService>();
             services.AddSingleton<IRecargaService, RecargaService>();
@@ -32,6 +32,7 @@ namespace wa_api_incomm.Middleware
             services.AddSingleton<IConsultaService, ConsultaService>();
 
             services.AddSingleton<ITransaccionService, TransaccionService>();
+            services.AddSingleton<IReporteCrediticioService, ReporteCrediticioService>();
             return services;
         }
     }

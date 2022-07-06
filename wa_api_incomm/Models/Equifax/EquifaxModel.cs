@@ -23,10 +23,10 @@ namespace wa_api_incomm.Models
             public string codigo_comercio { get; set; }
             public string nombre_comercio { get; set; }
             public string id_producto { get; set; }
-            public string tipo_documento_consultante { get; set; }
-            public string numero_documento_consultante { get; set; }
-            public string email_consultante { get; set; }
-            public string digito_verificador_consultante { get; set; }
+            public string tipo_documento_solicitante { get; set; }
+            public string numero_documento_solicitante { get; set; }
+            public string email_solicitante { get; set; }
+            public string digito_verificador_solicitante { get; set; }
             public string tipo_documento_consultado { get; set; }
             public string numero_documento_consultado { get; set; }
             public string clave { get; set; }

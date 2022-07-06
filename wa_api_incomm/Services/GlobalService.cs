@@ -578,13 +578,13 @@ namespace wa_api_incomm.Services
                         model.bi_confirmado = dr["bi_confirmado"].ToBool();
                     if (UtilSql.Ec(dr, "bi_informado"))
                         model.bi_informado = dr["bi_informado"].ToBool();
-                    
+
                     if (UtilSql.Ec(dr, "nu_id_convenio"))
                         model.nu_id_convenio = Convert.ToDecimal(dr["nu_id_convenio"].ToString());
-                    
+
                     if (UtilSql.Ec(dr, "vc_desc_categoria"))
                         model.vc_desc_categoria = dr["vc_desc_categoria"].ToString();
-                    
+
 
                     if (UtilSql.Ec(dr, "vc_nro_pin"))
                         model.vc_nro_pin = dr["vc_nro_pin"].ToString();

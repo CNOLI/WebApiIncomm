@@ -77,6 +77,7 @@ namespace wa_api_incomm.Services
                 model_api.vc_cod_producto = model.vc_cod_producto;
                 model_api.vc_numero_servicio = model.numero_servicio;
                 model_api.nu_precio_vta = model.importe_recarga.ToString();
+                model_api.ubigeo = model.ubigeo;
 
                 var response = api.Recargar(model_api, idtran, _logger, model.id_trx_hub).Result;
 
@@ -91,7 +92,8 @@ namespace wa_api_incomm.Services
                 trx.nu_id_tipo_moneda_vta = 1; // SOLES
                 trx.vc_tran_usua_regi = "API";
                 trx.vc_numero_servicio = model.numero_servicio;
-                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;                
+                trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
+                trx.vc_ubigeo = model.ubigeo;
                 try { trx.ti_respuesta_api = (response.dt_fin - response.dt_inicio); } catch (Exception ti) { }
                 
                 //Validar Timeout
@@ -147,6 +149,7 @@ namespace wa_api_incomm.Services
                         cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
                         cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
                         cmd.Parameters.AddWithValue("@ti_respuesta_api", trx.ti_respuesta_api);
+                        cmd.Parameters.AddWithValue("@vc_ubigeo", trx.vc_ubigeo);
 
                         UtilSql.iIns(cmd, trx);
                         cmd.ExecuteNonQuery();

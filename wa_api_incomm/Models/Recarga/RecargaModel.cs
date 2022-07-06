@@ -19,6 +19,7 @@ namespace wa_api_incomm.Models
             public string numero { get; set; }
             public string importe { get; set; }
             public string nro_transaccion_referencia { get; set; }
+            public string ubigeo { get; set; } = "150101";
 
         }
 

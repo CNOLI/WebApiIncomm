@@ -27,11 +27,11 @@ namespace wa_api_incomm.Models
 
             public string id_producto { get; set; }
 
-            public string tipo_documento_consultante { get; set; }
-            public string numero_documento_consultante { get; set; }
-            public string digito_verificador_consultante { get; set; }
-            public string telefono_consultante { get; set; }
-            public string email_consultante { get; set; }
+            public string tipo_documento_solicitante { get; set; }
+            public string numero_documento_solicitante { get; set; }
+            public string digito_verificador_solicitante { get; set; }
+            public string telefono_solicitante { get; set; }
+            public string email_solicitante { get; set; }
 
             public string tipo_documento_consultado { get; set; }
             public string numero_documento_consultado { get; set; }
@@ -45,6 +45,7 @@ namespace wa_api_incomm.Models
             public string fecha_envio { get; set; }
             public string nro_transaccion_referencia { get; set; }
             public bool bono { get; set; } = false;
+
 
             //----------------------------------------
 

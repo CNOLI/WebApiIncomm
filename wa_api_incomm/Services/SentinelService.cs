@@ -181,12 +181,12 @@ namespace wa_api_incomm.Services
             }
 
         }
-        public object ins_transaccion(string conexion, SentinelInfo info, Sentinel_InputModel.Ins_Transaccion model)
+        public object ins_transaccion(string conexion, SentinelInfo info,  Sentinel_InputModel.Ins_Transaccion model, string id_trx_hub, TipoDocIdentidadModel tipodocidentidad_solicitante, TipoDocIdentidadModel tipodocidentidad_consultado, TipoDocIdentidadModel tipodocidentidad_PDV, DistribuidorModel distribuidor, ComercioModel comercio, ProductoModel producto)
         {
             bool ins_bd = false;
             bool saldo_comprometido = false;
             bool transaccion_completada = false;
-            string id_trx_hub = "";
+            //string id_trx_hub = "";
             string id_trans_global = "";
 
             SqlConnection con_sql = null;
@@ -211,151 +211,151 @@ namespace wa_api_incomm.Services
                 con_sql.Close();
 
                 SentinelApi api = new SentinelApi(hub_convenio);
-                //1) Inserta TRX_HUB y validaciones por BD
+                ////1) Inserta TRX_HUB y validaciones por BD
 
-                DistribuidorModel distribuidor = new DistribuidorModel();
-                distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
-                con_sql.Open();
-                distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
-                con_sql.Close();
+                //DistribuidorModel distribuidor = new DistribuidorModel();
+                //distribuidor.vc_cod_distribuidor = model.codigo_distribuidor;
+                //con_sql.Open();
+                //distribuidor = global_service.get_distribuidor(con_sql, distribuidor);
+                //con_sql.Close();
 
-                if (distribuidor.nu_id_distribuidor <= 0)
-                {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
-                }
+                //if (distribuidor.nu_id_distribuidor <= 0)
+                //{
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + "El código de distribuidor " + distribuidor.nu_id_distribuidor.ToString() + " no existe");
+                //    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                //}
 
-                //Obtener Comercio
-                con_sql.Open();
-                ComercioModel comercio = global_service.get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
-                con_sql.Close();
-
-
-                //Insertar Transaccion HUB                
-                con_sql.Open();
-
-                TipoDocIdentidadModel tipodocidentidad_consultante = new TipoDocIdentidadModel();
-                try
-                {
-                    tipodocidentidad_consultante = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultante), nu_id_convenio);
-                }
-                catch (Exception ex)
-                {
-                    tipodocidentidad_consultante = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultante, nu_id_convenio);
-                }
-
-                if (tipodocidentidad_consultante.nu_id_tipo_doc_identidad <= 0)
-                {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultante " + tipodocidentidad_consultante.nu_id_tipo_doc_identidad.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("30", "El tipo de documento de consultante no existe.");
-                }
-
-                TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
-                try
-                {
-                    tipodocidentidad_consultado = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado), nu_id_convenio);
-                }
-                catch (Exception ex)
-                {
-                    tipodocidentidad_consultado = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado, nu_id_convenio);
-                }
-
-                if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
-                {
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultado " + tipodocidentidad_consultado.nu_id_tipo_doc_identidad.ToString() + " no existe");
-
-                    return UtilSql.sOutPutTransaccion("31", "El tipo de documento de consultado no existe.");
-                }                                              
-
-                TrxHubModel trx_hub = new TrxHubModel();
-                trx_hub.vc_cod_distribuidor = model.codigo_distribuidor;
-                trx_hub.vc_cod_comercio = model.codigo_comercio;
-                trx_hub.vc_nombre_comercio = model.nombre_comercio;
-                trx_hub.vc_nro_telefono = ""; 
-                trx_hub.vc_email = model.email_consultante;
-                trx_hub.vc_id_producto = model.id_producto;
-                trx_hub.nu_id_tipo_doc_sol = tipodocidentidad_consultante.nu_id_tipo_doc_identidad;
-                trx_hub.vc_nro_doc_sol = model.numero_documento_consultante;
-                trx_hub.ch_dig_ver_sol = model.digito_verificador_consultante;
-                trx_hub.nu_id_tipo_doc_cpt = tipodocidentidad_consultado.nu_id_tipo_doc_identidad;
-                trx_hub.vc_nro_doc_cpt = model.numero_documento_consultado;
-                trx_hub.nu_id_tipo_comprobante = model.tipo_documento_facturacion;
-                trx_hub.vc_ruc = model.numero_ruc;
-                trx_hub.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
+                ////Obtener Comercio
+                //con_sql.Open();
+                //ComercioModel comercio = global_service.get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
+                //con_sql.Close();
 
 
-                cmd = global_service.insTrxhub(con_sql, trx_hub);
-                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
-                {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
-                }
-                if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
-                {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                }
+                ////Insertar Transaccion HUB                
+                //con_sql.Open();
 
-                id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
+                //TipoDocIdentidadModel tipodocidentidad_solicitante = new TipoDocIdentidadModel();
+                //try
+                //{
+                //    tipodocidentidad_solicitante = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_solicitante), nu_id_convenio);
+                //}
+                //catch (Exception ex)
+                //{
+                //    tipodocidentidad_solicitante = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_solicitante, nu_id_convenio);
+                //}
 
-                con_sql.Close();
+                //if (tipodocidentidad_solicitante.nu_id_tipo_doc_identidad <= 0)
+                //{
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de solicitante " + tipodocidentidad_solicitante.nu_id_tipo_doc_identidad.ToString() + " no existe");
+                //    return UtilSql.sOutPutTransaccion("30", "El tipo de documento de solicitante no existe.");
+                //}
 
-                _logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
+                //TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
+                //try
+                //{
+                //    tipodocidentidad_consultado = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_consultado), nu_id_convenio);
+                //}
+                //catch (Exception ex)
+                //{
+                //    tipodocidentidad_consultado = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_consultado, nu_id_convenio);
+                //}
 
-                _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo recibido: " + JsonConvert.SerializeObject(model));
+                //if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
+                //{
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + "El tipo de documento de consultado " + tipodocidentidad_consultado.nu_id_tipo_doc_identidad.ToString() + " no existe");
 
-                // 2) Validar Campos adicionales.
+                //    return UtilSql.sOutPutTransaccion("31", "El tipo de documento de consultado no existe.");
+                //}                                              
 
-                if (!new EmailAddressAttribute().IsValid(model.email_consultante))
-                {
-                    mensaje_error = "El email " + model.email_consultante + " es incorrecto";
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
-                }
+                //TrxHubModel trx_hub = new TrxHubModel();
+                //trx_hub.vc_cod_distribuidor = model.codigo_distribuidor;
+                //trx_hub.vc_cod_comercio = model.codigo_comercio;
+                //trx_hub.vc_nombre_comercio = model.nombre_comercio;
+                //trx_hub.vc_nro_telefono = ""; 
+                //trx_hub.vc_email = model.email_solicitante;
+                //trx_hub.vc_id_producto = model.id_producto;
+                //trx_hub.nu_id_tipo_doc_sol = tipodocidentidad_solicitante.nu_id_tipo_doc_identidad;
+                //trx_hub.vc_nro_doc_sol = model.numero_documento_solicitante;
+                //trx_hub.ch_dig_ver_sol = model.digito_verificador_solicitante;
+                //trx_hub.nu_id_tipo_doc_cpt = tipodocidentidad_consultado.nu_id_tipo_doc_identidad;
+                //trx_hub.vc_nro_doc_cpt = model.numero_documento_consultado;
+                //trx_hub.nu_id_tipo_comprobante = model.tipo_documento_facturacion;
+                //trx_hub.vc_ruc = model.numero_ruc;
+                //trx_hub.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
 
-                if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
-                {
-                    mensaje_error = "El id del producto " + model.id_producto.ToString() + " debe ser numerico";
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
-                }
+
+                //cmd = global_service.insTrxhub(con_sql, trx_hub);
+                //if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
+                //{
+                //    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                //    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                //}
+                //if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
+                //{
+                //    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                //    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                //}
+
+                //id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
+
+                //con_sql.Close();
+
+                //_logger.Information("idtrx: " + id_trx_hub + " / " + "Inicio de transaccion");
+
+                //_logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo recibido: " + JsonConvert.SerializeObject(model));
+
+                //// 2) Validar Campos adicionales.
+
+                //if (!new EmailAddressAttribute().IsValid(model.email_solicitante))
+                //{
+                //    mensaje_error = "El email " + model.email_solicitante + " es incorrecto";
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                //    return UtilSql.sOutPutTransaccion("03", mensaje_error);
+                //}
+
+                //if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
+                //{
+                //    mensaje_error = "El id del producto " + model.id_producto.ToString() + " debe ser numerico";
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                //    return UtilSql.sOutPutTransaccion("04", mensaje_error);
+                //}
 
 
-                con_sql.Open();
-                TipoDocIdentidadModel tipodocidentidad_PDV = new TipoDocIdentidadModel();
-                try
-                {
-                    tipodocidentidad_PDV = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV), nu_id_convenio);
-                }
-                catch (Exception ex)
-                {
-                    tipodocidentidad_PDV = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_PDV, nu_id_convenio);
-                }
+                //con_sql.Open();
+                //TipoDocIdentidadModel tipodocidentidad_PDV = new TipoDocIdentidadModel();
+                //try
+                //{
+                //    tipodocidentidad_PDV = global_service.get_tipo_documento(con_sql, Convert.ToInt32(model.tipo_documento_PDV), nu_id_convenio);
+                //}
+                //catch (Exception ex)
+                //{
+                //    tipodocidentidad_PDV = global_service.get_tipo_documento_codigo(con_sql, model.tipo_documento_PDV, nu_id_convenio);
+                //}
 
-                if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
-                {
-                    mensaje_error = "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe";
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("32", mensaje_error);
-                }
-                con_sql.Close();
+                //if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0)
+                //{
+                //    mensaje_error = "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe";
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                //    return UtilSql.sOutPutTransaccion("32", mensaje_error);
+                //}
+                //con_sql.Close();
 
-                //Obtener Producto
-                ProductoModel producto = new ProductoModel();
-                producto.nu_id_producto = Convert.ToInt32(model.id_producto);
-                producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
-                producto.nu_id_convenio = nu_id_convenio;
+                ////Obtener Producto
+                //ProductoModel producto = new ProductoModel();
+                //producto.nu_id_producto = Convert.ToInt32(model.id_producto);
+                //producto.nu_id_distribuidor = distribuidor.nu_id_distribuidor;
+                //producto.nu_id_convenio = nu_id_convenio;
 
-                con_sql.Open();
-                producto = global_service.get_producto(con_sql, producto);
-                con_sql.Close();
+                //con_sql.Open();
+                //producto = global_service.get_producto(con_sql, producto);
+                //con_sql.Close();
 
-                if (producto.nu_id_producto <= 0)
-                {
-                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no existe";
-                    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
-                }
+                //if (producto.nu_id_producto <= 0)
+                //{
+                //    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no existe";
+                //    _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
+                //    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                //}
 
 
                 // 3) Obtener ID Transacción y comprometer saldo.
@@ -426,11 +426,11 @@ namespace wa_api_incomm.Services
                 }
                 modelo.Gx_PasEnc = encripta_rest.encriptado;
 
-                modelo.TipoDocSol = tipodocidentidad_consultante.vc_cod_tipo_doc_identidad;
-                modelo.NroDocSol = model.numero_documento_consultante;
-                modelo.DigVerSol = model.digito_verificador_consultante;
-                modelo.CorreoSol = model.email_consultante;
-                modelo.TelefSol = model.telefono_consultante;
+                modelo.TipoDocSol = tipodocidentidad_solicitante.vc_cod_tipo_doc_identidad;
+                modelo.NroDocSol = model.numero_documento_solicitante;
+                modelo.DigVerSol = model.digito_verificador_solicitante;
+                modelo.CorreoSol = model.email_solicitante;
+                modelo.TelefSol = model.telefono_solicitante;
 
                 modelo.TipoDocComprobante = model.tipo_documento_facturacion;
                 modelo.NroDocumentoFAC = model.tipo_documento_facturacion == "FAC" ? model.numero_ruc : "";
@@ -486,12 +486,12 @@ namespace wa_api_incomm.Services
                 trx.vc_cod_distribuidor = model.codigo_distribuidor;
                 trx.nu_id_comercio = comercio.nu_id_comercio;
                 trx.vc_cod_comercio = model.codigo_comercio;
-                trx.nu_id_tipo_doc_sol = tipodocidentidad_consultante.nu_id_tipo_doc_identidad;
-                trx.vc_cod_tipo_doc_sol = tipodocidentidad_consultante.vc_cod_tipo_doc_identidad;
-                trx.vc_nro_doc_sol = model.numero_documento_consultante;
-                trx.ch_dig_ver_sol = model.digito_verificador_consultante;
-                trx.vc_telefono_sol = model.telefono_consultante;
-                trx.vc_email_sol = model.email_consultante;
+                trx.nu_id_tipo_doc_sol = tipodocidentidad_solicitante.nu_id_tipo_doc_identidad;
+                trx.vc_cod_tipo_doc_sol = tipodocidentidad_solicitante.vc_cod_tipo_doc_identidad;
+                trx.vc_nro_doc_sol = model.numero_documento_solicitante;
+                trx.ch_dig_ver_sol = model.digito_verificador_solicitante;
+                trx.vc_telefono_sol = model.telefono_solicitante;
+                trx.vc_email_sol = model.email_solicitante;
                 trx.vc_tipo_comprobante = model.tipo_documento_facturacion;
                 trx.nu_id_tipo_doc_cpt = tipodocidentidad_consultado.nu_id_tipo_doc_identidad;
                 trx.vc_cod_tipo_doc_cpt = tipodocidentidad_consultado.vc_cod_tipo_doc_identidad;

@@ -65,7 +65,7 @@ namespace wa_api_incomm.Services
                 con_sql.Open();
                 ComercioModel comercio = global_service.get_comercio(con_sql, model.codigo_comercio, model.nombre_comercio, distribuidor.nu_id_distribuidor);
                 con_sql.Close();
-                                             
+
                 //Insertar Transaccion HUB
                 con_sql.Open();
 
@@ -172,6 +172,7 @@ namespace wa_api_incomm.Services
                     model_servipago.numero_servicio = model.numero;
                     model_servipago.importe_recarga = model.importe;
                     model_servipago.nro_transaccion_referencia = model.nro_transaccion_referencia;
+                    model_servipago.ubigeo = model.ubigeo;
 
                     ServiPagosService ServiPagos_Service = new ServiPagosService(_logger);
 
@@ -203,6 +204,7 @@ namespace wa_api_incomm.Services
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
                     return UtilSql.sOutPutTransaccion("80", mensaje_error);
                 }
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(obj, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
                 return obj;
 
@@ -216,7 +218,7 @@ namespace wa_api_incomm.Services
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (mensaje_error != "")
+                if (id_trx_hub != "" && mensaje_error != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

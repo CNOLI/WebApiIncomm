@@ -374,6 +374,8 @@ namespace wa_api_incomm.Services
                     return UtilSql.sOutPutTransaccion("80", mensaje_error);
                 }
 
+                _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(obj, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
+
                 return obj;
 
             }
@@ -387,7 +389,7 @@ namespace wa_api_incomm.Services
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (mensaje_error != "")
+                if (id_trx_hub != "" && mensaje_error != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

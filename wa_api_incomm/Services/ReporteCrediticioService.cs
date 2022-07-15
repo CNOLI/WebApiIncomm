@@ -369,7 +369,7 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
-                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no se encuentra convenio configurado.";
+                    mensaje_error = "El producto  " + model.id_producto + " no está habilitado para el distribuidor.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
                     return UtilSql.sOutPutTransaccion("80", mensaje_error);
                 }

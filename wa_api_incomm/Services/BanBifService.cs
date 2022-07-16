@@ -308,6 +308,10 @@ namespace wa_api_incomm.Services
                             }
                         }
                     }
+                    if (e_deuda.cliente.Length > 20)
+                    {
+                        e_deuda.cliente = e_deuda.cliente.Substring(0, 20);
+                    }
 
                     e_deuda.monto_documento = (e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino) - e_datos.comisionCliente;
                     e_deuda.monto_documento = Decimal.Round(Convert.ToDecimal((e_deuda.monto_documento ?? 0).ToString("N")), 2);
@@ -505,7 +509,7 @@ namespace wa_api_incomm.Services
                 Banbif_PagoModel e_pago = new Banbif_PagoModel();
                 foreach (var e_datos in ls_datos)
                 {
-                    if (model.vc_cod_convenio == "40" && ls_datos.Count() == 1)
+                    if (model.bi_doc_dinamico == true)
                     {
                         model.numero_documento = e_datos.documento.numero;
                     }

@@ -139,6 +139,8 @@ namespace wa_api_incomm.Services
                         _result.bi_envio_sms = dr["bi_envio_sms"].ToBool();
                     if (UtilSql.Ec(dr, "bi_envio_email"))
                         _result.bi_envio_email = dr["bi_envio_email"].ToBool();
+                    if (UtilSql.Ec(dr, "bi_doc_dinamico"))
+                        _result.bi_doc_dinamico = dr["bi_doc_dinamico"].ToBool();
 
                 }
             }

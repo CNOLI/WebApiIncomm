@@ -28,6 +28,7 @@ namespace wa_api_incomm.Models.Hub
         public int nu_id_empresa { get; set; }
         public int nu_id_rubro { get; set; }
         public int nu_id_distribuidor { get; set; }
+        public bool bi_doc_dinamico { get; set; }
 
 
     }

@@ -30,6 +30,7 @@ namespace wa_api_incomm.Models.Servicios
             public string id_trx_hub { get; set; }
             public string id_distribuidor { get; set; }
             public string id_comercio { get; set; }
+            public bool bi_doc_dinamico { get; set; }
 
         }
     }

@@ -344,6 +344,7 @@ namespace wa_api_incomm.Services
                     model_banbif.id_comercio = comercio.nu_id_comercio.ToString();
                     model_banbif.id_servicio = input.id_servicio;
                     model_banbif.vc_cod_convenio = producto.vc_cod_producto;
+                    model_banbif.bi_doc_dinamico = producto.bi_doc_dinamico;
                     model_banbif.numero_servicio = input.numero_servicio;
                     model_banbif.numero_documento = input.numero_documento;
                     model_banbif.importe_pago = input.importe_pago;

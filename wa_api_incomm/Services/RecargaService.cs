@@ -85,13 +85,14 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
+                    string codigo_error = cmd.Parameters["@vc_tran_codi"].Value.ToText();
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion(codigo_error, mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -107,21 +108,21 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = "El número del cliente debe ser numerico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("40", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("30", mensaje_error);
                 }
 
                 if (!Regex.Match(model.importe, @"^[0-9]+(\.[0-9]{1,2})?$").Success)
                 {
                     mensaje_error = "El importe de recarga debe ser numerico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("41", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("31", mensaje_error);
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    mensaje_error = "El id del producto debe ser numerico.";
+                    mensaje_error = "El id del producto debe ser numérico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
 
                 //Obtener Producto
@@ -137,7 +138,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = "El producto no existe.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
 
 
@@ -200,9 +201,9 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
-                    mensaje_error = "El producto " + model.id_producto + " no está habilitado para el distribuidor.";
+                    mensaje_error = "El producto no está habilitado para el distribuidor.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("80", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
                 _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(obj, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
@@ -212,13 +213,13 @@ namespace wa_api_incomm.Services
             catch (Exception ex)
             {
                 mensaje_error = ex.Message;
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (id_trx_hub != "" && mensaje_error != "")
+                if (mensaje_error != "" && id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

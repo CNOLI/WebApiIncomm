@@ -44,7 +44,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("97", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -52,7 +52,7 @@ namespace wa_api_incomm.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos."));
             }
         }
         [HttpPost("ActualizarRegla")]
@@ -62,7 +62,7 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("97", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -70,7 +70,7 @@ namespace wa_api_incomm.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos."));
             }
         }
     }

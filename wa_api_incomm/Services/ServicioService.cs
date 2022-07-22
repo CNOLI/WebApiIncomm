@@ -173,7 +173,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
 
                 //Obtener Producto
@@ -187,7 +187,7 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("06", "El producto no existe");
+                    return UtilSql.sOutPutTransaccion("04", "El producto no existe.");
                 }
 
                 //Dirigir a APIS
@@ -200,6 +200,7 @@ namespace wa_api_incomm.Services
                     model_banbif.nombre_comercio = input.nombre_comercio;
                     model_banbif.vc_cod_convenio = producto.vc_cod_producto;
                     model_banbif.numero_servicio = input.numero_servicio;
+                    model_banbif.comision_usuario_final = producto.nu_imp_com_usuario_final.ToString();
                     BanBifService Banbif_Service = new BanBifService(_logger);
                     obj = Banbif_Service.get_deuda(conexion, model_banbif);
 
@@ -213,13 +214,14 @@ namespace wa_api_incomm.Services
                     model_izipay.nombre_comercio = input.nombre_comercio;
                     model_izipay.vc_cod_convenio = producto.vc_cod_producto;
                     model_izipay.numero_servicio = input.numero_servicio;
+                    model_izipay.comision_usuario_final = producto.nu_imp_com_usuario_final.ToString();
                     IzipayService Izipay_Service = new IzipayService(_logger);
                     obj = Izipay_Service.ConsultaRecibos(conexion, model_izipay, client_factory);
 
                 }
                 else
                 {
-                    return UtilSql.sOutPutTransaccion("XX", "No se encuentra configurado convenio para el producto.");
+                    return UtilSql.sOutPutTransaccion("05", "El producto no está habilitado para el distribuidor.");
                 }
 
                 return obj;
@@ -228,7 +230,7 @@ namespace wa_api_incomm.Services
             catch (Exception ex)
             {
 
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -292,13 +294,14 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
+                    string codigo_error = cmd.Parameters["@vc_tran_codi"].Value.ToText();
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion(codigo_error, mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -322,16 +325,16 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    mensaje_error = "El producto  " + producto.nu_id_producto.ToString() + " no existe";
+                    mensaje_error = "El producto no existe";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
 
                 if (string.IsNullOrEmpty(input.numero_documento))
                 {
                     mensaje_error = "Debe indicar el número de documento de pago.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("20", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("32", mensaje_error);
                 }
 
                 //Dirigir a APIS
@@ -348,6 +351,7 @@ namespace wa_api_incomm.Services
                     model_banbif.numero_servicio = input.numero_servicio;
                     model_banbif.numero_documento = input.numero_documento;
                     model_banbif.importe_pago = input.importe_pago;
+                    model_banbif.comision_usuario_final = producto.nu_imp_com_usuario_final.ToString();
                     model_banbif.nro_transaccion_referencia = input.nro_transaccion_referencia;
                     BanBifService Banbif_Service = new BanBifService(_logger);
                     obj = Banbif_Service.post_pago(conexion, model_banbif);
@@ -364,15 +368,16 @@ namespace wa_api_incomm.Services
                     model_izipay.numero_servicio = input.numero_servicio;
                     model_izipay.numero_documento = input.numero_documento;
                     model_izipay.importe_pago = input.importe_pago;
+                    model_izipay.comision_usuario_final = producto.nu_imp_com_usuario_final.ToString();
                     model_izipay.nro_transaccion_referencia = input.nro_transaccion_referencia;
-                    IzipayService Banbif_Service = new IzipayService(_logger);
-                    obj = Banbif_Service.RealizarPago(conexion, model_izipay, client_factory);
+                    IzipayService Izipay_Service = new IzipayService(_logger);
+                    obj = Izipay_Service.RealizarPago(conexion, model_izipay, client_factory);
                 }
                 else
                 {
-                    mensaje_error = "El producto " + input.id_servicio + " no está habilitado para el distribuidor.";
+                    mensaje_error = "El producto no está habilitado para el distribuidor.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("80", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
 
                 _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(obj, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
@@ -384,13 +389,13 @@ namespace wa_api_incomm.Services
             {
 
                 mensaje_error = ex.Message;
-                return UtilSql.sOutPutTransaccion("500", mensaje_error);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (id_trx_hub != "" && mensaje_error != "")
+                if (mensaje_error != "" && id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

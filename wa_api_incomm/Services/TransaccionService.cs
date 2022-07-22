@@ -45,7 +45,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
                 ComercioModel comercio = new ComercioModel();
                 comercio.vc_cod_comercio = model.codigo_comercio;
@@ -53,7 +53,7 @@ namespace wa_api_incomm.Services
 
                 if (comercio.nu_id_comercio <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                    return UtilSql.sOutPutTransaccion("02", "El código de comercio no existe.");
                 }
 
                 TransaccionModel model_sql = new TransaccionModel();
@@ -65,7 +65,7 @@ namespace wa_api_incomm.Services
 
                 if (model_sql.nu_id_trx <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("99", "No se encontró transacción con los datos enviados.");
+                    return UtilSql.sOutPutTransaccion("39", "No se encontró transacción con los datos enviados.");
                 }
 
                 var cmd_upd_confirmar = global_service.upd_confirmar(con_sql, model_sql);
@@ -73,7 +73,7 @@ namespace wa_api_incomm.Services
                 if (cmd_upd_confirmar.Parameters["@nu_tran_stdo"].Value.ToString() == "0")
                 {
                     _logger.Information("idtrx: " + model_sql.nu_id_trx_hub.ToString() + " / " + cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToString());
-                    return UtilSql.sOutPutTransaccion("99", cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToString());
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 //Obtener Producto
                 ProductoModel producto = new ProductoModel();
@@ -151,7 +151,7 @@ namespace wa_api_incomm.Services
 
                 _logger.Error("idtrx_app: " + model.nro_transaccion + " / " + ex.Message);
 
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -179,7 +179,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("05", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
                 ComercioModel comercio = new ComercioModel();
                 comercio.vc_cod_comercio = model.codigo_comercio;
@@ -187,7 +187,7 @@ namespace wa_api_incomm.Services
 
                 if (comercio.nu_id_comercio <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                    return UtilSql.sOutPutTransaccion("02", "El código de comercio no existe.");
                 }
 
                 TransaccionModel model_sql = new TransaccionModel();
@@ -199,7 +199,7 @@ namespace wa_api_incomm.Services
 
                 if (model_sql.nu_id_trx <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("99", "No se encontró transacción con los datos enviados.");
+                    return UtilSql.sOutPutTransaccion("39", "No se encontró transacción con los datos enviados.");
                 }
 
                 hub_convenio = global_service.get_convenio(con_sql, model_sql.nu_id_convenio);
@@ -266,7 +266,7 @@ namespace wa_api_incomm.Services
                 {
                     info = new
                     {
-                        codigo = "99",
+                        codigo = "37",
                         mensaje = "Transacción no ha sido informada correctamente.",
                         nro_transaccion = model_sql.nu_id_trx
                     };
@@ -284,7 +284,7 @@ namespace wa_api_incomm.Services
 
                 _logger.Error("idtrx_app: " + model.nro_transaccion + " / " + ex.Message);
 
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {

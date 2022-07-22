@@ -13,6 +13,7 @@ namespace wa_api_incomm.Models.Hub
         public class ProductoClientModelInput
         {
             public string id_producto { get; set; }
+            public string id_tipo_producto { get; set; }
             public string codigo_distribuidor { get; set; }
             public string id_convenio { get; set; }
 

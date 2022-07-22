@@ -32,7 +32,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
                 ComercioModel comercio = new ComercioModel();
                 comercio.vc_cod_comercio = model.codigo_comercio;
@@ -40,7 +40,7 @@ namespace wa_api_incomm.Services
 
                 if (comercio.nu_id_comercio <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                    return UtilSql.sOutPutTransaccion("02", "El código de comercio no existe.");
                 }
 
                 TransaccionModel trx = new TransaccionModel();
@@ -95,8 +95,8 @@ namespace wa_api_incomm.Services
                 {
                     info = new
                     {
-                        codigo = "99",
-                        mensaje = "No se encontró transacción."
+                        codigo = "39",
+                        mensaje = "No se encontró transacción con los datos enviados."
                     };
 
                 }
@@ -113,7 +113,6 @@ namespace wa_api_incomm.Services
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
             }
         }
-
         public object Estado(string conexion, Consulta.Transaccion_Input_Estado model)
         {
 
@@ -131,7 +130,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
                 ComercioModel comercio = new ComercioModel();
                 comercio.vc_cod_comercio = model.codigo_comercio;
@@ -139,7 +138,7 @@ namespace wa_api_incomm.Services
 
                 if (comercio.nu_id_comercio <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                    return UtilSql.sOutPutTransaccion("02", "El código de comercio no existe.");
                 }
 
                 TransaccionModel trx = new TransaccionModel();
@@ -252,7 +251,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
 
                 distribuidor = global_service.get_distrbuidor_saldo(con_sql, distribuidor);

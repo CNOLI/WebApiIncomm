@@ -273,11 +273,7 @@ namespace wa_api_incomm.ApiRest
             }
             catch (OperationCanceledException e)
             {
-                if (logger != null)
-                {
-                    logger.Error(e.Message + ". Consultar_Deuda TIMEOUT" + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                }
-                throw new Exception(e.Message + ". Consultar_Deuda TIMEOUT " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                Result.timeout = true;
             }
             catch (Exception ex)
             {
@@ -327,19 +323,11 @@ namespace wa_api_incomm.ApiRest
                 Result.dt_fin = dt_fin;
 
             }
-            catch (WebException e)
+            catch (OperationCanceledException e)
             {
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = DateTime.Now;
-                if (e.Status == WebExceptionStatus.Timeout)
-                {
-                    Result.timeout = true;
-                }
-                else
-                {
-                    logger.Error(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                    throw new Exception(e.Message + ". Procesar_Pago " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                }
+                Result.timeout = true;
             }
             catch (Exception ex)
             {

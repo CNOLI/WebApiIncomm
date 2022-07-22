@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -71,6 +72,14 @@ namespace wa_api_incomm.ApiRest
                 result.dt_inicio = dt_inicio;
                 result.dt_fin = dt_fin;
 
+            }
+            catch (OperationCanceledException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                result.timeout = true;
+                result.errorCode = "-1";
+                result.errorMessage = "No hubo respuesta a la solicitud. (Timeout)";
             }
             catch (Exception ex)
             {

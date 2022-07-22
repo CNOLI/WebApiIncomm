@@ -40,7 +40,7 @@ namespace wa_api_incomm.Controllers
         //    {
         //        var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
         //        _logger.Error(allErrors.First());
-        //        return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+        //        return this.BadRequest(UtilSql.sOutPutTransaccion("97", "Datos incorrectos: " + allErrors.First()));
         //    }
         //    try
         //    {
@@ -138,7 +138,7 @@ namespace wa_api_incomm.Controllers
         //        var a = "uutñtÑxÑvxztttTTtxtñuyuw";// enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.nu_id_servicio);
         //        if (a != model.clave)
         //        {
-        //            return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+        //            return this.BadRequest(UtilSql.sOutPutTransaccion("98", "La clave de seguridad es incorrecta."));
         //        }
         //        else
         //        {
@@ -165,7 +165,7 @@ namespace wa_api_incomm.Controllers
         //        var a = "uutñtÑxÑvxztttTTtxtñuyuw"; //enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
         //        if (a != model.clave)
         //        {
-        //            return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+        //            return this.BadRequest(UtilSql.sOutPutTransaccion("98", "La clave de seguridad es incorrecta."));
         //        }
         //        else
         //        { 

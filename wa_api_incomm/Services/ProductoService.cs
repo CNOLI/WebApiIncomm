@@ -34,9 +34,18 @@ namespace wa_api_incomm.Services
                         {
                             model.nu_id_producto = int.Parse(input.id_producto);
                         }
+                        if (!String.IsNullOrEmpty(input.id_tipo_producto))
+                        {
+                            model.nu_id_tipo_producto = int.Parse(input.id_tipo_producto);
+                        }
+                        else
+                        {
+                            model.nu_id_tipo_producto = 1; //P. D.
+                        }
                         cmd.Parameters.AddWithValue("@vc_cod_distribuidor", model.vc_cod_distribuidor);
                         cmd.Parameters.AddWithValue("@nu_id_convenio", model.nu_id_convenio);
                         cmd.Parameters.AddWithValue("@nu_id_producto", model.nu_id_producto);
+                        cmd.Parameters.AddWithValue("@nu_id_tipo_producto", model.nu_id_tipo_producto);
                         UtilSql.iGet(cmd, model);
                         SqlDataReader dr = cmd.ExecuteReader();
                         return Query(dr);
@@ -44,7 +53,7 @@ namespace wa_api_incomm.Services
                 } 
                 catch (Exception ex)
                 {
-                    throw ex;
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
 
             }

@@ -64,7 +64,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 saldo_comprometido = true;
 
@@ -106,7 +106,7 @@ namespace wa_api_incomm.Services
                         response = new ServiPagos_ResponseModel();
                         if (response_consulta.respuesta.datos.resultado == "")
                         {
-                            response.respuesta.resultado = "99";
+                            response.respuesta.resultado = "-1";
                             response.respuesta.transacid = response_consulta.respuesta.datos.transacid;
                             response.respuesta.nro_op = response_consulta.respuesta.datos.nro_op;
                         }
@@ -160,7 +160,7 @@ namespace wa_api_incomm.Services
                             ins_bd = false;
                             _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                             mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                            return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                         }
                         trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -180,7 +180,7 @@ namespace wa_api_incomm.Services
                             ins_bd = false;
                             _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText());
                             mensaje_error = cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                            return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                         }
                         cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                     }
@@ -200,7 +200,7 @@ namespace wa_api_incomm.Services
                             ins_bd = false;
                             _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText());
                             mensaje_error = cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                            return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                         }
                     }
 
@@ -225,6 +225,9 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
+                    string vc_cod_error_hub = "99";
+                    string vc_desc_error_hub = "Error desconocido.";
+
                     TransaccionModel tm = new TransaccionModel();
                     tm.nu_id_trx = trx.nu_id_trx;
                     tm.nu_id_trx_hub = trx.nu_id_trx_hub;
@@ -240,7 +243,7 @@ namespace wa_api_incomm.Services
 
                     tm.vc_cod_error = response.respuesta.resultado;
 
-                    tm.vc_desc_error = global_service.get_mensaje_error(nu_id_convenio, tm.vc_cod_error) + (response.respuesta.obs != "" ? (" - " + response.respuesta.obs) : "");
+                    tm.vc_desc_error = response.respuesta.obs;
 
                     tm.vc_desc_tipo_error = "CONVENIO";
 
@@ -258,7 +261,7 @@ namespace wa_api_incomm.Services
                         ins_bd = false;
                         _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                        return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                     }
 
                     tran_sql_error.Commit();
@@ -266,10 +269,13 @@ namespace wa_api_incomm.Services
                     mensaje_error = tm.vc_desc_error;
                     ins_bd = false;
 
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, response.respuesta.resultado, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
                     _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
 
-                    //return UtilSql.sOutPutTransaccion(tm.vc_cod_error, tm.vc_desc_error);
-                    return UtilSql.sOutPutTransaccion("99", tm.vc_desc_error);
+                    return UtilSql.sOutPutTransaccion(vc_cod_error_hub, vc_desc_error_hub);
                 }
             }
             catch (Exception ex)
@@ -282,7 +288,7 @@ namespace wa_api_incomm.Services
                 _logger.Error("idtrx: " + model.id_trx_hub + " / " + ex.Message);
                 mensaje_error = ex.Message;
                 
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -299,7 +305,7 @@ namespace wa_api_incomm.Services
                     var cmd_saldo_extorno = global_service.updTrxhubSaldo(con_sql, model_saldo_extorno);
                     con_sql.Close();
                 }
-                if (transaccion_completada == false)
+                if (transaccion_completada == false && model.id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

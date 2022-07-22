@@ -16,6 +16,7 @@ namespace wa_api_incomm.Models
             public string[] errors { get; set; }
             public DateTime dt_inicio { get; set; }
             public DateTime dt_fin { get; set; }
+            public bool timeout { get; set; } = false;
         }
         public class E_Response_Trx
         {

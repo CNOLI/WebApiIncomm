@@ -64,7 +64,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
 
                 ComercioModel comercio = get_comercio(con_sql, input.codigo_comercio, input.nombre_comercio, distribuidor.nu_id_distribuidor);
@@ -88,12 +88,14 @@ namespace wa_api_incomm.Services
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    string codigo_error = cmd.Parameters["@vc_tran_codi"].Value.ToText();
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion(codigo_error, mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -119,16 +121,13 @@ namespace wa_api_incomm.Services
                     bi_envio_email_firts = false;
                 }
 
-
-
-
                 if (bi_envio_sms_firts)
                 {
                     if (!new PhoneAttribute().IsValid(input.nro_telefono))
                     {
-                        mensaje_error = "El número de telefono " + input.nro_telefono + " es incorrecto";
+                        mensaje_error = "El número de teléfono inválido.";
                         _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                        return UtilSql.sOutPutTransaccion("02", mensaje_error);
+                        return UtilSql.sOutPutTransaccion("20", mensaje_error);
                     }
                 }
 
@@ -136,17 +135,17 @@ namespace wa_api_incomm.Services
                 {
                     if (!new EmailAddressAttribute().IsValid(input.email))
                     {
-                        mensaje_error = "El email " + input.email + " es incorrecto";
+                        mensaje_error = "El correo ingresado es inválido.";
                         _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                        return UtilSql.sOutPutTransaccion("03", mensaje_error);
+                        return UtilSql.sOutPutTransaccion("44", mensaje_error);
                     }
                 }
 
                 if (!Regex.Match(input.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    mensaje_error = "El id del producto " + input.id_producto + " debe ser numerico";
+                    mensaje_error = "El id del producto debe ser numérico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
 
 
@@ -155,9 +154,9 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    mensaje_error = "El producto " + input.id_producto + " no existe";
+                    mensaje_error = "El producto no existe.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
                 ConvenioModel convenio = get_convenio(con_sql, nu_id_convenio);
                 con_sql.Close();
@@ -178,7 +177,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 saldo_comprometido = true;
 
@@ -262,7 +261,7 @@ namespace wa_api_incomm.Services
                         ins_bd = false;
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                     }
                     tm.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -282,7 +281,7 @@ namespace wa_api_incomm.Services
                             ins_bd = false;
                             _logger.Error("idtrx: " + id_trx_hub + " / " + cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText());
                             mensaje_error = cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                            return UtilSql.sOutPutTransaccion("99", cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                            return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                         }
                         cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                     }                                  
@@ -299,7 +298,7 @@ namespace wa_api_incomm.Services
                     info = new
                     {
                         codigo = "00",
-                        mensaje = "Transacción realizada correctamente.",
+                        mensaje = "Transacción procesada correctamente.",
                         nro_transaccion = id_trans_global
                     };
 
@@ -310,16 +309,19 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
+                    string vc_cod_error_hub = "99";
+                    string vc_desc_error_hub = "Error desconocido.";
+
+                    if (result.errorCode == null)
+                        tm.vc_cod_error = "";
+                    else
+                        tm.vc_cod_error = result.errorCode;
 
                     if (result.errorMessage == null)
                         tm.vc_desc_error = "";
                     else
                         tm.vc_desc_error = result.errorMessage;
 
-                    if (result.errorCode == null)
-                        tm.vc_cod_error = "";
-                    else
-                        tm.vc_cod_error = result.errorCode;
 
                     tm.vc_desc_tipo_error = "CONVENIO";
 
@@ -333,16 +335,21 @@ namespace wa_api_incomm.Services
                         tran_sql_error.Rollback();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                     }
 
                     tran_sql_error.Commit();
                     con_sql.Close();
                     ins_bd = false;
                     mensaje_error = tm.vc_desc_error;
+
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, result.errorCode, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
                     _logger.Error("idtrx: " + id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
 
-                    return UtilSql.sOutPutTransaccion("99", "Ocurrio un error en la transaccion.");
+                    return UtilSql.sOutPutTransaccion(vc_cod_error_hub, vc_desc_error_hub);
 
                 }
 
@@ -357,7 +364,7 @@ namespace wa_api_incomm.Services
                 _logger.Error("idtrx: " + id_trx_hub + " / " + ex.Message);
                 mensaje_error = ex.Message;
 
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -376,7 +383,7 @@ namespace wa_api_incomm.Services
                     con_sql.Close();
                 }
 
-                if (transaccion_completada == false)
+                if (transaccion_completada == false && id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();
@@ -419,7 +426,7 @@ namespace wa_api_incomm.Services
 
                 if (distribuidor.nu_id_distribuidor <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe");
+                    return UtilSql.sOutPutTransaccion("01", "El código de distribuidor no existe.");
                 }
 
                 TrxHubModel trx = new TrxHubModel();
@@ -436,12 +443,14 @@ namespace wa_api_incomm.Services
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 0)
                 {
                     _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
-                    _logger.Error(cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
-                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                    string codigo_error = cmd.Parameters["@vc_tran_codi"].Value.ToText();
+                    mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
+                    _logger.Error(mensaje_error);
+                    return UtilSql.sOutPutTransaccion(codigo_error, mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -463,14 +472,14 @@ namespace wa_api_incomm.Services
 
                 if (comercio.nu_id_comercio <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("07", "El código de comercio no existe");
+                    return UtilSql.sOutPutTransaccion("02", "El código de comercio no existe.");
                 }
 
                 if (!Regex.Match(input.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    mensaje_error = "El id del producto " + input.id_producto + " debe ser numerico";
+                    mensaje_error = "El id del producto debe ser numérico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
 
 
@@ -478,9 +487,9 @@ namespace wa_api_incomm.Services
 
                 if (producto.nu_id_producto <= 0)
                 {
-                    mensaje_error = "El producto " + input.id_producto + " no existe";
+                    mensaje_error = "El producto no existe.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
 
                 //ConvenioModel convenio = get_convenio(con_sql, nu_id_convenio);
@@ -504,7 +513,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 saldo_comprometido = true;
 
@@ -534,7 +543,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = tm_validar.vc_observacion;
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("39", mensaje_error);
                 }
 
                 TransaccionModel tm = new TransaccionModel();
@@ -552,11 +561,6 @@ namespace wa_api_incomm.Services
                 tm.vc_email_sol = input.email;
                 tm.nu_id_trx_ref = tm_validar.nu_id_trx;
 
-                //CUANDO SE HABILITE EL API PARA EXTORNO DIRECTO CON INCOMM
-                //IncommApi client = new IncommApi(hub_convenio, convenio.vc_merchant_id, convenio.vc_clave_encrip_aut, convenio.vc_pos_id, convenio.vc_source_header);
-                //var result = client.Transaccion(tim, _logger, id_trx_hub).Result; 
-
-
                 var result = new ResultTransaccionIncomm();
 
                 result.errorCode = "00";
@@ -568,9 +572,6 @@ namespace wa_api_incomm.Services
                     tm.vc_cod_autorizacion = result.authorizationCode;
                     tm.vc_nro_pin = result.pin;
 
-                    //CUANDO SE HABILITE EL API PARA EXTORNO DIRECTO CON INCOMM
-                    //tm.bi_confirmado = true;
-
                     con_sql.Open();
                     tran_sql = con_sql.BeginTransaction();
                     ins_bd = true;
@@ -581,7 +582,7 @@ namespace wa_api_incomm.Services
                         ins_bd = false;
                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToString();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                        return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                     }
                     tm.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -634,14 +635,14 @@ namespace wa_api_incomm.Services
                         tran_sql_error.Rollback();
                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                         _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                        return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                     }
 
                     tran_sql_error.Commit();
                     con_sql.Close();
                     _logger.Error("idtrx: " + id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
 
-                    return UtilSql.sOutPutTransaccion("99", "Ocurrio un error en la transaccion.");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
 
                 }
 
@@ -656,7 +657,7 @@ namespace wa_api_incomm.Services
                 _logger.Error("idtrx: " + id_trx_hub + " / " + ex.Message);
                 mensaje_error = ex.Message;
 
-                return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -675,7 +676,7 @@ namespace wa_api_incomm.Services
                     con_sql.Close();
                 }
 
-                if (transaccion_completada == false)
+                if (transaccion_completada == false && id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();
@@ -738,48 +739,6 @@ namespace wa_api_incomm.Services
             }
         }
 
-        private async Task SendMessage(string from, string mensaje, string numero, string vc_aws_access_key_id, string vc_aws_secrect_access_key, string id_trx, SqlConnection cn)
-        {
-            try
-            {
-                AmazonSimpleNotificationServiceClient client =
-                       new AmazonSimpleNotificationServiceClient(vc_aws_access_key_id,
-                                                                   vc_aws_secrect_access_key,
-                                                                   Amazon.RegionEndpoint.USEast1);
-
-                var request = new PublishRequest
-                {
-                    Message = mensaje,
-                    PhoneNumber = numero
-
-                };
-
-                if (from.Length > 11)
-                {
-                    from = from.Substring(0, 11);
-                }
-
-                Dictionary<string, MessageAttributeValue> MessageAttributes = new Dictionary<string, MessageAttributeValue>
-                  {
-                    {
-                      "AWS.SNS.SMS.SenderID", new MessageAttributeValue
-                        { DataType = "String", StringValue = from.Replace(" ","-")}
-                    }
-                  };
-                request.MessageAttributes = MessageAttributes;
-
-                await client.PublishAsync(request);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "id_trx: " + id_trx + ex.Message);
-                ReenvioMensajeModel rm = new ReenvioMensajeModel();
-                rm.nu_id_trx = id_trx;
-                rm.ch_tipo_mensaje = "M";
-                var cmd = insSendInfoError(cn, rm);
-            }
-        }
-
         private static SqlCommand insTransaccion(SqlConnection cn, SqlTransaction tran, TransaccionModel model)
         {
 
@@ -806,20 +765,6 @@ namespace wa_api_incomm.Services
                 return cmd;
             }
 
-
-        }
-        private static SqlCommand insSendInfoError(SqlConnection cn, ReenvioMensajeModel model)
-        {
-
-            using (SqlCommand cmd = new SqlCommand("tisi_global.usp_ins_reenvio_mensaje", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
-                cmd.Parameters.AddWithValue("@ch_tipo_mensaje", model.ch_tipo_mensaje);
-                UtilSql.iIns(cmd, model);
-                cmd.ExecuteNonQuery();
-                return cmd;
-            }
 
         }
         private DistribuidorModel get_distribuidor(SqlConnection cn, string vc_cod_distribuidor)
@@ -987,97 +932,6 @@ namespace wa_api_incomm.Services
             }
             return _result;
         }
-        private IncommModel get_transaccion(SqlConnection cn, IncommModel model)
-        {
-            IncommModel _result = new IncommModel();
-            using (var cmd = new SqlCommand("tisi_trx.usp_get_transaccion_incomm", cn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@nu_id_trx", model.nu_id_trx);
-                cmd.Parameters.AddWithValue("@nu_id_distribuidor", model.nu_id_distribuidor);
-                cmd.Parameters.AddWithValue("@nu_id_comercio", model.nu_id_comercio);
-                UtilSql.iGet(cmd, model);
-                var dr = cmd.ExecuteReader();
-                if (dr.Read())
-
-                {
-                    if (UtilSql.Ec(dr, "vc_url_api_aes"))
-                        _result.vc_url_api_aes = dr["vc_url_api_aes"].ToString();
-                    if (UtilSql.Ec(dr, "vc_clave_aes"))
-                        _result.vc_clave_aes = dr["vc_clave_aes"].ToString();
-                    if (UtilSql.Ec(dr, "vc_aws_access_key_id"))
-                        _result.vc_aws_access_key_id = dr["vc_aws_access_key_id"].ToString();
-                    if (UtilSql.Ec(dr, "vc_aws_secrect_access_key"))
-                        _result.vc_aws_secrect_access_key = dr["vc_aws_secrect_access_key"].ToString();
-
-                    if (UtilSql.Ec(dr, "vc_desc_empresa"))
-                        _result.vc_desc_empresa = dr["vc_desc_empresa"].ToString();
-                    if (UtilSql.Ec(dr, "vc_color_header_email"))
-                        _result.vc_color_header_email = dr["vc_color_header_email"].ToString();
-                    if (UtilSql.Ec(dr, "vc_color_body_email"))
-                        _result.vc_color_body_email = dr["vc_color_body_email"].ToString();
-                    if (UtilSql.Ec(dr, "vc_email_envio"))
-                        _result.vc_email_envio = dr["vc_email_envio"].ToString();
-                    if (UtilSql.Ec(dr, "vc_password_email"))
-                        _result.vc_password_email = dr["vc_password_email"].ToString();
-                    if (UtilSql.Ec(dr, "vc_smtp_email"))
-                        _result.vc_smtp_email = dr["vc_smtp_email"].ToString();
-                    if (UtilSql.Ec(dr, "nu_puerto_smtp_email"))
-                        _result.nu_puerto_smtp_email = dr["nu_puerto_smtp_email"].ToInt();
-                    if (UtilSql.Ec(dr, "bi_ssl_email"))
-                        _result.bi_ssl_email = dr["bi_ssl_email"].ToBool();
-                    if (UtilSql.Ec(dr, "vc_url_web_terminos"))
-                        _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
-
-                    if (UtilSql.Ec(dr, "nu_id_trx"))
-                        _result.nu_id_trx = Convert.ToInt64(dr["nu_id_trx"].ToString());
-                    if (UtilSql.Ec(dr, "nu_id_trx_hub"))
-                        _result.nu_id_trx_hub = Convert.ToInt64(dr["nu_id_trx_hub"].ToString());
-                    if (UtilSql.Ec(dr, "nu_id_distribuidor"))
-                        _result.nu_id_distribuidor = Convert.ToInt32(dr["nu_id_distribuidor"].ToString());
-                    if (UtilSql.Ec(dr, "nu_id_comercio"))
-                        _result.nu_id_comercio = Convert.ToInt32(dr["nu_id_comercio"].ToString());
-                    if (UtilSql.Ec(dr, "dt_fec_reg"))
-                        _result.dt_fec_reg = dr["dt_fec_reg"].ToDateTime();
-                    if (UtilSql.Ec(dr, "vc_telefono_sol"))
-                        _result.vc_telefono_sol = dr["vc_telefono_sol"].ToString();
-                    if (UtilSql.Ec(dr, "vc_email_sol"))
-                        _result.vc_email_sol = dr["vc_email_sol"].ToString();
-                    if (UtilSql.Ec(dr, "nu_precio_vta"))
-                        _result.nu_precio_vta = dr["nu_precio_vta"].ToDecimal();
-                    if (UtilSql.Ec(dr, "vc_nro_pin"))
-                        _result.vc_nro_pin = dr["vc_nro_pin"].ToString();
-                    if (UtilSql.Ec(dr, "vc_id_ref_trx"))
-                        _result.vc_id_ref_trx = dr["vc_id_ref_trx"].ToString();
-                    if (UtilSql.Ec(dr, "vc_cod_autorizacion"))
-                        _result.vc_cod_autorizacion = dr["vc_cod_autorizacion"].ToString();
-
-                    if (UtilSql.Ec(dr, "vc_cod_comercio"))
-                        _result.vc_cod_comercio = dr["vc_cod_comercio"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_categoria"))
-                        _result.vc_desc_categoria = dr["vc_desc_categoria"].ToString();
-                    if (UtilSql.Ec(dr, "vc_desc_producto"))
-                        _result.vc_desc_producto = dr["vc_desc_producto"].ToString();
-                    if (UtilSql.Ec(dr, "vc_url_web_terminos"))
-                        _result.vc_url_web_terminos = dr["vc_url_web_terminos"].ToString();
-                    if (UtilSql.Ec(dr, "bi_valor_pin"))
-                        _result.bi_valor_pin = dr["bi_valor_pin"].ToBool();
-
-                    if (UtilSql.Ec(dr, "bi_confirmado"))
-                        _result.bi_confirmado = dr["bi_confirmado"].ToBool();
-                    if (UtilSql.Ec(dr, "bi_informado"))
-                        _result.bi_informado = dr["bi_informado"].ToBool();
-
-                }
-            }
-            return _result;
-        }
-
-
-
-
-
-
 
     }
 }

@@ -110,6 +110,8 @@ namespace wa_api_incomm.ApiRest
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = DateTime.Now;
                 Result.timeout = true;
+                Result.respuesta.resultado = "-1";
+                Result.respuesta.obs = "No hubo respuesta a la solicitud. (Timeout)";
             }
             catch (Exception ex)
             {
@@ -161,8 +163,9 @@ namespace wa_api_incomm.ApiRest
             }
             catch (OperationCanceledException e)
             {
-                Result.respuesta.resultado = "99";
                 Result.timeout = true;
+                Result.respuesta.resultado = "-1";
+                Result.respuesta.obs = "No hubo respuesta a la solicitud. (Timeout)";
             }
             catch (Exception ex)
             {

@@ -97,5 +97,7 @@ namespace wa_api_incomm.Models.Hub
         public string vc_error { get; set; }
         public string vc_ubigeo { get; set; }
 
+        public decimal? nu_imp_com_usuario_final { get; set; }
+
     }
 }

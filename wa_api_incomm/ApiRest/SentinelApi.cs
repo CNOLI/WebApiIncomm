@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -92,6 +93,13 @@ namespace wa_api_incomm.ApiRest
                 result.dt_inicio = dt_inicio;
                 result.dt_fin = dt_fin;
             }
+            catch (OperationCanceledException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                result.timeout = true;
+                result.CodigoWS = "-1";
+            }
             catch (Exception ex)
             {
                 result.dt_inicio = dt_inicio;
@@ -129,6 +137,13 @@ namespace wa_api_incomm.ApiRest
                 result = JsonConvert.DeserializeObject<ConsultaTitularRest>(await response.Content.ReadAsStringAsync());
                 result.dt_inicio = dt_inicio;
                 result.dt_fin = dt_fin;
+            }
+            catch (OperationCanceledException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                result.timeout = true;
+                result.CodigoWS = "-1";
             }
             catch (Exception ex)
             {

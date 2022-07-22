@@ -124,6 +124,14 @@ namespace wa_api_incomm.ApiRest
                 result.dt_fin = dt_fin;
 
             }
+            catch (OperationCanceledException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                result.timeout = true;
+                result.rc = "-1";
+                result.descripcion = "No hubo respuesta a la solicitud. (Timeout)";
+            }
             catch (Exception ex)
             {
                 result.dt_inicio = dt_inicio;
@@ -170,6 +178,14 @@ namespace wa_api_incomm.ApiRest
                 result.dt_fin = dt_fin;
 
             }
+            catch (OperationCanceledException e)
+            {
+                result.dt_inicio = dt_inicio;
+                result.dt_fin = DateTime.Now;
+                result.timeout = true;
+                result.rc = "-1";
+                result.descripcion = "No hubo respuesta a la solicitud. (Timeout)";
+            }
             catch (Exception ex)
             {
                 result.dt_inicio = dt_inicio;
@@ -210,19 +226,13 @@ namespace wa_api_incomm.ApiRest
                 result.dt_fin = dt_fin;
 
             }
-            catch (WebException e)
+            catch (OperationCanceledException e)
             {
                 result.dt_inicio = dt_inicio;
                 result.dt_fin = DateTime.Now;
-                if (e.Status == WebExceptionStatus.Timeout)
-                {
-                    result.timeout = true;
-                }
-                else
-                {
-                    logger.Error(e.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                    throw new Exception(e.Message + ". PagoRecibo " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                }
+                result.timeout = true;
+                result.rc = "-1";
+                result.descripcion = "No hubo respuesta a la solicitud. (Timeout)";
             }
             catch (Exception ex)
             {

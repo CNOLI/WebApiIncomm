@@ -12,6 +12,9 @@ using wa_api_incomm.Services.Contracts;
 using static wa_api_incomm.Models.RecargaModel;
 using Hub_Encrypt;
 using System.Threading;
+using wa_api_incomm.Services;
+using wa_api_incomm.Models.Hub;
+using System.Data.SqlClient;
 
 namespace wa_api_incomm.Controllers
 {
@@ -43,15 +46,24 @@ namespace wa_api_incomm.Controllers
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
                 _logger.Error(allErrors.First());
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("97", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
+                // Validar configuracion distribuidor
+                GlobalService oGlobalService = new GlobalService();
+                DistribuidorModel ds = new DistribuidorModel();
+                ds.vc_cod_distribuidor = model.codigo_distribuidor;
+                SqlConnection con_sql = new SqlConnection(Configuration.GetSection("SQL").Value);
+                con_sql.Open();
+                ds = oGlobalService.get_distribuidor(con_sql, ds);
+                con_sql.Close();
+
                 EncrypDecrypt enc = new EncrypDecrypt();
                 var a = enc.ENCRYPT(model.fecha_envio, model.codigo_distribuidor, model.codigo_comercio, model.id_producto);
-                if (a != model.clave)
+                if (a != model.clave && ds.bi_encriptacion_trx == true)
                 {
-                    return this.BadRequest(UtilSql.sOutPutTransaccion("401", "La clave es incorrecta"));
+                    return this.Ok(UtilSql.sOutPutTransaccion("98", "La clave de seguridad es incorrecta."));
                 }
                 else
                 {
@@ -60,7 +72,7 @@ namespace wa_api_incomm.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos."));
             }
         }
     }

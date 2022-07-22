@@ -21,6 +21,7 @@ namespace wa_api_incomm.Models.Hub
         public string   vc_contraseña           { get; set; }
         public int?     nu_id_comercio          { get; set; }
         public int?     nu_seg_encolamiento     { get; set; } = 0;
+        public bool?    bi_encriptacion_trx     { get; set; } = true;
 
     }
 }

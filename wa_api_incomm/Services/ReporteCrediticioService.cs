@@ -35,6 +35,9 @@ namespace wa_api_incomm.Services
         {
             try
             {
+                string vc_cod_error_hub = "99";
+                string vc_desc_error_hub = "Error desconocido.";
+
                 GlobalService global_service = new GlobalService();
                 Encripta encripta = null;
                 EncriptaRest encripta_rest = null;
@@ -67,7 +70,7 @@ namespace wa_api_incomm.Services
 
                 if (tipodocidentidad_consultado.nu_id_tipo_doc_identidad <= 0)
                 {
-                    return UtilSql.sOutPutTransaccion("XX", "El tipo de documento de consultado no existe.");
+                    return UtilSql.sOutPutTransaccion("07", "El tipo de documento de consultado no existe.");
                 }
                 con_sql.Close();
 
@@ -87,9 +90,12 @@ namespace wa_api_incomm.Services
                             mensaje_error = "Error en web service.";
                             break;
                     }
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, 2, encripta_rest.coderror.ToString(), ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
 
-                    response.codigo = encripta_rest.coderror.ToString();
-                    response.mensaje = mensaje_error;
+                    response.codigo = vc_cod_error_hub;
+                    response.mensaje = vc_desc_error_hub;
 
                     return response;
                 }
@@ -111,8 +117,13 @@ namespace wa_api_incomm.Services
                             mensaje_error = "Error en web service.";
                             break;
                     }
-                    response.codigo = encripta_rest.coderror.ToString();
-                    response.mensaje = mensaje_error;
+
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, 2, encripta_rest.coderror.ToString(), ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
+                    response.codigo = vc_cod_error_hub;
+                    response.mensaje = vc_desc_error_hub;
 
                     return response;
                 }
@@ -128,8 +139,12 @@ namespace wa_api_incomm.Services
 
                 if (rest.CodigoWS != "0")
                 {
-                    response.codigo = "40";
-                    response.mensaje = global_service.get_mensaje_error(2, rest.CodigoWS);
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, 2, rest.CodigoWS, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
+                    response.codigo = vc_cod_error_hub;
+                    response.mensaje = vc_desc_error_hub;
 
                     return response;
                 }
@@ -143,7 +158,7 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
 
         }
@@ -199,7 +214,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = "El producto no existe.";
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
                 }
 
                 con_sql.Open();
@@ -216,7 +231,7 @@ namespace wa_api_incomm.Services
                 if (tipodocidentidad_solicitante.nu_id_tipo_doc_identidad <= 0)
                 {
                     _logger.Error("El tipo de documento de solicitante " + tipodocidentidad_solicitante.nu_id_tipo_doc_identidad.ToString() + " no existe");
-                    return UtilSql.sOutPutTransaccion("30", "El tipo de documento de solicitante no existe.");
+                    return UtilSql.sOutPutTransaccion("08", "El tipo de documento de solicitante no existe.");
                 }
 
                 TipoDocIdentidadModel tipodocidentidad_consultado = new TipoDocIdentidadModel();
@@ -233,7 +248,7 @@ namespace wa_api_incomm.Services
                 {
                     _logger.Error("El tipo de documento de consultado " + tipodocidentidad_consultado.nu_id_tipo_doc_identidad.ToString() + " no existe");
 
-                    return UtilSql.sOutPutTransaccion("31", "El tipo de documento de consultado no existe.");
+                    return UtilSql.sOutPutTransaccion("07", "El tipo de documento de consultado no existe.");
                 }
 
                 //Insertar Transaccion HUB
@@ -262,13 +277,14 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 if (cmd.Parameters["@nu_tran_stdo"].Value.ToDecimal() == 2)
                 {
+                    string codigo_error = cmd.Parameters["@vc_tran_codi"].Value.ToText();
                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion(codigo_error, mensaje_error);
                 }
 
                 id_trx_hub = cmd.Parameters["@nu_tran_pkey"].Value.ToString();
@@ -280,22 +296,22 @@ namespace wa_api_incomm.Services
                 // 2) Validar Campos adicionales.
                 if (!new EmailAddressAttribute().IsValid(model.email_solicitante))
                 {
-                    mensaje_error = "El email " + model.email_solicitante + " es incorrecto";
+                    mensaje_error = "El correo ingresado es inválido.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("44", mensaje_error);
                 }
 
                 if (!Regex.Match(model.id_producto, @"(^[0-9]+$)").Success)
                 {
-                    mensaje_error = "El id del producto " + model.id_producto + " debe ser numerico";
+                    mensaje_error = "El id del producto debe ser numérico.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("04", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("03", mensaje_error);
                 }
                 if (string.IsNullOrEmpty(model.digito_verificador_solicitante) && producto.nu_id_convenio == 4)
                 {
                     mensaje_error = "El digito verificador es obligatorio";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + " " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("22", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("25", mensaje_error);
                 }
 
                 TipoDocIdentidadModel tipodocidentidad_PDV = new TipoDocIdentidadModel();
@@ -310,9 +326,9 @@ namespace wa_api_incomm.Services
 
                 if (tipodocidentidad_PDV.nu_id_tipo_doc_identidad <= 0 && producto.nu_id_convenio == 2)
                 {
-                    mensaje_error = "El tipo de documento del PDV " + tipodocidentidad_PDV.nu_id_tipo_doc_identidad.ToString() + " no existe";
+                    mensaje_error = "El tipo de documento del PDV no existe";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("32", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("06", mensaje_error);
                 }
 
                 con_sql.Close();
@@ -369,9 +385,9 @@ namespace wa_api_incomm.Services
                 }
                 else
                 {
-                    mensaje_error = "El producto  " + model.id_producto + " no está habilitado para el distribuidor.";
+                    mensaje_error = "El producto no está habilitado para el distribuidor.";
                     _logger.Error("idtrx: " + id_trx_hub + " / " + mensaje_error);
-                    return UtilSql.sOutPutTransaccion("80", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("05", mensaje_error);
                 }
                 _logger.Information("idtrx: " + id_trx_hub + " / " + "Modelo enviado: " + JsonConvert.SerializeObject(obj, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
@@ -382,13 +398,13 @@ namespace wa_api_incomm.Services
             catch (Exception ex)
             {
                 mensaje_error = ex.Message;
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
                 if (con_sql.State == ConnectionState.Open) con_sql.Close();
 
-                if (id_trx_hub != "" && mensaje_error != "")
+                if (mensaje_error != "" && id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

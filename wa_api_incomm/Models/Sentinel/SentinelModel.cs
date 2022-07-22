@@ -87,6 +87,7 @@ namespace wa_api_incomm.Models
         public List<ConsultaTitularRestDet> SDT_TitMas_Out { get; set; }
         public DateTime dt_inicio { get; set; }
         public DateTime dt_fin { get; set; }
+        public bool timeout { get; set; } = false;
 
         public ConsultaTitularRest()
         {

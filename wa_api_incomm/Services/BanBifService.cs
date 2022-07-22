@@ -267,28 +267,39 @@ namespace wa_api_incomm.Services
                 Response.E_meta e_meta = (Response.E_meta)result.meta;
                 List<Response.E_datos_trx> ls_datos = (List<Response.E_datos_trx>)result.datos;
 
+                string codigo = "";
+                string mensaje = "";
+
+                string vc_cod_error_hub = "99";
+                string vc_desc_error_hub = "Error desconocido.";
+
+                if (result.timeout == true)
+                {
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, "-1", ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
+                    return UtilSql.sOutPutTransaccion(vc_cod_error_hub, vc_desc_error_hub);
+                }
+
                 if (ls_datos == null && e_meta != null)
                 {
-                    string codigo = "";
-                    string mensaje = "";
+
                     foreach (var item in e_meta.mensajes)
                     {
-                        codigo = String.Concat(codigo, item.codigo, "; ");
-                        mensaje = String.Concat(mensaje, item.mensaje, "; ");
+                        con_sql.Open();
+                        global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, item.codigo, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                        con_sql.Close();
 
+                        codigo = String.Concat(codigo, vc_cod_error_hub, " - ");
+                        mensaje = String.Concat(mensaje, vc_desc_error_hub, " - ");
                     }
 
                     if (codigo.Length > 0)
-                        codigo = codigo.Substring(0, codigo.Length - 2);
+                        codigo = codigo.Substring(0, codigo.Length - 3);
                     if (mensaje.Length > 0)
-                        mensaje = mensaje.Substring(0, mensaje.Length - 2);
-
-                    if (codigo == "ESM25")
-                    {
-                        codigo = "ESM25";
-                        mensaje = "No se puede obtener la información de pago (fuera de horario).";
-                    }
-
+                        mensaje = mensaje.Substring(0, mensaje.Length - 3);
+                                   
                     return UtilSql.sOutPutTransaccion(codigo, mensaje);
                 }
                 foreach (var e_datos in ls_datos)
@@ -315,9 +326,9 @@ namespace wa_api_incomm.Services
 
                     e_deuda.monto_documento = (e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino) - e_datos.comisionCliente;
                     e_deuda.monto_documento = Decimal.Round(Convert.ToDecimal((e_deuda.monto_documento ?? 0).ToString("N")), 2);
-                    e_deuda.comision_cliente = Decimal.Round(Convert.ToDecimal((e_datos.comisionCliente ?? 0).ToString("N")), 2);  ;
+                    e_deuda.comision_cliente = Decimal.Round(Convert.ToDecimal((e_datos.comisionCliente ?? 0).ToString("N")), 2) + Decimal.Round(Convert.ToDecimal(model.comision_usuario_final), 2); 
                     e_deuda.monto_deuda = e_datos.montoRedondeo != e_datos.montoTotalDestino ? e_datos.montoRedondeo : e_datos.montoTotalDestino;
-                    e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2);
+                    e_deuda.monto_deuda = Decimal.Round(Convert.ToDecimal((e_deuda.monto_deuda ?? 0).ToString("N")), 2) + Decimal.Round(Convert.ToDecimal(model.comision_usuario_final), 2);
                     e_deuda.numero_documento = e_datos.documento.numero;
                     e_deuda.moneda = e_datos.moneda;
 
@@ -409,8 +420,7 @@ namespace wa_api_incomm.Services
             }
             catch (Exception ex)
             {
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
-                //return UtilSql.sOutPutTransaccion("500", "Ocurrio un error en la transaccion");
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             return ls_deuda;
 
@@ -462,7 +472,7 @@ namespace wa_api_incomm.Services
                 {
                     mensaje_error = cmd_saldo.Parameters["@tx_tran_mnsg"].Value.ToText();
                     _logger.Error(mensaje_error);
-                    return UtilSql.sOutPutTransaccion("99", mensaje_error);
+                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                 }
                 saldo_comprometido = true;
 
@@ -480,28 +490,42 @@ namespace wa_api_incomm.Services
                 Response.E_meta e_meta = (Response.E_meta)result.meta;
                 List<Response.E_datos_trx> ls_datos = (List<Response.E_datos_trx>)result.datos;
 
+                string codigo = "";
+                string mensaje = "";
+
+                string vc_cod_error_hub = "99";
+                string vc_desc_error_hub = "Error desconocido.";
+
+                if (result.timeout == true)
+                {
+                    con_sql.Open();
+                    global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, "-1", ref vc_cod_error_hub, ref vc_desc_error_hub);
+                    con_sql.Close();
+
+                    mensaje_error = vc_desc_error_hub;
+
+                    return UtilSql.sOutPutTransaccion(vc_cod_error_hub, vc_desc_error_hub);
+                }
+
                 if (ls_datos == null && e_meta != null)
                 {
-                    string codigo = "";
-                    string mensaje = "";
                     foreach (var item in e_meta.mensajes)
                     {
-                        codigo = String.Concat(codigo, item.codigo, "; ");
-                        mensaje = String.Concat(mensaje, item.mensaje, "; ");
+                        con_sql.Open();
+                        global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, item.codigo, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                        con_sql.Close();
 
+                        codigo = String.Concat(codigo, vc_cod_error_hub, " - ");
+                        mensaje = String.Concat(mensaje, vc_desc_error_hub, " - ");
                     }
 
                     if (codigo.Length > 0)
-                        codigo = codigo.Substring(0, codigo.Length - 2);
+                        codigo = codigo.Substring(0, codigo.Length - 3);
                     if (mensaje.Length > 0)
-                        mensaje = mensaje.Substring(0, mensaje.Length - 2);
+                        mensaje = mensaje.Substring(0, mensaje.Length - 3);
 
-                    if (codigo == "ESM25")
-                    {
-                        codigo = "ESM25";
-                        mensaje = "No se puede obtener la información de pago (fuera de horario).";
-                    }
                     mensaje_error = mensaje;
+
                     return UtilSql.sOutPutTransaccion(codigo, mensaje);
                 }
 
@@ -566,11 +590,11 @@ namespace wa_api_incomm.Services
                             e_p.monto = e_datos.montoTotalDestino;
                         }
 
-                        if (e_p.monto != Convert.ToDecimal(model.importe_pago))
+                        if (e_p.monto != (Convert.ToDecimal(model.importe_pago) - Convert.ToDecimal(model.comision_usuario_final)))
                         {
-                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + "El importe de pago es diferente al importe de deuda.");
-                            mensaje_error = "El importe de pago es diferente al importe de deuda.";
-                            return UtilSql.sOutPutTransaccion("500", "El importe de pago es diferente al importe de deuda.");
+                            _logger.Error("idtrx: " + model.id_trx_hub + " / " + "La suma de importes a pagar no coincide con los datos de la deuda.");
+                            mensaje_error = "La suma de importes a pagar no coincide con los datos de la deuda.";
+                            return UtilSql.sOutPutTransaccion("65", "La suma de importes a pagar no coincide con los datos de la deuda.");
                         }
 
                         e_p.deudaAPagar = e_datos.montoTotalDestino;
@@ -715,6 +739,7 @@ namespace wa_api_incomm.Services
                         trx.vc_nro_doc_pago = model.numero_documento;
                         trx.vc_id_ref_trx_distribuidor = model.nro_transaccion_referencia;
                         try { trx.ti_respuesta_api = (result_pago.dt_fin - result_pago.dt_inicio); } catch (Exception ti) { }
+                        trx.nu_imp_com_usuario_final = model.comision_usuario_final.ToDecimal();
 
                         if (e_meta_pago != null &&
                             e_datos_pago_result != null &&
@@ -742,6 +767,7 @@ namespace wa_api_incomm.Services
                                 cmd.Parameters.AddWithValue("@nu_precio_vta", trx.nu_precio);
                                 cmd.Parameters.AddWithValue("@vc_id_ref_trx_distribuidor", trx.vc_id_ref_trx_distribuidor);
                                 cmd.Parameters.AddWithValue("@ti_respuesta_api", trx.ti_respuesta_api);
+                                cmd.Parameters.AddWithValue("@nu_imp_com_usuario_final", trx.nu_imp_com_usuario_final);
 
                                 UtilSql.iIns(cmd, trx);
                                 cmd.ExecuteNonQuery();
@@ -752,7 +778,7 @@ namespace wa_api_incomm.Services
                                     ins_bd = false;
                                     _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                     mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                    return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                 }
                                 trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -772,7 +798,7 @@ namespace wa_api_incomm.Services
                                     ins_bd = false;
                                     _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                     mensaje_error = cmd_upd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                 }
                                 cmd.Parameters["@vc_tran_codi"].Value = cmd_upd.Parameters["@vc_tran_codi"].Value;
                             }
@@ -792,7 +818,7 @@ namespace wa_api_incomm.Services
                                     ins_bd = false;
                                     _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText());
                                     mensaje_error = cmd_upd_confirmar.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                    return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                                    return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                 }
                             }
 
@@ -816,6 +842,7 @@ namespace wa_api_incomm.Services
                         }
                         else
                         {
+
                             TransaccionModel tm = new TransaccionModel();
                             tm.nu_id_trx = trx.nu_id_trx;
                             tm.nu_id_trx_hub = trx.nu_id_trx_hub;
@@ -859,7 +886,7 @@ namespace wa_api_incomm.Services
                                         ins_bd = false;
                                         _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                     }
                                     trx.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -1045,7 +1072,7 @@ namespace wa_api_incomm.Services
                                         ins_bd = false;
                                         _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                     }
                                     trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -1055,8 +1082,11 @@ namespace wa_api_incomm.Services
 
                                     tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
 
-                                    tm.vc_cod_error = "99";
-                                    tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (Confirmado)";
+                                    tm.vc_cod_error = "-1";
+                                    tm.vc_desc_error = "No hubo respuesta del convenio. (Confirmado)";
+
+                                    codigo = "99";
+                                    mensaje = tm.vc_desc_error;
                                 }
                                 else
                                 {
@@ -1076,7 +1106,7 @@ namespace wa_api_incomm.Services
                                         ins_bd = false;
                                         _logger.Error("idtrx: " + trx.nu_id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
                                         mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                        return UtilSql.sOutPutTransaccion("99", cmd.Parameters["@tx_tran_mnsg"].Value.ToText());
+                                        return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                                     }
                                     trx_reverso.nu_id_trx_app = cmd.Parameters["@nu_tran_pkey"].Value.ToDecimal();
 
@@ -1086,8 +1116,11 @@ namespace wa_api_incomm.Services
 
                                     tm.nu_id_trx_extorno = trx_reverso.nu_id_trx_app;
 
-                                    tm.vc_cod_error = "99";
-                                    tm.vc_desc_error = "No hubo respuesta por parte de la empresa. (No confirmado)";
+                                    tm.vc_cod_error = "-1";
+                                    tm.vc_desc_error = "No hubo respuesta del convenio. (No confirmado)";
+
+                                    codigo = "99";
+                                    mensaje = tm.vc_desc_error;
                                 }
 
 
@@ -1098,9 +1131,21 @@ namespace wa_api_incomm.Services
                             {
                                 foreach (var item in e_meta_pago.mensajes)
                                 {
+                                    con_sql.Open();
+                                    global_service.get_mensaje_error_hub(con_sql, nu_id_convenio, item.codigo, ref vc_cod_error_hub, ref vc_desc_error_hub);
+                                    con_sql.Close();
+
+                                    codigo = String.Concat(tm.vc_cod_error, vc_cod_error_hub, " - ");
+                                    mensaje = String.Concat(tm.vc_desc_error, vc_desc_error_hub, " - ");
+
                                     tm.vc_cod_error = String.Concat(tm.vc_cod_error, item.codigo, " - ");
                                     tm.vc_desc_error = String.Concat(tm.vc_desc_error, item.mensaje, " - ");
                                 }
+
+                                if (codigo.Length > 0)
+                                    codigo = codigo.Substring(0, codigo.Length - 3);
+                                if (mensaje.Length > 0)
+                                    mensaje = mensaje.Substring(0, mensaje.Length - 3);
 
                                 if (tm.vc_cod_error.Length > 0)
                                     tm.vc_cod_error = tm.vc_cod_error.Substring(0, tm.vc_cod_error.Length - 3);
@@ -1123,7 +1168,7 @@ namespace wa_api_incomm.Services
                                 tran_sql_error.Rollback();
                                 _logger.Error("idtrx: " + model.id_trx_hub + " / " + cmd.Parameters["@tx_tran_mnsg"].Value.ToString());
                                 mensaje_error = cmd.Parameters["@tx_tran_mnsg"].Value.ToText();
-                                return UtilSql.sOutPutTransaccion("99", "Error en base de datos");
+                                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
                             }
 
                             tran_sql_error.Commit();
@@ -1132,19 +1177,14 @@ namespace wa_api_incomm.Services
                             ins_bd = false;
                             _logger.Error("idtrx: " + model.id_trx_hub + " / " + tm.vc_cod_error + " - " + tm.vc_desc_error);
 
-                            if (tm.vc_cod_error == "ESM25")
-                            {
-                                tm.vc_cod_error = "ESM25";
-                                tm.vc_desc_error = "El pago no puede ser procesado por realizarse fuera de horario.";
-                            }
-
-                            return UtilSql.sOutPutTransaccion("99", tm.vc_desc_error);
+                            return UtilSql.sOutPutTransaccion(codigo, mensaje);
                         }
                     }
 
                 }
 
-                return UtilSql.sOutPutTransaccion("500", "No se encontro deuda con el número de documento " + model.numero_documento);
+                mensaje_error = "No se encontro deuda con el número de documento " + model.numero_documento;
+                return UtilSql.sOutPutTransaccion("69", mensaje_error);
             }
             catch (Exception ex)
             {
@@ -1156,7 +1196,7 @@ namespace wa_api_incomm.Services
                 _logger.Error("idtrx: " + model.id_trx_hub + " / " + ex.Message);
                 mensaje_error = ex.Message;
 
-                return UtilSql.sOutPutTransaccion("500", ex.Message);
+                return UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos.");
             }
             finally
             {
@@ -1175,7 +1215,7 @@ namespace wa_api_incomm.Services
                     con_sql.Close();
                 }
 
-                if (transaccion_completada == false)
+                if (transaccion_completada == false && model.id_trx_hub != "")
                 {
                     con_sql.Open();
                     TrxHubModel model_hub_error = new TrxHubModel();

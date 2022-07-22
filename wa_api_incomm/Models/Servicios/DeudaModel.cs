@@ -33,6 +33,7 @@ namespace wa_api_incomm.Models.Servicios
             public string codigo_pais { get; set; } = "PE";
 
             public string vc_cod_convenio { get; set; }
+            public string comision_usuario_final { get; set; }
         }
     }
 }

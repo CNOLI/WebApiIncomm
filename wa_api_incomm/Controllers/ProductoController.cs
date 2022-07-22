@@ -31,12 +31,12 @@ namespace wa_api_incomm.Controllers
         }
 
         [HttpPost("sel")]
-        public IActionResult generar([FromBody]ProductoClientModelInput model)
+        public IActionResult get([FromBody]ProductoClientModelInput model)
         {
             if (!this.ModelState.IsValid)
             {
                 var allErrors = this.ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
-                return this.BadRequest(UtilSql.sOutPutTransaccion("01", "Datos incorrectos: " + allErrors.First()));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("97", "Datos incorrectos: " + allErrors.First()));
             }
             try
             {
@@ -44,7 +44,7 @@ namespace wa_api_incomm.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(Utilitarios.JsonErrorSel(ex));
+                return this.BadRequest(UtilSql.sOutPutTransaccion("99", "Hubo un error al procesar la transacción, vuelva a intentarlo en unos minutos."));
             }
         }
     }

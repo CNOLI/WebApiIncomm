@@ -43,6 +43,7 @@ namespace wa_api_incomm.Models
             public string codigo_autorizacion { get; set; }
             public DateTime dt_inicio { get; set; }
             public DateTime dt_fin { get; set; }
+            public bool timeout { get; set; } = false;
         }
         public class Recibo
         {

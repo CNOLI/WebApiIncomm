@@ -114,6 +114,8 @@ namespace wa_api_incomm.ApiRest
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = DateTime.Now;
                 Result.timeout = true;
+                Result.codigo = "-1";
+                Result.mensaje = "No hubo respuesta a la solicitud. (Timeout)";
             }
             catch (Exception ex)
             {

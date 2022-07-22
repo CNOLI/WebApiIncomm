@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -100,20 +101,22 @@ namespace wa_api_incomm.ApiRest
                 Result.dt_fin = dt_fin;
 
             }
+            catch (OperationCanceledException e)
+            {
+                Result.dt_inicio = dt_inicio;
+                Result.dt_fin = DateTime.Now;
+                Result.timeout = true;
+                Result.code = "-1";
+                Result.message = "No hubo respuesta a la solicitud. (Timeout)";
+            }
             catch (Exception ex)
             {
                 Result.dt_inicio = dt_inicio;
                 Result.dt_fin = DateTime.Now;
-                logger.Error(ex.Message + ". Generar_Reporte " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
 
-                if (response.Content == null)
-                {
-                    throw new Exception("Generar_Reporte: " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
-                }
-                else
-                {
-                    Result = JsonConvert.DeserializeObject<Generar_Reporte_Response>(await response.Content.ReadAsStringAsync());
-                }
+                logger.Error(ex.Message + ". Generar_Reporte_Equifax " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+                throw new Exception(ex.Message + ". Generar_Reporte_Equifax " + (response.Content == null ? "" : response.Content.ReadAsStringAsync().Result));
+
             }
             return Result;
         }

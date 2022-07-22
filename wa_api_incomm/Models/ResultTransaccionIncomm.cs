@@ -20,6 +20,7 @@ namespace wa_api_incomm.Models
         public string pin { get; set; }
         public DateTime dt_inicio { get; set; }
         public DateTime dt_fin { get; set; }
+        public bool timeout { get; set; } = false;
 
     }
 }
